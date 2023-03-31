@@ -1,2 +1,6 @@
+# ignore ALL .cdsapirc files
+*.cdsapirc
+tempfile.tif
+
 # ignore ALL files in ANY directory named output
 output/
