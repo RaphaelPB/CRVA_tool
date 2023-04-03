@@ -1,7 +1,0 @@
-# ignore ALL documents in format .cdsapirc and the tempile.tif
-*.cdsapirc
-*.tif
-*.tiff
-
-# ignore ALL files in ANY directory named output
-outputs/
