@@ -31,6 +31,8 @@ import cdsapi # for copernicus function
 import datetime # to have actual date
 
 
+# # Class
+
 # ### Time class
 
 # In[2]:
@@ -73,6 +75,8 @@ class copernicus_elements:
     #experiments = ('ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
     experiments = ('historical','ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
 
+
+# # Functions
 
 # ### Copernicus function
 # Some data comes from copernicus and can be directly taken form the website thans to CDS. The following functions serves this purpose
