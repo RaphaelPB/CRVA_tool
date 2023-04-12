@@ -61,9 +61,33 @@ class time:
     actual_year = actual_date.year
 
 
-# ## Copernicus function
+# ### Copernicus class
 
 # In[3]:
+
+
+## Definition of tuples that will be useful to search which data are available or not
+# make it tuples to make unchangeable
+class copernicus_elements:
+    models =('access_cm2','awi_cm_1_1_mr')#,'bcc_csm2_mr','cams_csm1_0','canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
+    #experiments = ('ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    experiments = ('historical','ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+
+
+# ### Copernicus function
+# Some data comes from copernicus and can be directly taken form the website thans to CDS. The following functions serves this purpose
+# #### Parameters of the function :
+# projections-cmip6 : name of the web page, in this case, 'projections-cmip6'
+# format : zip or tar.gz
+# temporal_resolution : daily or monthly or fixed
+# SSP : sscenario that is studied "Historical", "SSP1-1.9", "SSP1-2.6" ...
+# Variable : variable to be studied
+# model: model of projection to choose
+# year: year of study to choose
+# area: area of study
+# month: month to be studied
+
+# In[4]:
 
 
 ##################################################### Copernicus function ######################################################
