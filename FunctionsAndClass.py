@@ -81,8 +81,13 @@ class copernicus_elements:
 
 # ### Period for the copernicus function
 
-# In[4]:
+# In[7]:
 
+
+################################################ Period for copernicus function ################################################
+# Aim of the function: by giving it a first and last year of the period that must analyzed, this function produce several 
+# vectors,containing time informations, useful to download and treat data from CMIP6 projections (https://cds.climate.copernicus.eu/cdsapp#!/dataset/projections-cmip6?tab=overview )
+# Those time vectors are used in the copernicus_data and the dataframe_csv_copernicus functions
 
 def year_copernicus(first_year,last_year):
     year = np.arange(first_year,(last_year+1),1) # create vector of years
@@ -91,12 +96,23 @@ def year_copernicus(first_year,last_year):
     i = 0 # initialize index
     for i in index: # convert all the date in string format
         year_str[i]=str(year[i])
+    return (year, year_str, index)
 
-    start_date = "01-01-"+year_str[0] # string start date based on start year
-    stop_date = "31-12-"+year_str[len(year)-1] # string stop date based on stop year
-    dates = pd.date_range(start_date,stop_date) # vector of dates between start date and stop date
-    index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
-    return (year, year_str, index, dates, index_dates)
+def date_copernicus(temporal_resolution,year_str):
+    if temporal_resolution =='daily':
+        start_date = "01-01-"+year_str[0] # string start date based on start year
+        stop_date = "31-12-"+year_str[len(year_str)-1] # string stop date based on stop year
+        dates = pd.date_range(start_date,stop_date) # vector of dates between start date and stop date
+        index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
+    if temporal_resolution =='monthly':
+        date = np.arange(0,len(time.default_month))
+        k=0
+        for j in year_str:
+            for i in time.default_month:
+                dates[k] = i + '-' + j # vector of dates between start date and stop date
+        index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
+    #if temporal_resolution =='fixed': trouver donnees pour gerer cela
+    return (dates, index_dates)
 
 
 # ### Copernicus function
@@ -115,7 +131,7 @@ def year_copernicus(first_year,last_year):
 # In[5]:
 
 
-##################################################### Copernicus function ######################################################
+################################################### Copernicus data function ###################################################
 # Aim of the function : read nc data found on copernicus CMIP6 projections (https://cds.climate.copernicus.eu/cdsapp#!/dataset/projections-cmip6?tab=overview )
 # Actions of this function
 #     1) check which parameters are asked or not in the variables dictionnary, and modify the last depend on the parameters chosen byt the user before
@@ -224,59 +240,94 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 # In[6]:
 
 
-def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path,global_variable, name_variable,area,index_dates,dates):    
+########################################### Register data from nc file of Copernicus ############################################
+# Aim of the function: this function aims to register in a dataframe and a csv file the data from the nc file downloaded with
+# the function copernicus_data
+# Actions of this function
+#     1) Create the string indicating the period of interest
+#     2) Creating path and file name to register dataframe in csv file
+#     3) Register data, with its corresponding experiments and models, in dataframe and csv file
+#        3 a) Test if path does not exists (if dataframe is not registered) : 
+#                1 . Thanks to copernicus_data, download nc fils from copernicus CMIP6 website for each experiment and each model
+#                2 . Open the dowloaded nc file in the jupyter notebook if it exists
+#                3 . In a dataframe, register the value in the nc file, for each experiment, model and day
+#                4 . if there no value for each experiments and models tested, the datfram is empty and the user is informed
+#        3 b) Test if path exists (dataframe is registered) : no need to register again, return in dataframe the existing 
+#             csv file in a dataframe
+
+# Parameters of the function
+
+def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path,global_variable, name_variable,area):    
     # create string for name of folder depending on type of period
     if temporal_resolution == 'fixed':
         period = 'fixed'
     else:
         period=year_str[0]+'-'+year_str[len(year_str)-1]
+        
+    (dates, index_dates)=date_copernicus(temporal_resolution,year_str) # create time vector depending on temporal resolution
 
-    df = pd.DataFrame() # create an empty dataframe
+    title_file = period + '_' + temporal_resolution + '_' +name_variable
+    
+    path_for_csv = os.path.join('outputs','csv','data',period,name_variable) # create path for csv file
+    
+    if not os.path.isdir(path_for_csv): # test if the data were already downloaded; if not, first part if the if is applied
+        df = pd.DataFrame() # create an empty dataframe
 
-    for SSP in experiments:
-        experiment = (SSP,) # create tuple for iteration of dataframe
-        print(SSP)
-        for model_simulation in models:
-            model =(model_simulation,) # create tuple for iteration of dataframe
-            print(model)
-            # path were the futur downloaded file is registered
-            path_for_file= os.path.join(out_path,'Datasets', global_variable, name_variable, SSP, model_simulation,period)#,'')
-            # existence of path_for_file tested in copernicus function
-            wind_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path)
-            # area is determined in the "Load shapefiles and plot" part
-            if (wind_path is not None):
-                Open_path = Dataset(wind_path) # open netcdf file
-                lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
-                lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
-                data_with_all = ma.getdata(Open_path.variables['sfcWind']).data
+        for SSP in experiments:
+            experiment = (SSP,) # create tuple for iteration of dataframe
+            print(SSP)
+            for model_simulation in models:
+                model =(model_simulation,) # create tuple for iteration of dataframe
+                print(model)
+                # path were the futur downloaded file is registered
+                path_for_file= os.path.join(out_path,'Datasets', global_variable, name_variable, SSP, model_simulation,period)#,'')
+                # existence of path_for_file tested in copernicus function
+                wind_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path)
+                # area is determined in the "Load shapefiles and plot" part
+                if (wind_path is not None):
+                    Open_path = Dataset(wind_path) # open netcdf file
+                    lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
+                    lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
+                    data_with_all = ma.getdata(Open_path.variables['sfcWind']).data
 
-                for day in index_dates:
-                    print('FINAAAAL')
-                    data_dataframe = data_with_all[day,:,:]
-                    time = (dates[day],) # create tuple for iteration of dataframe
-                    # Create the MultiIndex
-                    midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
-                    # multiindex to name the columns
-                    lon_str = ('Longitude',)
-                    cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
-                    # Create the Dataframe
-                    Variable_dataframe = pd.DataFrame(data = data_dataframe, 
-                                                index = midx,
-                                                columns = cols)
-                    # Concatenate former and new dataframe
-                    df = pd.concat([df,Variable_dataframe])
+                    for moment in index_dates: # case if temporal resolution is daily
+                        print('FINAAAAL')
+                        data_dataframe = data_with_all[moment,:,:]
+                        time = (dates[moment],) # create tuple for iteration of dataframe
+                        # Create the MultiIndex
+                        midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
+                        # multiindex to name the columns
+                        lon_str = ('Longitude',)
+                        cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
+                        # Create the Dataframe
+                        Variable_dataframe = pd.DataFrame(data = data_dataframe, 
+                                                    index = midx,
+                                                    columns = cols)
+                        # Concatenate former and new dataframe
+                        df = pd.concat([df,Variable_dataframe])# register information for project
 
-                    # register information for project
+                    Open_path.close # to spare memory
+                else:
+                    print("Path does not exist")
+                    pass
+        # test if dataframe is empty, if values exist for this period
+        if not df.empty: # if dataframe is not empty, value were registered, the first part is run : a path to register the csv file is created, and the dataframe is registered in a csv file
+            os.makedirs(path_for_csv) # to ensure the creation of the path
+            df.to_csv(path_for_csv) # register dataframe in csv file
+            return df 
+        else: # if the dataframe is empty, no value were found, there is no value to register or to return
+            print('No value were found for the period tested')
+            return # there is no dataframe to return
+    else:# test if the data were already downloaded; if yes, this part of the if is applied
+        print('The file was already downloaded')
+        df = pd.read_csv(path_for_csv) # read the downloaded data for the analysis
+        return df
 
 
-                Open_path.close # to spare memory
-            else:
-                print("Path does not exist")
-                pass
+# In[ ]:
 
-    path_for_csv=os.path.join('outputs','csv',name_variable)    
-    df.to_csv(path_for_csv)
-    return df
+
+
 
 
 # In[ ]:
