@@ -71,12 +71,33 @@ class time:
 ## Definition of tuples that will be useful to search which data are available or not
 # make it tuples to make unchangeable
 class copernicus_elements:
-    models =('access_cm2','awi_cm_1_1_mr')#,'bcc_csm2_mr','cams_csm1_0','canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
+    models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0')#,'canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
     #experiments = ('ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
-    experiments = ('historical','ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4')#,'ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    experiments_historical=('historical',)
 
 
 # # Functions
+
+# ### Period for the copernicus function
+
+# In[4]:
+
+
+def year_copernicus(first_year,last_year):
+    year = np.arange(first_year,(last_year+1),1) # create vector of years
+    year_str = [0]*len(year) # create initiale empty vector to convert years in int
+    index = np.arange(0,len(year)) # create vector of index for year
+    i = 0 # initialize index
+    for i in index: # convert all the date in string format
+        year_str[i]=str(year[i])
+
+    start_date = "01-01-"+year_str[0] # string start date based on start year
+    stop_date = "31-12-"+year_str[len(year)-1] # string stop date based on stop year
+    dates = pd.date_range(start_date,stop_date) # vector of dates between start date and stop date
+    index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
+    return (year, year_str, index, dates, index_dates)
+
 
 # ### Copernicus function
 # Some data comes from copernicus and can be directly taken form the website thans to CDS. The following functions serves this purpose
@@ -91,7 +112,7 @@ class copernicus_elements:
 # area: area of study
 # month: month to be studied
 
-# In[4]:
+# In[5]:
 
 
 ##################################################### Copernicus function ######################################################
@@ -196,6 +217,72 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
             else:
                 pass
     print('Problem : No nc file was found')
+
+
+# ### Registering data in dataframe and csv form copernicus CMIP6
+
+# In[6]:
+
+
+def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path,global_variable, name_variable,area,index_dates,dates):    
+    # create string for name of folder depending on type of period
+    if temporal_resolution == 'fixed':
+        period = 'fixed'
+    else:
+        period=year_str[0]+'-'+year_str[len(year_str)-1]
+
+    df = pd.DataFrame() # create an empty dataframe
+
+    for SSP in experiments:
+        experiment = (SSP,) # create tuple for iteration of dataframe
+        print(SSP)
+        for model_simulation in models:
+            model =(model_simulation,) # create tuple for iteration of dataframe
+            print(model)
+            # path were the futur downloaded file is registered
+            path_for_file= os.path.join(out_path,'Datasets', global_variable, name_variable, SSP, model_simulation,period)#,'')
+            # existence of path_for_file tested in copernicus function
+            wind_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path)
+            # area is determined in the "Load shapefiles and plot" part
+            if (wind_path is not None):
+                Open_path = Dataset(wind_path) # open netcdf file
+                lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
+                lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
+                data_with_all = ma.getdata(Open_path.variables['sfcWind']).data
+
+                for day in index_dates:
+                    print('FINAAAAL')
+                    data_dataframe = data_with_all[day,:,:]
+                    time = (dates[day],) # create tuple for iteration of dataframe
+                    # Create the MultiIndex
+                    midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
+                    # multiindex to name the columns
+                    lon_str = ('Longitude',)
+                    cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
+                    # Create the Dataframe
+                    Variable_dataframe = pd.DataFrame(data = data_dataframe, 
+                                                index = midx,
+                                                columns = cols)
+                    # Concatenate former and new dataframe
+                    df = pd.concat([df,Variable_dataframe])
+
+                    # register information for project
+
+
+                Open_path.close # to spare memory
+            else:
+                print("Path does not exist")
+                pass
+
+    path_for_csv=os.path.join('outputs','csv',name_variable)    
+    df.to_csv(path_for_csv)
+    return df
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
