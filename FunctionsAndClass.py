@@ -64,7 +64,7 @@ class time:
 
 # ### Map class
 
-# In[11]:
+# In[3]:
 
 
 class map_elements:
@@ -74,7 +74,7 @@ class map_elements:
 
 # ### Copernicus class
 
-# In[3]:
+# In[4]:
 
 
 ## Definition of tuples that will be useful to search which data are available or not
@@ -86,6 +86,85 @@ class copernicus_elements:
 
 
 # # Functions
+
+# ### read_cckp_ncdata
+
+# In[5]:
+
+
+#def read cckp (world bank) nc files
+#reads data from world bank climate knowledge portal, nc files, with a single band
+#assigns projection and exports to tif since zonal_stats seems to have issues with it otherwise (not ideal solution)
+def read_cckp_ncdata(nc_path,output='tempfile.tif'):
+    with rioxarray.open_rasterio(nc_path,decode_times=False)[0] as ncdata:
+        ncdata.rio.write_crs('EPSG:4326', inplace=True)
+        ncdata=ncdata.isel(time=0)
+        ncdata.rio.to_raster(output)
+       # output=output #here
+   # else: 
+      #  print(nc_path,"not found") # in this case, the data printed in the table will apply to the previous print.. 
+       # output=0 #here
+    return output       
+
+#def read nc files (copernicus)
+#reads data from CMIP6 Copernicus, nc files
+#assigns projection and exports to tif since zonal_stats seems to have issues with it otherwise (not ideal solution)
+def read_nc_data(nc_path,stats,output='tempfile.tif'):
+    with rioxarray.open_rasterio(nc_path,decode_times=False)[3] as ncdata:
+        # calculate statistiques for each variable
+        if stats == 'mean':
+            ncdata=ncdata.mean(dim='time')
+        elif stats == 'median':
+            ncdata=ncdata.median(dim='time')
+        elif stats == 'p10':
+            ncdata=ncdata.quantile(0.1, dim='time')
+        elif stats == 'p90':
+            ncdata=ncdata.quantile(0.9, dim='time')
+        
+        ncdata.rio.write_crs('EPSG:4326', inplace=True)
+        ncdata.rio.to_raster(output)
+    return output       
+
+
+# ### get_cckp_file_name
+
+# In[6]:
+
+
+#get filename from cckp based on ssp, period and gcm
+def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
+    if period in ['1991-2020']:
+ #cru/era
+    #Precipitation   
+        if var in ['climatology-r50mm-annual-mean_era_annual','climatology-rx1day-monthly-mean_era_monthly','climatology-rx1day-annual-mean_era_annual','climatology-pr-annual-mean_era_annual','climatology-pr-monthly-mean_era_monthly']:
+            filename='precipitation/wb_cckp/climatology-rx5day-annual-mean_era_annual_era5-0.5x0.5-climatology_mean_1991-2020.nc'
+            filename=filename.replace('climatology-rx5day-annual-mean_era_annual',var)
+        elif var in ['climatology-pr-annual-mean_cru']:
+            filename='precipitation/wb_cckp/climatology-pr-annual-mean_cru_annual_cru-ts4.06-climatology_mean_1991-2020.nc'
+    #Temperature
+        elif var in ['climatology-tasmax-annual-mean_era','climatology-hd35-annual-mean_era','climatology-tas-annual-mean_era','climatology-hd40-annual-mean_era']:
+            filename='temperature/wb_cckp/climatology-tasmax-annual-mean_era_annual_era5-0.5x0.5-climatology_mean_1991-2020.nc'
+            filename=filename.replace('climatology-tasmax-annual-mean_era',var)                                                                                                                                 
+        elif var in ['climatology-tasmax-annual-mean_cru']: 
+            filename='temperature/wb_cckp/climatology-tasmax-annual-mean_cru_annual_cru-ts4.06-climatology_mean_1991-2020.nc' 
+ #Realtime             
+    elif period not in ['1991-2020']:
+    #Precipitation     
+        if var in ['frp100yr-rx1day-period-mean_cmip6_period','climatology-rx1day-annual-mean_cmip6_annual','frp50yr-rx1day-period-mean_cmip6_period','climatology-pr-monthly-mean_cmip6_monthly','climatology-pr-annual-mean_cmip6_annual','climatology-pr-seasonal-mean_cmip6_seasonal','changefactorfaep100yr-rx1day-period-mean_cmip6_period','anomaly-pr-monthly-mean_cmip6_monthly','climatology-rx5day-annual-mean_cmip6_annual']: 
+            filename='precipitation/wb_cckp/frp100yr-rx1day-period-mean_cmip6_period_all-regridded-bct-ssp245-climatology_median_2010-2039.nc'   
+            filename=filename.replace('2010-2039',period)
+            filename=filename.replace('frp100yr-rx1day-period-mean_cmip6_period',var)                      
+    #Temperature
+        elif var in ['climatology-hd40','anomaly-hd40','anomaly-hd35','anomaly-tasmax','anomaly-txx','climatology-txx','anomaly-tas','climatology-tas']: 
+            filename='temperature/wb_cckp/climatology-hd40-annual-mean_cmip6_annual_all-regridded-bct-ssp245-climatology_median_2020-2039.nc'
+            filename=filename.replace('2020-2039',period)    
+            filename=filename.replace('climatology-hd40',var)
+        filename=filename.replace('ssp245',ssp)
+        filename=filename.replace('median',gcm)
+    data_path=os.path.join(data_folder,filename)
+    return data_path
+#import data from copernicus
+
 
 # ### Period for the copernicus function
 
@@ -136,7 +215,7 @@ def date_copernicus(temporal_resolution,year_str):
 # area: area of study
 # month: month to be studied
 
-# In[5]:
+# In[8]:
 
 
 ################################################### Copernicus data function ###################################################
@@ -245,7 +324,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[6]:
+# In[9]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -334,7 +413,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
 
 # ### Display map
 
-# In[12]:
+# In[10]:
 
 
 # function to display a map
