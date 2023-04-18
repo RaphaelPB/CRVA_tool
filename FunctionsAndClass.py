@@ -7,7 +7,6 @@
 
 
 #Import python packages
-import os.path
 from rasterstats import zonal_stats
 import pandas as pd
 import geopandas as gpd
@@ -63,6 +62,16 @@ class time:
     actual_year = actual_date.year
 
 
+# ### Map class
+
+# In[11]:
+
+
+class map_elements:
+    parallels = np.arange(-360,360,10) # make latitude lines ever 10 degrees
+    meridians = np.arange(-360,360,10) # make longitude lines every 10 degrees
+
+
 # ### Copernicus class
 
 # In[3]:
@@ -71,9 +80,8 @@ class time:
 ## Definition of tuples that will be useful to search which data are available or not
 # make it tuples to make unchangeable
 class copernicus_elements:
-    models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0')#,'canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
-    #experiments = ('ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
-    experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4')#,'ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0','canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
+    experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
     experiments_historical=('historical',)
 
 
@@ -324,16 +332,33 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
         return df
 
 
-# In[ ]:
+# ### Display map
+
+# In[12]:
 
 
+# function to display a map
+def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lon_min_wanted,lon_max_wanted,data,title_png,title_to_adapt,label,parallels,meridians):#,projects):
 
+    lon_moz, lat_moz = np.meshgrid(lon, lat) # this is necessary to have a map
+    
+    # create Map for Mozambique coast
+    fig = plt.figure()
+    plt.title(title_to_adapt) # title of the map # automatized with year
+    map = Basemap(projection ='merc',llcrnrlon=lon_min_wanted+5,llcrnrlat=lat_min_wanted+2,urcrnrlon=lon_max_wanted-5,urcrnrlat=lat_max_wanted-2,resolution='i', epsg = 4326) # projection, lat/lon extents an
+    # adding and substracting a quantity to the lon and lat to have a bit of margin when presenting it
+    # substracting more to longitude because the range of longitude is -180 to 180. The range of latitude is -90 to 90
+    map.drawcountries()
+    map.drawcoastlines()
+    map.drawparallels(parallels,labels=[1,0,0,0],fontsize=10)
+    map.drawmeridians(meridians,labels=[0,0,0,1],fontsize=10)
 
-
-# In[ ]:
-
-
-
+    temp = map.contourf(lon_moz,lat_moz,data)
+    #projects.plot(ax=ax) # project in projection EPSG:4326
+    cb = map.colorbar(temp,"right", size="5%", pad="2%") # color scale, second parameter can be locationNone or {'left', 'right', 'top', 'bottom'}
+    cb.set_label(label) # name for color scale
+    plt.savefig(os.path.join(out_path,'figures',title_png),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+    plt.show()
 
 
 # In[ ]:
