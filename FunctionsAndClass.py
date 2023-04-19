@@ -80,8 +80,8 @@ class map_elements:
 ## Definition of tuples that will be useful to search which data are available or not
 # make it tuples to make unchangeable
 class copernicus_elements:
-    models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0','canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
-    experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0')#,'canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
+    experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4')#,'ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
     experiments_historical=('historical',)
 
 
@@ -325,7 +325,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[12]:
+# In[9]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -339,13 +339,13 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 #                1 . Thanks to copernicus_data, download nc fils from copernicus CMIP6 website for each experiment and each model
 #                2 . Open the dowloaded nc file in the jupyter notebook if it exists
 #                3 . In a dataframe, register the value in the nc file, for each experiment, model and day
-#                4 . if there no value for each experiments and models tested, the datfram is empty and the user is informed
+#                4 . If there no value for each experiments and models tested, the datfram is empty and the user is informed
 #        3 b) Test if path exists (dataframe is registered) : no need to register again, return in dataframe the existing 
 #             csv file in a dataframe
 
 # Parameters of the function
 
-def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path,global_variable, name_variable,area):    
+def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, column_name,area):    
     # create string for name of folder depending on type of period
     if temporal_resolution == 'fixed':
         period = 'fixed'
@@ -360,8 +360,6 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
     
     if not os.path.isdir(path_for_csv): # test if the data were already downloaded; if not, first part if the if is applied
         df = pd.DataFrame() # create an empty dataframe
-        experiments = ('ipsl_cm6a_lr',)
-        models=('ssp1_1_9',)
         for SSP in experiments:
             experiment = (SSP,) # create tuple for iteration of dataframe
             print(SSP)
@@ -377,7 +375,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                     Open_path = Dataset(wind_path) # open netcdf file
                     lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
                     lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
-                    data_with_all = ma.getdata(Open_path.variables['sfcWind']).data
+                    data_with_all = ma.getdata(Open_path.variables[column_name]).data
 
                     for moment in index_dates: # case if temporal resolution is daily
                         data_dataframe = data_with_all[moment,:,:]
@@ -401,8 +399,10 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                     pass
         # test if dataframe is empty, if values exist for this period
         if not df.empty: # if dataframe is not empty, value were registered, the first part is run : a path to register the csv file is created, and the dataframe is registered in a csv file
-            os.makedirs(path_for_csv) # to ensure the creation of the path
-            df.to_csv(path_for_csv) # register dataframe in csv file
+            if not os.path.exists(path_for_csv):
+                os.makedirs(path_for_csv) # to ensure the creation of the path
+            fullname = os.path.join(path_for_csv, title_file)   
+            df.to_csv(fullname) # register dataframe in csv file
             return df 
         else: # if the dataframe is empty, no value were found, there is no value to register or to return
             print('No value were found for the period tested')
@@ -415,7 +415,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
 
 # ### Display map
 
-# In[10]:
+# In[ ]:
 
 
 # function to display a map
