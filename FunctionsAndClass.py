@@ -325,7 +325,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[9]:
+# In[12]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -360,7 +360,8 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
     
     if not os.path.isdir(path_for_csv): # test if the data were already downloaded; if not, first part if the if is applied
         df = pd.DataFrame() # create an empty dataframe
-
+        experiments = ('ipsl_cm6a_lr',)
+        models=('ssp1_1_9',)
         for SSP in experiments:
             experiment = (SSP,) # create tuple for iteration of dataframe
             print(SSP)
@@ -379,9 +380,9 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                     data_with_all = ma.getdata(Open_path.variables['sfcWind']).data
 
                     for moment in index_dates: # case if temporal resolution is daily
-                        print('FINAAAAL')
                         data_dataframe = data_with_all[moment,:,:]
                         time = (dates[moment],) # create tuple for iteration of dataframe
+                        print(time)
                         # Create the MultiIndex
                         midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
                         # multiindex to name the columns
