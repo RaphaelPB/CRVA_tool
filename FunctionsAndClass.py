@@ -411,11 +411,11 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
             print('No value were found for the period tested')
             return # there is no dataframe to return
     else:# test if the data were already downloaded; if yes, this part of the if is applied
-        print('The file was already downloaded')
+        print('The file was already downloaded') ##### PROBLEME : UNABLE TO TAKE DAT FROM CSV
         csv_file=os.path.join(path_for_csv,title_file)
         df = pd.read_csv(csv_file) # read the downloaded data for the analysis
         
-        # register data for longitude, NEED TO DO THE SAME FOR EXPERIMENT, MODEL, TIME, LAt
+        # register data for longitude, experiment, model time and latitude
         lon_dataframe = df.loc[0]
         lon_dataframe= lon_dataframe.dropna()# remove NAN of longitude series
         lon_dataframe= lon_dataframe.reset_index(drop=True) # drop to avoid old index
@@ -442,8 +442,8 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
         lat_dataframe_serie=lat_dataframe_serie.reset_index(drop=True)
         
         # select data in dataframe
-        df = df.drop([0,1], axis=0,inplace=True) # remove 2 first lines
-        df = df.drop(['Unnamed: 0','Unnamed: 1','Unnamed: 2','Unnamed: 3'], axis=1,inplace=True) # remove 4 first columns
+        df.drop([0,1], axis=0,inplace=True) # remove 2 first lines
+        df.drop(['Unnamed: 0','Unnamed: 1','Unnamed: 2','Unnamed: 3'], axis=1,inplace=True) # remove 4 first columns
         
         midx = pd.MultiIndex.from_product([experiment_serie, model_serie, time_serie, lat_dataframe_serie],names=['Experiment', 'Model', 'Date', 'Latitude'])
         # multiindex to name the columns
@@ -460,7 +460,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
 
 # ### Display map
 
-# In[ ]:
+# In[10]:
 
 
 # function to display a map
