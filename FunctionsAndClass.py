@@ -346,6 +346,9 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 # Parameters of the function
 
 def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, column_name,area):    
+    ### PROBLEM WITH DATES, CAN T just pass one year
+    
+    
     # create string for name of folder depending on type of period
     if temporal_resolution == 'fixed':
         period = 'fixed'
@@ -409,7 +412,49 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
             return # there is no dataframe to return
     else:# test if the data were already downloaded; if yes, this part of the if is applied
         print('The file was already downloaded')
-        df = pd.read_csv(path_for_csv) # read the downloaded data for the analysis
+        csv_file=os.path.join(path_for_csv,title_file)
+        df = pd.read_csv(csv_file) # read the downloaded data for the analysis
+        
+        # register data for longitude, NEED TO DO THE SAME FOR EXPERIMENT, MODEL, TIME, LAt
+        lon_dataframe = df.loc[0]
+        lon_dataframe= lon_dataframe.dropna()# remove NAN of longitude series
+        lon_dataframe= lon_dataframe.reset_index(drop=True) # drop to avoid old index
+        
+        
+        experiment_serie=df['Unnamed: 0']
+        experiment_serie=experiment_serie.drop(index=[0,1])
+        experiment_serie=experiment_serie.drop_duplicates(keep='first')
+        experiment_serie=experiment_serie.reset_index(drop=True)
+        
+        model_serie=df['Unnamed: 1']
+        model_serie=model_serie.drop(index=[0,1])
+        model_serie=model_serie.drop_duplicates(keep='first')
+        model_serie=model_serie.reset_index(drop=True)
+        
+        time_serie=df['Unnamed: 2']
+        time_serie=time_serie.drop(index=[0,1])
+        time_serie=time_serie.drop_duplicates(keep='first')
+        time_serie=time_serie.reset_index(drop=True)
+        
+        lat_dataframe_serie=df['Unnamed: 3']
+        lat_dataframe_serie=lat_dataframe_serie.drop(index=[0,1])
+        lat_dataframe_serie=lat_dataframe_serie.drop_duplicates(keep='first')
+        lat_dataframe_serie=lat_dataframe_serie.reset_index(drop=True)
+        
+        # select data in dataframe
+        df = df.drop([0,1], axis=0,inplace=True) # remove 2 first lines
+        df = df.drop(['Unnamed: 0','Unnamed: 1','Unnamed: 2','Unnamed: 3'], axis=1,inplace=True) # remove 4 first columns
+        
+        midx = pd.MultiIndex.from_product([experiment_serie, model_serie, time_serie, lat_dataframe_serie],names=['Experiment', 'Model', 'Date', 'Latitude'])
+        # multiindex to name the columns
+        lon_str = ('Longitude',)
+        cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
+        # Create the Dataframe
+        df = pd.DataFrame(data = df, 
+                                index = midx,
+                                columns = cols)
+
+        #df.columns = ['Experiment', 'Model', 'Date', 'Latitude']
         return df
 
 
