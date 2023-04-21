@@ -444,6 +444,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
         # select data in dataframe
         df.drop([0,1], axis=0,inplace=True) # remove 2 first lines
         df.drop(['Unnamed: 0','Unnamed: 1','Unnamed: 2','Unnamed: 3'], axis=1,inplace=True) # remove 4 first columns
+        df=df.to_numpy()
         
         midx = pd.MultiIndex.from_product([experiment_serie, model_serie, time_serie, lat_dataframe_serie],names=['Experiment', 'Model', 'Date', 'Latitude'])
         # multiindex to name the columns
