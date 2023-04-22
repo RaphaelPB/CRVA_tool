@@ -80,8 +80,8 @@ class map_elements:
 ## Definition of tuples that will be useful to search which data are available or not
 # make it tuples to make unchangeable
 class copernicus_elements:
-    models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0')#,'canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
-    experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4')#,'ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    models =('access_cm2',)#'access_cm2',)#'awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0')#,'canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
+    experiments = ('ssp1_2_6',)#'ssp1_1_9',)#'ssp1_2_6','ssp4_3_4')#,'ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
     experiments_historical=('historical',)
 
 
@@ -237,7 +237,7 @@ def date_copernicus(temporal_resolution,year_str):
 # path_for_file: path where the file must be unzipped
 
 def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_for_file,out_path): 
-    
+    # AFFICHE NO NC FILE MEME QUAND PAS NECESSAIRE
     # creat a path to register data
     if not os.path.isdir(path_for_file):
         
@@ -307,9 +307,9 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
                 return final_path # the function returns the path of the nc file of interest
                 break # stop the function if a nc file was found 
             else:
+                print('Problem : No nc file was found')
                 pass
-        
-        print('Problem : No nc file was found')
+
         
     else:
         for file in os.listdir(path_for_file):
@@ -319,13 +319,13 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
                 return final_path # the function returns the path of the nc file of interest
                 break # stop the function if a nc file was found 
             else:
+                print('Problem : No nc file was found')
                 pass
-    print('Problem : No nc file was found')
 
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[9]:
+# In[13]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -345,7 +345,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 
 # Parameters of the function
 
-def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, column_name,area):    
+def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, column_name,name_projects,area):    
     ### PROBLEM WITH DATES, CAN T just pass one year
     
     
@@ -355,14 +355,20 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
     else:
         period=year_str[0]+'-'+year_str[len(year_str)-1]
         
+    name_projects = name_projects.replace(' ','-') # take off every blank space of project names
+    name_projects = name_projects.replace('/','-') # take off every / of project names
+    name_projects = name_projects.replace(r'"\"','-') # take off every \ of project names
+    # brackets shouldn't be a problem for name projects
+        
     (dates, index_dates)=date_copernicus(temporal_resolution,year_str) # create time vector depending on temporal resolution
 
-    title_file = period + '_' + temporal_resolution + '_' +name_variable
+    title_file = name_projects +'_' +period+ '_' + temporal_resolution + '_' +name_variable#+'.csv'
     
-    path_for_csv = os.path.join('outputs','csv','data',period,name_variable) # create path for csv file
+    path_for_csv = os.path.join(out_path,'csv','data',name_projects,period,name_variable) # create path for csv file
     
     if not os.path.isdir(path_for_csv): # test if the data were already downloaded; if not, first part if the if is applied
         df = pd.DataFrame() # create an empty dataframe
+        os.makedirs(path_for_csv) # to ensure the creation of the path
         for SSP in experiments:
             experiment = (SSP,) # create tuple for iteration of dataframe
             print(SSP)
@@ -383,7 +389,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                     for moment in index_dates: # case if temporal resolution is daily
                         data_dataframe = data_with_all[moment,:,:]
                         time = (dates[moment],) # create tuple for iteration of dataframe
-                        print(time)
+                        ####print(time)
                         # Create the MultiIndex
                         midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
                         # multiindex to name the columns
@@ -402,61 +408,40 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                     pass
         # test if dataframe is empty, if values exist for this period
         if not df.empty: # if dataframe is not empty, value were registered, the first part is run : a path to register the csv file is created, and the dataframe is registered in a csv file
-            if not os.path.exists(path_for_csv):
-                os.makedirs(path_for_csv) # to ensure the creation of the path
-            fullname = os.path.join(path_for_csv, title_file)   
-            df.to_csv(fullname) # register dataframe in csv file
-            return df 
+            full_name = os.path.join(path_for_csv,title_file)
+            print(full_name)
+            df.to_csv(full_name) # register dataframe in csv file
+            return df,period 
         else: # if the dataframe is empty, no value were found, there is no value to register or to return
             print('No value were found for the period tested')
+            os.remove(path_for_file)# remove path
             return # there is no dataframe to return
     else:# test if the data were already downloaded; if yes, this part of the if is applied
-        print('The file was already downloaded') ##### PROBLEME : UNABLE TO TAKE DAT FROM CSV
-        csv_file=os.path.join(path_for_csv,title_file)
-        df = pd.read_csv(csv_file) # read the downloaded data for the analysis
+        print('The file was already downloaded')
+        #csv_file=os.path.join(path_for_csv,title_file)
+        df = pd.read_csv(os.path.join(path_for_csv,title_file)) # read the downloaded data for the analysis
         
-        # register data for longitude, experiment, model time and latitude
-        lon_dataframe = df.loc[0]
-        lon_dataframe= lon_dataframe.dropna()# remove NAN of longitude series
-        lon_dataframe= lon_dataframe.reset_index(drop=True) # drop to avoid old index
+        # changing name of columns
+        name_columns=df.iloc[0].array
+        df.rename(columns={'Unnamed: 0':'Experiment','Unnamed: 1':'Model','Unnamed: 2':'Date','Unnamed: 3':'Latitude'}, inplace=True)
         
+        lon_dataframe=name_columns[4:len(name_columns)] # register data for columns of multiindex
         
-        experiment_serie=df['Unnamed: 0']
-        experiment_serie=experiment_serie.drop(index=[0,1])
-        experiment_serie=experiment_serie.drop_duplicates(keep='first')
-        experiment_serie=experiment_serie.reset_index(drop=True)
-        
-        model_serie=df['Unnamed: 1']
-        model_serie=model_serie.drop(index=[0,1])
-        model_serie=model_serie.drop_duplicates(keep='first')
-        model_serie=model_serie.reset_index(drop=True)
-        
-        time_serie=df['Unnamed: 2']
-        time_serie=time_serie.drop(index=[0,1])
-        time_serie=time_serie.drop_duplicates(keep='first')
-        time_serie=time_serie.reset_index(drop=True)
-        
-        lat_dataframe_serie=df['Unnamed: 3']
-        lat_dataframe_serie=lat_dataframe_serie.drop(index=[0,1])
-        lat_dataframe_serie=lat_dataframe_serie.drop_duplicates(keep='first')
-        lat_dataframe_serie=lat_dataframe_serie.reset_index(drop=True)
-        
-        # select data in dataframe
         df.drop([0,1], axis=0,inplace=True) # remove 2 first lines
-        df.drop(['Unnamed: 0','Unnamed: 1','Unnamed: 2','Unnamed: 3'], axis=1,inplace=True) # remove 4 first columns
-        df=df.to_numpy()
         
-        midx = pd.MultiIndex.from_product([experiment_serie, model_serie, time_serie, lat_dataframe_serie],names=['Experiment', 'Model', 'Date', 'Latitude'])
-        # multiindex to name the columns
+        # recreate multiindex 
+        
+        # .... with columns
+
+        df.set_index(['Experiment', 'Model', 'Date','Latitude'],inplace=True)
+
+        # .... with lines
+
         lon_str = ('Longitude',)
         cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
-        # Create the Dataframe
-        df = pd.DataFrame(data = df, 
-                                index = midx,
-                                columns = cols)
+        df.columns=cols
 
-        #df.columns = ['Experiment', 'Model', 'Date', 'Latitude']
-        return df
+        return df,period
 
 
 # ### Display map
@@ -486,6 +471,84 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
     cb.set_label(label) # name for color scale
     plt.savefig(os.path.join(out_path,'figures',title_png),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
