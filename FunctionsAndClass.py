@@ -3,7 +3,7 @@
 
 # ### Import python packages
 
-# In[1]:
+# In[ ]:
 
 
 #Import python packages
@@ -34,7 +34,7 @@ import datetime # to have actual date
 
 # ### Time class
 
-# In[2]:
+# In[ ]:
 
 
 # class to define parameter of time that remain constant durinf the whole script
@@ -64,7 +64,7 @@ class time:
 
 # ### Map class
 
-# In[3]:
+# In[ ]:
 
 
 class map_elements:
@@ -74,7 +74,7 @@ class map_elements:
 
 # ### Copernicus class
 
-# In[4]:
+# In[ ]:
 
 
 ## Definition of tuples that will be useful to search which data are available or not
@@ -89,7 +89,7 @@ class copernicus_elements:
 
 # ### read_cckp_ncdata
 
-# In[5]:
+# In[ ]:
 
 
 #def read cckp (world bank) nc files
@@ -128,7 +128,7 @@ def read_nc_data(nc_path,stats,output='tempfile.tif'):
 
 # ### get_cckp_file_name
 
-# In[6]:
+# In[ ]:
 
 
 #get filename from cckp based on ssp, period and gcm
@@ -169,7 +169,7 @@ def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
 
 # ### Period for the copernicus function
 
-# In[7]:
+# In[ ]:
 
 
 ################################################ Period for copernicus function ################################################
@@ -216,7 +216,7 @@ def date_copernicus(temporal_resolution,year_str):
 # area: area of study
 # month: month to be studied
 
-# In[8]:
+# In[2]:
 
 
 ################################################### Copernicus data function ###################################################
@@ -243,96 +243,117 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
     print('YOUYOUYOU')
     if not os.path.isdir(path_for_file):
         print('path_for_file does not exist')
-        start_path = os.path.join(out_path,name_area,'Data_download_zip')
+        start_path = os.path.join(out_path,'Data_download_zip',name_area)
 
-        if len(year)==1:
-            file_download = os.path.join(start_path,name_variable,name_area,SSP,model,year)
-        elif len(year)>1:
-            period=year[0]+'-'+year[len(year)-1]
-            file_download = os.path.join(start_path,name_variable,name_area,SSP,model,period)
-        elif temporal_resolution == 'fixed':
-            file_download = os.path.join(start_path,name_variable,name_area,SSP,model,'fixed_period')
-
+        file_download=create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution)
+        
+        print(os.path.isdir(file_download))
         if not os.path.isdir(file_download):
             print('file_download does not exist')
-            c = cdsapi.Client()# function to use the c.retrieve
-            # basic needed dictionnary to give to the c.retrieve function the parameters asked by the user
-            variables = {
-                        'format': 'zip', # this function is only designed to download and unzip zip files
-                        'temporal_resolution': temporal_resolution,
-                        'experiment': SSP,
-                        'variable': name_variable,
-                        'model': model,
-            }
-
-            if area != []: # the user is interested by a sub region and not the whole region 
-                variables.update({'area':area}) 
-
-            if name_variable == 'air_temperature':
-                variables['level'] = '1000' # [hPa], value of the standard pressure at sea level is 1013.25 [hPa], so 1000 [hPa] is the neareste value. Other pressure value are available but there is no interest for the aim of this project
-
-            if temporal_resolution != 'fixed':# if 'fixed', no year, month, date to choose
-                variables['year']=year # period chosen by the user
-                variables['month']= time.default_month  # be default, all the months are given; defined in class time
-                if temporal_resolution == 'daily':
-                    variables['day']= time.default_day # be default, all the days are given; defined in class time
-            # c.retrieve download the data from the website
-            try:
-                c.retrieve(
-                    'projections-cmip6',
-                    variables,
-                    'download.zip') # the file in a zip format is registered in the current directory
-            except:
-                print('Some parameters are not matching')
-                return # stop the function, because some data the user entered are not matching
+            # function try to download from copernicus
+            try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year)
             
-            os.makedirs(path_for_file) # to ensure the creation of the path
-            # unzip the downloaded file
-            from zipfile import ZipFile
-            zf = ZipFile('download.zip', 'r')
-            zf.extractall(path_for_file)
-            zf.close()
-            
-            os.makedirs(file_download) # to ensure the creation of the path
-            # moving download to appropriate place
-            #file_download = os.path.join(file_download,'download.zip')
-            shutil.move('download.zip',file_download) # no need to delete 'download.zip' from inital place
-
+            download_extract(path_for_file,file_download)
+            #return path_for_file
         else: # if the path already exist, the data should also exists
             print('file_download does exist')
             pass
 
-        # look for nc file types in path_for_file. There should only be one nc files for every downloading
-        for file in os.listdir(path_for_file):
-            if file.endswith(".nc"):
-                final_path=os.path.join(path_for_file, file)
-                print('1) The path exists Function copernicus')
-                return final_path # the function returns the path of the nc file of interest
-                break # stop the function if a nc file was found 
-            else:
-                pass
-        # the all folder has been search and there is no nc file in it
-        print('1) Problem : No nc file was found Function copernicus') # this line is out of the for loop, 
-        #because it should only appear once all the folder has been examinated and if the break of the if was not used
-        
+        final_path=search_for_nc(path_for_file)
+        return final_path
     else:
-        print('path_for_file does exist')
-        for file in os.listdir(path_for_file):
-            if file.endswith(".nc"):
-                final_path=os.path.join(path_for_file, file)
-                print('1) The path exists Function copernicus')
-                return final_path # the function returns the path of the nc file of interest
-                break # stop the function if a nc file was found 
-            else:
-                pass
-        # the all folder has been search and there is no nc file in it
-        print('2) Problem : No nc file was found Function copernicus')# this line is out of the for loop, 
-        #because it should only appear once all the folder has been examinated and if the break of the if was not used
+        final_path=search_for_nc(path_for_file)
+        return final_path
+
+
+# In[ ]:
+
+
+def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year):
+    c = cdsapi.Client()# function to use the c.retrieve
+    # basic needed dictionnary to give to the c.retrieve function the parameters asked by the user
+    variables = {
+                'format': 'zip', # this function is only designed to download and unzip zip files
+                'temporal_resolution': temporal_resolution,
+                'experiment': SSP,
+                'variable': name_variable,
+                'model': model,
+    }
+
+    if area != []: # the user is interested by a sub region and not the whole region 
+        variables.update({'area':area}) 
+
+    if name_variable == 'air_temperature':
+        variables['level'] = '1000' # [hPa], value of the standard pressure at sea level is 1013.25 [hPa], so 1000 [hPa] is the neareste value. Other pressure value are available but there is no interest for the aim of this project
+
+    if temporal_resolution != 'fixed':# if 'fixed', no year, month, date to choose
+        variables['year']=year # period chosen by the user
+        variables['month']= time.default_month  # be default, all the months are given; defined in class time
+        if temporal_resolution == 'daily':
+            variables['day']= time.default_day # be default, all the days are given; defined in class time
+    # c.retrieve download the data from the website
+    try:
+        c.retrieve(
+            'projections-cmip6',
+            variables,
+            'download.zip') # the file in a zip format is registered in the current directory
+    except:
+        print('Some parameters are not matching')
+        return # stop the function, because some data the user entered are not matching
+
+
+# In[ ]:
+
+
+def download_extract(path_for_file,file_download):
+    os.makedirs(path_for_file) # to ensure the creation of the path
+    # unzip the downloaded file
+    from zipfile import ZipFile
+    zf = ZipFile('download.zip', 'r')
+    zf.extractall(path_for_file)
+    zf.close()
+
+    os.makedirs(file_download) # to ensure the creation of the path
+    # moving download to appropriate place
+    #file_download = os.path.join(file_download,'download.zip')
+    shutil.move('download.zip',file_download) # no need to delete 'download.zip' from inital place
+
+
+# In[ ]:
+
+
+def search_for_nc(path_for_file):
+    print('path_for_file does exist')
+    for file in os.listdir(path_for_file):
+        if file.endswith(".nc"):
+            final_path=os.path.join(path_for_file, file)
+            print('The path exists Function copernicus')
+            return final_path # the function returns the path of the nc file of interest
+            break # stop the function if a nc file was found 
+        else:
+            pass
+    # the all folder has been search and there is no nc file in it
+    print('Problem : No nc file was found Function copernicus')# this line is out of the for loop, 
+    #because it should only appear once all the folder has been examinated and if the break of the if was not used
+
+
+# In[ ]:
+
+
+def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution):
+    if len(year)==1:
+        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,year)
+    elif len(year)>1:
+        period=year[0]+'-'+year[len(year)-1]
+        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,period)
+    elif temporal_resolution == 'fixed':
+        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,'fixed_period')
+    return file_download
 
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[9]:
+# In[1]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -421,7 +442,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
             return df,period 
         else: # if the dataframe is empty, no value were found, there is no value to register or to return
             print('No value were found for the period tested')
-            os.remove(path_for_file)# remove path
+            #os.remove(path_for_file)# remove path
             return # there is no dataframe to return
     else:# test if the data were already downloaded; if yes, this part of the if is applied
         print('The file was already downloaded')
@@ -453,7 +474,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
 
 # ### Display map
 
-# In[10]:
+# In[ ]:
 
 
 # function to display a map
