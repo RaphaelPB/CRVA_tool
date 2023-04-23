@@ -238,10 +238,11 @@ def date_copernicus(temporal_resolution,year_str):
 # name_area : to specify if we are only looking data for a project or for a wider zone
 
 def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_for_file,out_path,name_area): 
-    # AFFICHE NO NC FILE MEME QUAND PAS NECESSAIRE
+    # AFFICHE NO NC FILE MEME QUAND PAS NECESSAIRE, je crois que resolu mais a verifier
     # creat a path to register data
+    print('YOUYOUYOU')
     if not os.path.isdir(path_for_file):
-        
+        print('path_for_file does not exist')
         start_path = os.path.join(out_path,name_area,'Data_download_zip')
 
         if len(year)==1:
@@ -253,7 +254,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
             file_download = os.path.join(start_path,name_variable,name_area,SSP,model,'fixed_period')
 
         if not os.path.isdir(file_download):
-            
+            print('file_download does not exist')
             c = cdsapi.Client()# function to use the c.retrieve
             # basic needed dictionnary to give to the c.retrieve function the parameters asked by the user
             variables = {
@@ -298,6 +299,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
             shutil.move('download.zip',file_download) # no need to delete 'download.zip' from inital place
 
         else: # if the path already exist, the data should also exists
+            print('file_download does exist')
             pass
 
         # look for nc file types in path_for_file. There should only be one nc files for every downloading
@@ -308,11 +310,13 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
                 return final_path # the function returns the path of the nc file of interest
                 break # stop the function if a nc file was found 
             else:
-                print('1) Problem : No nc file was found Function copernicus')
                 pass
-
+        # the all folder has been search and there is no nc file in it
+        print('1) Problem : No nc file was found Function copernicus') # this line is out of the for loop, 
+        #because it should only appear once all the folder has been examinated and if the break of the if was not used
         
     else:
+        print('path_for_file does exist')
         for file in os.listdir(path_for_file):
             if file.endswith(".nc"):
                 final_path=os.path.join(path_for_file, file)
@@ -320,8 +324,10 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
                 return final_path # the function returns the path of the nc file of interest
                 break # stop the function if a nc file was found 
             else:
-                print('2) Problem : No nc file was found Function copernicus')
                 pass
+        # the all folder has been search and there is no nc file in it
+        print('2) Problem : No nc file was found Function copernicus')# this line is out of the for loop, 
+        #because it should only appear once all the folder has been examinated and if the break of the if was not used
 
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
@@ -377,7 +383,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                 model =(model_simulation,) # create tuple for iteration of dataframe
                 print(model)
                 # path were the futur downloaded file is registered
-                path_for_file= os.path.join(out_path,'Datasets')#, global_variable+'-'+name_variable+'-'+name_projects, SSP, model_simulation,period)#,'')
+                path_for_file= os.path.join(out_path,'Datasets', global_variable,name_variable)#+'-'+name_projects, SSP, model_simulation,period)#,'')
                 # existence of path_for_file tested in copernicus function
                 wind_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_projects)
                 # area is determined in the "Load shapefiles and plot" part
