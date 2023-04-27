@@ -216,7 +216,7 @@ def date_copernicus(temporal_resolution,year_str):
 # area: area of study
 # month: month to be studied
 
-# In[2]:
+# In[ ]:
 
 
 ################################################### Copernicus data function ###################################################
@@ -252,9 +252,9 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
             print('file_download does not exist')
             # function try to download from copernicus
             try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year)
-            
+            # function to extract the downloaded zip
             download_extract(path_for_file,file_download)
-            #return path_for_file
+            
         else: # if the path already exist, the data should also exists
             print('file_download does exist')
             pass
@@ -353,7 +353,7 @@ def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_res
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[1]:
+# In[ ]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -482,7 +482,7 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 
     lon_moz, lat_moz = np.meshgrid(lon, lat) # this is necessary to have a map
     
-    # create Map for Mozambique coast
+    # create Map
     fig = plt.figure()
     plt.title(title_to_adapt) # title of the map # automatized with year
     map = Basemap(projection ='merc',llcrnrlon=lon_min_wanted+5,llcrnrlat=lat_min_wanted+2,urcrnrlon=lon_max_wanted-5,urcrnrlat=lat_max_wanted-2,resolution='i', epsg = 4326) # projection, lat/lon extents an
@@ -501,82 +501,32 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
     plt.show()
 
 
-# In[ ]:
+# ### Display map project
+
+# In[3]:
 
 
+########################################## Display project on map ############################################
+# This function aims to display every projects wanted by the user with a map as a background
+# Parameters of the function : 
+# projects: geopanda.dataframe containing projects information
+# study_area: geopanda.dataframe containing study_area information
+# str_interest: string of the climate variable of interest to be represented
+# number_rows: the user should indicate the number of rows for the subplots
+# number_cols: the user should indicate the number of cols for the subplots
 
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
+def Display_map_projects(projects,study_area,str_interest,number_rows, number_cols):
+    
+    # select climate variable to be represented
+    columns_to_represent= list(projects.filter(regex=str_interest).columns) # select columns that should be presented in plots
+    number_plots = len(columns_to_represent)
+    
+    fig, axs = plt.subplots(nrows=number_rows,ncols=number_cols, sharex=True, sharey=True,figsize=(8,8))
+    #norm = plt.colors.Normalize(vmin=projects.val.min(), vmax=projects.val.max()) # to normalize legend between the different plots
+    # wait to see if new intallation worked
+    for i in np.arange(0,number_plots):
+        base = study_area.plot(ax=axs[i],color='white', edgecolor='black')
+        projects.plot(ax=axs[i], column=columns_to_represent[i],legend=True)
 
 
 # In[ ]:
