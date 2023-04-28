@@ -3,7 +3,7 @@
 
 # ### Import python packages
 
-# In[ ]:
+# In[1]:
 
 
 #Import python packages
@@ -34,7 +34,7 @@ import datetime # to have actual date
 
 # ### Time class
 
-# In[ ]:
+# In[2]:
 
 
 # class to define parameter of time that remain constant durinf the whole script
@@ -64,7 +64,7 @@ class time:
 
 # ### Map class
 
-# In[ ]:
+# In[3]:
 
 
 class map_elements:
@@ -74,7 +74,7 @@ class map_elements:
 
 # ### Copernicus class
 
-# In[ ]:
+# In[4]:
 
 
 ## Definition of tuples that will be useful to search which data are available or not
@@ -89,7 +89,7 @@ class copernicus_elements:
 
 # ### read_cckp_ncdata
 
-# In[ ]:
+# In[5]:
 
 
 #def read cckp (world bank) nc files
@@ -128,7 +128,7 @@ def read_nc_data(nc_path,stats,output='tempfile.tif'):
 
 # ### get_cckp_file_name
 
-# In[ ]:
+# In[6]:
 
 
 #get filename from cckp based on ssp, period and gcm
@@ -169,7 +169,7 @@ def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
 
 # ### Period for the copernicus function
 
-# In[ ]:
+# In[7]:
 
 
 ################################################ Period for copernicus function ################################################
@@ -216,7 +216,7 @@ def date_copernicus(temporal_resolution,year_str):
 # area: area of study
 # month: month to be studied
 
-# In[ ]:
+# In[8]:
 
 
 ################################################### Copernicus data function ###################################################
@@ -266,7 +266,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
         return final_path
 
 
-# In[ ]:
+# In[9]:
 
 
 def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year):
@@ -302,7 +302,7 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
         return # stop the function, because some data the user entered are not matching
 
 
-# In[ ]:
+# In[10]:
 
 
 def download_extract(path_for_file,file_download):
@@ -319,7 +319,7 @@ def download_extract(path_for_file,file_download):
     shutil.move('download.zip',file_download) # no need to delete 'download.zip' from inital place
 
 
-# In[ ]:
+# In[11]:
 
 
 def search_for_nc(path_for_file):
@@ -337,7 +337,7 @@ def search_for_nc(path_for_file):
     #because it should only appear once all the folder has been examinated and if the break of the if was not used
 
 
-# In[ ]:
+# In[12]:
 
 
 def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution):
@@ -353,7 +353,7 @@ def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_res
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[ ]:
+# In[13]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -375,7 +375,6 @@ def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_res
 
 def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, column_name,name_projects,area):    
     ### PROBLEM WITH DATES, CAN T just pass one year
-    
     
     # create string for name of folder depending on type of period
     if temporal_resolution == 'fixed':
@@ -409,28 +408,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                 wind_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_projects)
                 # area is determined in the "Load shapefiles and plot" part
                 if (wind_path is not None):
-                    Open_path = Dataset(wind_path) # open netcdf file
-                    lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
-                    lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
-                    data_with_all = ma.getdata(Open_path.variables[column_name]).data
-
-                    for moment in index_dates: # case if temporal resolution is daily
-                        data_dataframe = data_with_all[moment,:,:]
-                        time = (dates[moment],) # create tuple for iteration of dataframe
-                        ####print(time)
-                        # Create the MultiIndex
-                        midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
-                        # multiindex to name the columns
-                        lon_str = ('Longitude',)
-                        cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
-                        # Create the Dataframe
-                        Variable_dataframe = pd.DataFrame(data = data_dataframe, 
-                                                    index = midx,
-                                                    columns = cols)
-                        # Concatenate former and new dataframe
-                        df = pd.concat([df,Variable_dataframe])# register information for project
-
-                    Open_path.close # to spare memory
+                    df=register_data(wind_path,column_name,index_dates,experiment,model,time)
                 else:
                     print("2) Path does not exist Function Dataframe")
                     pass
@@ -445,36 +423,70 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
             #os.remove(path_for_file)# remove path
             return # there is no dataframe to return
     else:# test if the data were already downloaded; if yes, this part of the if is applied
-        print('The file was already downloaded')
-        #csv_file=os.path.join(path_for_csv,title_file)
-        df = pd.read_csv(os.path.join(path_for_csv,title_file)) # read the downloaded data for the analysis
-        
-        # changing name of columns
-        name_columns=df.iloc[0].array
-        df.rename(columns={'Unnamed: 0':'Experiment','Unnamed: 1':'Model','Unnamed: 2':'Date','Unnamed: 3':'Latitude'}, inplace=True)
-        
-        lon_dataframe=name_columns[4:len(name_columns)] # register data for columns of multiindex
-        
-        df.drop([0,1], axis=0,inplace=True) # remove 2 first lines
-        
-        # recreate multiindex 
-        
-        # .... with columns
-
-        df.set_index(['Experiment', 'Model', 'Date','Latitude'],inplace=True)
-
-        # .... with lines
-
-        lon_str = ('Longitude',)
-        cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
-        df.columns=cols
+        df=file_already_downloaded(path_for_csv,title_file)
 
         return df,period
 
 
+# In[14]:
+
+
+def register_data(wind_path,column_name,index_dates,experiment,model,time):                    
+    Open_path = Dataset(wind_path) # open netcdf file
+    lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
+    lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
+    data_with_all = ma.getdata(Open_path.variables[column_name]).data
+
+    for moment in index_dates: # case if temporal resolution is daily
+        data_dataframe = data_with_all[moment,:,:]
+        time = (dates[moment],) # create tuple for iteration of dataframe
+        
+        # Create the MultiIndex
+        midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
+        # multiindex to name the columns
+        lon_str = ('Longitude',)
+        cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
+        # Create the Dataframe
+        Variable_dataframe = pd.DataFrame(data = data_dataframe, 
+                                    index = midx,
+                                    columns = cols)
+        # Concatenate former and new dataframe
+        df = pd.concat([df,Variable_dataframe])# register information for project
+
+    Open_path.close # to spare memory
+    return df
+
+
+# In[15]:
+
+
+def file_already_downloaded(path_for_csv,title_file):
+    print('The file was already downloaded')
+    df = pd.read_csv(os.path.join(path_for_csv,title_file)) # read the downloaded data for the analysis
+
+    # changing name of columns
+    name_columns=df.iloc[0].array
+    df.rename(columns={'Unnamed: 0':'Experiment','Unnamed: 1':'Model','Unnamed: 2':'Date','Unnamed: 3':'Latitude'}, inplace=True)
+
+    lon_dataframe=name_columns[4:len(name_columns)] # register data for columns of multiindex
+
+    df.drop([0,1], axis=0,inplace=True) # remove 2 first lines
+
+    # recreate multiindex 
+
+    # .... with columns
+    df.set_index(['Experiment', 'Model', 'Date','Latitude'],inplace=True)
+
+    # .... with lines
+    lon_str = ('Longitude',)
+    cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
+    df.columns=cols
+    return df
+
+
 # ### Display map
 
-# In[ ]:
+# In[16]:
 
 
 # function to display a map
@@ -503,7 +515,7 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 
 # ### Display map project
 
-# In[3]:
+# In[17]:
 
 
 ########################################## Display project on map ############################################
@@ -537,6 +549,12 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
         ax_created.title.set_text(columns_to_represent[i])
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
