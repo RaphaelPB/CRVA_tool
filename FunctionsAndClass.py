@@ -376,6 +376,8 @@ def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_res
 def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, column_name,name_projects,area):    
     ### PROBLEM WITH DATES, CAN T just pass one year
     
+    ## pourquoi mettre toutes les donnees dans un dataframe ?? permet d'avoir cette organisation en multiindex. Sinon, on ne peut pas faire ca
+    
     # create string for name of folder depending on type of period
     if temporal_resolution == 'fixed':
         period = 'fixed'
@@ -515,7 +517,7 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 
 # ### Display map project
 
-# In[17]:
+# In[1]:
 
 
 ########################################## Display project on map ############################################
@@ -527,26 +529,36 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 # title_for_image: title for image composed of subplots
 # number_rows: the user should indicate the number of rows for the subplots
 # number_cols: the user should indicate the number of cols for the subplots
+# out_path: begenning of the path to register the image
 
-def Display_map_projects(projects,study_area,str_interest,title_for_image,number_rows, number_cols):
+def Display_map_projects(projects,study_area,str_interest,title_for_image,number_rows, number_cols,out_path):
     
     # select climate variable to be represented
     columns_to_represent= list(projects.filter(regex=str_interest).columns) # select columns that should be presented in plots
+    columns_to_represent2=[ ('\n').join(k.split(' ')[-2:])  for k in columns_to_represent] # delete 'water stress' from 
+    # the list column_to_represent and insert \n to do a back to line
     number_plots = len(columns_to_represent)
     
     # create figure
     fig, axs = plt.subplots(nrows=number_rows,ncols=number_cols, sharex=True, sharey=True,figsize=(8,8))
-    plt.title(title_for_image) # give a global name to the image
+    
+    k=0
     # map in the subplot
-    for i in np.arange(0,number_plots):
-        base = study_area.plot(ax=axs[i],color='white', edgecolor='black')# background is map of the study area presenting 
-        # country borders of this area
-        projects.plot(ax=axs[i], column=columns_to_represent[i], legend=True)# plot the projects as points; legeng = True 
-        # impose a color for the projects point dpeending on the value in the column
-        
-        # give subplot a title
-        ax_created = axs[i]
-        ax_created.title.set_text(columns_to_represent[i])
+    for i in np.arange(0,3):# columns
+        for j in np.arange(0,2): # linesfor i in np.arange(0,number_plots):
+            base = study_area.plot(ax=axs[j][i],color='white', edgecolor='black')# background is map of the study area presenting 
+            # country borders of this area
+            projects.plot(ax=axs[j][i], column=columns_to_represent[k], legend=True)# plot the projects as points; legeng = True 
+            # impose a color for the projects point dpeending on the value in the column
+
+            # give subplot a title
+            ax_created = axs[j][i]
+            ax_created.title.set_text(columns_to_represent2[k])
+            
+            k+=1 # incrementation to iterate columns_to_represent
+
+    
+    plt.suptitle(title_for_image) # give a global name to the image
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
 
