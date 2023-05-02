@@ -238,16 +238,15 @@ def date_copernicus(temporal_resolution,year_str):
 # name_area : to specify if we are only looking data for a project or for a wider zone
 
 def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_for_file,out_path,name_area): 
-    # AFFICHE NO NC FILE MEME QUAND PAS NECESSAIRE, je crois que resolu mais a verifier
     # creat a path to register data
     print('YOUYOUYOU')
     if not os.path.isdir(path_for_file):
         print('path_for_file does not exist')
-        start_path = os.path.join(out_path,'Data_download_zip',name_area)
-
-        file_download=create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution)
+        # create path for the downloaded file
+        start_path = os.path.join(out_path,'Data_download_zip')
+        file_download=create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution) 
         
-        print(os.path.isdir(file_download))
+        #print(os.path.isdir(file_download))
         if not os.path.isdir(file_download):
             print('file_download does not exist')
             # function try to download from copernicus
@@ -340,7 +339,9 @@ def search_for_nc(path_for_file):
 # In[12]:
 
 
+# function to create path for the downloaded file
 def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution):
+    # adapt the name of the folder fot the period, depending on the type of period
     if len(year)==1:
         file_download = os.path.join(start_path,name_variable,name_area,SSP,model,year)
     elif len(year)>1:
@@ -372,9 +373,19 @@ def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_res
 #             csv file in a dataframe
 
 # Parameters of the function
+# temporal_resolution: 'daily', 'monthly', or 'fixed'. String type 
+# year_str: list containing all the years under the string type and in the period of interest
+# experiments: copernicus_elements.experiments
+# models: copernicus_elements.models
+# out_path: path were the outputs are registered. Defined by the user at the beginning of the code 
+# global_variable: global name of the climate variable of interest (example: Wind)
+# name_variable: name of the elements downloaded from copernicus (example: 'near_surface_wind_speed')
+# column_name: name of the column containing the data for the climate variables of interest in the nc file
+# name_projects: Name of the project for which the data are taken
+# area: list containing latitudes and logitudes around the project
 
 def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, column_name,name_projects,area):    
-    ### PROBLEM WITH DATES, CAN T just pass one year
+    ### PROBLEM WITH DATES, CAN T just pass one year. year str is a list, so if one year (2020,)
     
     ## pourquoi mettre toutes les donnees dans un dataframe ?? permet d'avoir cette organisation en multiindex. Sinon, on ne peut pas faire ca
     
@@ -405,12 +416,12 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                 model =(model_simulation,) # create tuple for iteration of dataframe
                 print(model)
                 # path were the futur downloaded file is registered
-                path_for_file= os.path.join(out_path,'Datasets', global_variable,name_variable)#+'-'+name_projects, SSP, model_simulation,period)#,'')
+                path_for_file= os.path.join(out_path,'Datasets', global_variable,name_variable, SSP, model_simulation,period)#,name_projects)#, SSP, model_simulation,period)#,'')
                 # existence of path_for_file tested in copernicus function
                 wind_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_projects)
                 # area is determined in the "Load shapefiles and plot" part
                 if (wind_path is not None):
-                    df=register_data(wind_path,column_name,index_dates,experiment,model,time)
+                    df=register_data(wind_path,column_name,index_dates,dates,experiment,model,time,df)
                 else:
                     print("2) Path does not exist Function Dataframe")
                     pass
@@ -433,7 +444,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
 # In[14]:
 
 
-def register_data(wind_path,column_name,index_dates,experiment,model,time):                    
+def register_data(wind_path,column_name,index_dates,dates,experiment,model,time,df):                    
     Open_path = Dataset(wind_path) # open netcdf file
     lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
     lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
@@ -517,7 +528,7 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 
 # ### Display map project
 
-# In[1]:
+# In[17]:
 
 
 ########################################## Display project on map ############################################
@@ -548,7 +559,7 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
         for j in np.arange(0,2): # linesfor i in np.arange(0,number_plots):
             base = study_area.plot(ax=axs[j][i],color='white', edgecolor='black')# background is map of the study area presenting 
             # country borders of this area
-            projects.plot(ax=axs[j][i], column=columns_to_represent[k], legend=True)# plot the projects as points; legeng = True 
+            projects.plot(ax=axs[j][i], column=columns_to_represent[k])# plot the projects as points; legeng = True 
             # impose a color for the projects point dpeending on the value in the column
 
             # give subplot a title
@@ -557,7 +568,7 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
             
             k+=1 # incrementation to iterate columns_to_represent
 
-    
+    plt.legend()
     plt.suptitle(title_for_image) # give a global name to the image
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
