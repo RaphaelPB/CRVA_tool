@@ -296,29 +296,27 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
             'projections-cmip6',
             variables,
             'download.zip') # the file in a zip format is registered in the current directory
-        
-        os.makedirs(path_for_file) # to ensure the creation of the path
-        shutil.move('download.zip',path_for_file) # move zip file to path_for_file
     except:
         print('Some parameters are not matching')
         return # stop the function, because some data the user entered are not matching
 
 
-# In[18]:
+# In[10]:
 
 
 def download_extract(path_for_file,file_download):
-    #os.makedirs(path_for_file) # to ensure the creation of the path
+    os.makedirs(path_for_file) # to ensure the creation of the path
     # unzip the downloaded file
-    temporary_path=os.path.join(path_for_file,'download.zip')
     from zipfile import ZipFile
-    zf = ZipFile(temporary_path, 'r')
-    zf.extractall('dir_out_extractall') # if no precision of directory, extract in current directory
+    zf = ZipFile('download.zip', 'r')
+    zf.extractall('data') # if no precision of directory, extract in current directory
     zf.close()
 
     os.makedirs(file_download) # to ensure the creation of the path
     # moving download to appropriate place
-    shutil.move(temporary_path,file_download) # no need to delete 'download.zip' from inital place
+    shutil.move('download.zip',file_download) # no need to delete 'download.zip' from inital place
+    
+    shutil.move('data',path_for_file) # move extracted data to the path created for them
 
 
 # In[11]:
@@ -580,4 +578,10 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
     plt.suptitle(title_for_image) # give a global name to the image
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
+
+
+# In[ ]:
+
+
+
 
