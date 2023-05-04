@@ -187,19 +187,31 @@ def year_copernicus(first_year,last_year):
     return (year, year_str, index)
 
 def date_copernicus(temporal_resolution,year_str):
+    start_date = "01-01-"+year_str[0] # string start date based on start year
+    stop_date = "31-12-"+year_str[len(year_str)-1] # string stop date based on stop year
     if temporal_resolution =='daily':
+        r"""
         start_date = "01-01-"+year_str[0] # string start date based on start year
         stop_date = "31-12-"+year_str[len(year_str)-1] # string stop date based on stop year
-        dates = pd.date_range(start_date,stop_date) # vector of dates between start date and stop date
-        index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
+        """
+        # vector of dates between start date and stop date
+        dates = pd.date_range(start_date,stop_date)# dates is a pandas.core.indexes.datetimes.DatetimeIndex
+        # By default, freq = 'D', whcih means calendar day frequency (source : https://pandas.pydata.org/docs/user_guide/timeseries.html#timeseries-offset-aliases)
+        #index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
     if temporal_resolution =='monthly':
-        date = np.arange(0,len(time.default_month))
+        dates = pd.date_range(start_date,stop_date,freq='MS') # vector of dates between start date and stop date
+        dates=dates.strftime('%m-%Y') # dates is an pandas.core.indexes.base.Index, not a pandas.core.indexes.datetimes.DatetimeIndex
+        # former verison
+        r"""
+        dates = np.arange(0,len(time.default_month))
         k=0
         for j in year_str:
             for i in time.default_month:
                 dates[k] = i + '-' + j # vector of dates between start date and stop date
         index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
+        """
     #if temporal_resolution =='fixed': trouver donnees pour gerer cela
+    index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
     return (dates, index_dates)
 
 
@@ -430,7 +442,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                 # area is determined in the "Load shapefiles and plot" part
                 if (climate_variable_path is not None):
                     # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
-                    df=register_data(climate_variable_path,index_dates,dates,experiment,model,time,df)
+                    df=register_data(climate_variable_path,index_dates,dates,experiment,model,df)
                 else:
                     print("2) Path does not exist Function Dataframe")
                     pass
@@ -454,7 +466,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
 
 
 # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
-def register_data(climate_variable_path,index_dates,dates,experiment,model,time,df):                    
+def register_data(climate_variable_path,index_dates,dates,experiment,model,df):                    
     Open_path = Dataset(climate_variable_path) # open netcdf file
     lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
     lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
