@@ -32,13 +32,13 @@ import datetime # to have actual date
 
 # # Class
 
-# ### Time class
+# ### Calendar class
 
 # In[2]:
 
 
 # class to define parameter of time that remain constant durinf the whole script
-class time:
+class calendar:
     default_month = [ 
                 '01', '02', '03',
                 '04', '05', '06',
@@ -196,11 +196,11 @@ def date_copernicus(temporal_resolution,year_str):
         """
         # vector of dates between start date and stop date
         dates = pd.date_range(start_date,stop_date)# dates is a pandas.core.indexes.datetimes.DatetimeIndex
-        # By default, freq = 'D', whcih means calendar day frequency (source : https://pandas.pydata.org/docs/user_guide/timeseries.html#timeseries-offset-aliases)
+        # By default, freq = 'D', which means calendar day frequency (source : https://pandas.pydata.org/docs/user_guide/timeseries.html#timeseries-offset-aliases)
         #index_dates = np.arange(0,len(dates)) # vector containning index o dates vector
     if temporal_resolution =='monthly':
         dates = pd.date_range(start_date,stop_date,freq='MS') # vector of dates between start date and stop date
-        dates=dates.strftime('%m-%Y') # dates is an pandas.core.indexes.base.Index, not a pandas.core.indexes.datetimes.DatetimeIndex
+        dates=list(dates.strftime('%m-%Y')) # dates is an pandas.core.indexes.base.Index, not a pandas.core.indexes.datetimes.DatetimeIndex
         # former verison
         r"""
         dates = np.arange(0,len(time.default_month))
@@ -301,9 +301,9 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
 
     if temporal_resolution != 'fixed':# if 'fixed', no year, month, date to choose
         variables['year']=year # period chosen by the user
-        variables['month']= time.default_month  # be default, all the months are given; defined in class time
+        variables['month']= calendar.default_month  # be default, all the months are given; defined in class calendar
         if temporal_resolution == 'daily':
-            variables['day']= time.default_day # be default, all the days are given; defined in class time
+            variables['day']= calendar.default_day # be default, all the days are given; defined in class calendar
     # c.retrieve download the data from the website
     try:
         c.retrieve(
@@ -415,9 +415,9 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
         period=year_str[0]+'-'+year_str[len(year_str)-1]
     
     # modification on name_project str to ensure no problem whent using this str as name of a folder
-    name_project = name_project.replace('-','') # take off every blank space of project names
-    name_project = name_project.replace('/','') # take off every / of project names
-    name_project = name_project.replace(r'"\"','') # take off every \ of project names
+    name_project = name_project.replace('-','_') # take off every blank space of project names
+    name_project = name_project.replace('/','_') # take off every / of project names
+    name_project = name_project.replace(r'"\"','_') # take off every \ of project names
     # brackets shouldn't be a problem for name projects
         
     (dates, index_dates)=date_copernicus(temporal_resolution,year_str) # create time vector depending on temporal resolution
@@ -442,7 +442,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
                 # area is determined in the "Load shapefiles and plot" part
                 if (climate_variable_path is not None):
                     # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
-                    df=register_data(climate_variable_path,index_dates,dates,experiment,model,df)
+                    df=register_data(climate_variable_path,name_project,index_dates,dates,experiment,model,df)
                 else:
                     print("2) Path does not exist Function Dataframe")
                     pass
@@ -466,7 +466,7 @@ def dataframe_csv_copernicus(temporal_resolution,year_str,experiments,models,out
 
 
 # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
-def register_data(climate_variable_path,index_dates,dates,experiment,model,df):                    
+def register_data(climate_variable_path,name_project,index_dates,dates,experiment,model,df):                    
     Open_path = Dataset(climate_variable_path) # open netcdf file
     lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
     lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
@@ -475,10 +475,11 @@ def register_data(climate_variable_path,index_dates,dates,experiment,model,df):
 
     for moment in index_dates: # case if temporal resolution is daily
         data_dataframe = data_with_all[moment,:,:]
-        time = (dates[moment],) # create tuple for iteration of dataframe
-        
+        Date = (dates[moment],) # create tuple for iteration of dataframe
+        Name_Project = (name_project,)
+
         # Create the MultiIndex
-        midx = pd.MultiIndex.from_product([experiment, model, time, lat_dataframe],names=['Experiment', 'Model', 'Date', 'Latitude'])
+        midx = pd.MultiIndex.from_product([Name_Project,experiment, model, Date, lat_dataframe],names=['Name project','Experiment', 'Model', 'Date', 'Latitude'])
         # multiindex to name the columns
         lon_str = ('Longitude',)
         cols = pd.MultiIndex.from_product([lon_str,lon_dataframe])
@@ -612,6 +613,42 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
     plt.suptitle(title_for_image) # give a global name to the image
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
