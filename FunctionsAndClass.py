@@ -81,8 +81,9 @@ class map_elements:
 ## Definition of tuples that will be useful to search which data are available or not
 # make it tuples to make unchangeable
 class copernicus_elements:
-    models =('cams_csm1_0','access_cm2')#,'awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0','canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
-    experiments = ('ssp1_1_9','ssp1_2_6')#,'ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    # there is 58 models
+    models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0','canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
+    experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
     experiments_historical=('historical',)
 
 
@@ -254,38 +255,42 @@ def date_copernicus(temporal_resolution,year_str):
 # out_path: path were all the outputs are registered, defined by the user in the begining of the main code
 # name_area : to specify if we are only looking data for a project or for a wider zone
 
-def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_for_file,out_path,name_area): 
+def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_for_file,out_path,name_area,source): 
     # create a path to register data
     if not os.path.isdir(path_for_file):
         print('path_for_file does not exist: the data may not have been downloaded')
         # create path for the downloaded file
         start_path = os.path.join(out_path,'Data_download_zip')
-        file_download=create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution) 
+        file_download=create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution,source) 
         
-        #print(os.path.isdir(file_download))
+        
         if not os.path.isdir(file_download):
             print('file_download does not exist: the data were not downloaded')
             # function try to download from copernicus
-            path_file = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download)
+            path_file = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
             if path_file is None: # for this climate variable, the parameter do not fit
                 return path_file
             final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc
+            print('\n')
+            print('---------------  Path to nc file exists ?? ---------------\n')
+            print(os.path.isdir(final_path))
+            print('\n')
             return final_path
             
         else: # if the path already exist, the data in zip format should also exists
             print('file_download does exist, the data have been downloaded, but not extracted')
-            path_file=os.path.join(path_for_file,'data')# data was added because of a problem during downloading
+            path_file=os.path.join(path_for_file,source)# source was added because of a problem during downloading
             final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc
             if final_path is None:# if no nc file exists, need to check again if the file with those parameters exists
-                final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download)
+                final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
                 final_path = search_for_nc(final_path) # looking for the netCDF file in format .nc in the path
             return final_path
                 
     else: # the path for the file exists
-        path_file=os.path.join(path_for_file,'data')# data was added because of a problem during downloading
+        path_file=os.path.join(path_for_file,source)# data was added because of a problem during downloading
         final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc
         if final_path is None: # if no nc file exists, need to check again if the file with those parameters exists
-            final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download)
+            final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
             final_path = search_for_nc(final_path) # looking for the netCDF file in format .nc in the path
         return final_path
 
@@ -293,7 +298,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
 # In[9]:
 
 
-def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download):
+def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source):
     c = cdsapi.Client()# function to use the c.retrieve
     # basic needed dictionnary to give to the c.retrieve function the parameters asked by the user
     variables = {
@@ -326,7 +331,7 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
         return # stop the function, because some data the user entered are not matching
     
     # function to extract the downloaded zip
-    path_file=download_extract(path_for_file,file_download)
+    path_file=download_extract(path_for_file,file_download,source)
     return path_file
 
 
@@ -335,21 +340,21 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
 
 # download_extract functions aims to return the path were the downloaded file in zip format is extracted
 
-def download_extract(path_for_file,file_download):
+def download_extract(path_for_file,file_download,source):
     print('EXTRAAAAAACTION OF DATA')
     os.makedirs(path_for_file) # to ensure the creation of the path
     # unzip the downloaded file
     from zipfile import ZipFile
     zf = ZipFile('download.zip', 'r')
-    zf.extractall('data') # if no precision of directory, extract in current directory
+    zf.extractall(source) # if no precision of directory, extract in current directory
     zf.close()
 
     os.makedirs(file_download) # to ensure the creation of the path
     # moving download to appropriate place
     shutil.move('download.zip',file_download) # no need to delete 'download.zip' from inital place
     
-    shutil.move('data',path_for_file) # move extracted data to the path created for them
-    path_file=os.path.join(path_for_file,'data')
+    shutil.move(source,path_for_file) # move extracted data to the path created for them
+    path_file=os.path.join(path_for_file,source)
     return path_file
 
 
@@ -377,15 +382,15 @@ def search_for_nc(path_for_file):
 
 
 # function to create path for the downloaded file
-def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution):
+def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_resolution,source):
     # adapt the name of the folder fot the period, depending on the type of period
     if len(year)==1:
-        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,year)
+        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,year,source)
     elif len(year)>1:
         period=year[0]+'-'+year[len(year)-1]
-        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,period)
+        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,period,source)
     elif temporal_resolution == 'fixed':
-        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,'fixed_period')
+        file_download = os.path.join(start_path,name_variable,name_area,SSP,model,'fixed_period',source)
     return file_download
 
 
@@ -420,7 +425,7 @@ def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_res
 # name_project: Name of the project for which the data are taken
 # area: list containing latitudes and logitudes around the project
 
-def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area):    
+def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,source):    
     ### PROBLEM WITH DATES, CAN T just pass one year. year str is a list, so if one year (2020,)
     ## PROBLEM WITH PATH: not coherent between data csv, datasets, download. And not achieving to have project name in path for dataset
     ## maybe the name for dataset is too long, but even if end at name project, does not work. Try doing one string with name project in it
@@ -444,20 +449,20 @@ def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, glo
 
     title_file = name_project +'_' +period+ '_' + temporal_resolution + '_' +name_variable#+'.csv'
     
-    path_for_csv = os.path.join(out_path,'csv','data',name_variable,name_project,period) # create path for csv file
+    path_for_csv = os.path.join(out_path,'csv',source,name_variable,name_project,period) # create path for csv file
 
     if not os.path.isdir(path_for_csv): # test if the data were already downloaded; if not, first part if the if is applied
         os.makedirs(path_for_csv) # to ensure the creation of the path
         # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
         # and then produce a csv file if the data exists
-        (df,period)=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file)
+        (df,period)=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
         return df,period
     else:# test if the data were already downloaded; if yes, this part of the if is applied
         if len(os.listdir(path_for_csv)) == 0: #test if the directory is empty
             # the csv file does not exist, even if the path exist
             # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
             # and then produce a csv file if the data exists
-            (df,period)=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file)
+            (df,period)=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
         else: # the directory is not empty
             df=file_already_downloaded(path_for_csv,title_file)
 
@@ -470,7 +475,7 @@ def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, glo
 # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
 # and then produce a csv file if the data exists
 
-def dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file):    
+def dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source):    
     print('FUNCTION DATAFRAME_COPERNICUS')
     df = pd.DataFrame() # create an empty dataframe
     for SSP in experiments:
@@ -482,7 +487,7 @@ def dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_pat
             # path were the futur downloaded file is registered
             path_for_file= os.path.join(out_path,'Datasets',name_variable,name_project,SSP,model_simulation,period)
             # existence of path_for_file tested in copernicus function
-            climate_variable_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_project)
+            climate_variable_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_project,source)
             # area is determined in the "Load shapefiles and plot" part
             if (climate_variable_path is not None):
                 # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
@@ -653,4 +658,10 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
     plt.suptitle(title_for_image) # give a global name to the image
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
+
+
+# In[ ]:
+
+
+
 
