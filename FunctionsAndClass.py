@@ -270,7 +270,7 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
             path_file = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
             if path_file is None: # for this climate variable, the parameter do not fit
                 return path_file
-            final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc
+            final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc and look if path length is a problem at the same time
             print('\n')
             print('---------------  Path to nc file exists ?? ---------------\n')
             print(os.path.isdir(final_path))
@@ -280,18 +280,18 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
         else: # if the path already exist, the data in zip format should also exists
             print('file_download does exist, the data have been downloaded, but not extracted')
             path_file=os.path.join(path_for_file,source)# source was added because of a problem during downloading
-            final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc
+            final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc and look if path length is a problem at the same time
             if final_path is None:# if no nc file exists, need to check again if the file with those parameters exists
                 final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
-                final_path = search_for_nc(final_path) # looking for the netCDF file in format .nc in the path
+                final_path = search_for_nc(final_path) # looking for the netCDF file in format .nc and look if path length is a problem at the same time
             return final_path
                 
     else: # the path for the file exists
         path_file=os.path.join(path_for_file,source)# data was added because of a problem during downloading
-        final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc
+        final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc and look if path length is a problem at the same time
         if final_path is None: # if no nc file exists, need to check again if the file with those parameters exists
             final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
-            final_path = search_for_nc(final_path) # looking for the netCDF file in format .nc in the path
+            final_path = search_for_nc(final_path) # looking for the netCDF file in format .nc and look if path length is a problem at the same time
         return final_path
 
 
@@ -341,7 +341,6 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
 # download_extract functions aims to return the path were the downloaded file in zip format is extracted
 
 def download_extract(path_for_file,file_download,source):
-    print('EXTRAAAAAACTION OF DATA')
     os.makedirs(path_for_file) # to ensure the creation of the path
     # unzip the downloaded file
     from zipfile import ZipFile
@@ -355,6 +354,7 @@ def download_extract(path_for_file,file_download,source):
     
     shutil.move(source,path_for_file) # move extracted data to the path created for them
     path_file=os.path.join(path_for_file,source)
+    print('\n The downloaded file is extracted')
     return path_file
 
 
@@ -368,7 +368,11 @@ def search_for_nc(path_for_file):
     for file in os.listdir(path_for_file):
         if file.endswith(".nc"):
             final_path=os.path.join(path_for_file, file)
-            print('The path exists Function copernicus search for nc')
+            print('The file is in the path Function copernicus search for nc\n')
+            print('The final path for the nc file is: '+final_path)
+            final_path=path_length(final_path) # check if length of path is too long
+            answer = str(os.path.isfile(final_path))
+            print('\n The final path for nc file exists ? '+answer+'\n')
             return final_path # the function returns the path of the nc file of interest
             break # stop the function if a nc file was found 
         else:
@@ -379,6 +383,24 @@ def search_for_nc(path_for_file):
 
 
 # In[12]:
+
+
+# this functions test if the path is too long
+# if the path is more than 260 char, the path wll be modified in order for windows to accept is as a path
+
+def path_length(str1):
+    if len(str1)>260:
+        path = os.path.abspath(str1) # normalize path
+        if path.startswith(u"\\\\"):
+            path=u"\\\\?\\UNC\\"+path[2:]
+        else:
+            path=u"\\\\?\\"+path
+        return path
+    else:
+        return str1
+
+
+# In[13]:
 
 
 # function to create path for the downloaded file
@@ -396,7 +418,7 @@ def create_period(start_path,name_variable,name_area,SSP,model,year,temporal_res
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[13]:
+# In[14]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -469,7 +491,7 @@ def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, glo
         return df,period
 
 
-# In[14]:
+# In[15]:
 
 
 # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
@@ -492,8 +514,9 @@ def dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_pat
             if (climate_variable_path is not None):
                 # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
                 df=register_data(climate_variable_path,name_project,index_dates,dates,experiment,model,df)
+                print('\nValue were found for the period and the project tested\n')
             else:
-                print('No value were found for the period and the project tested')
+                print('\nNo value were found for the period and the project tested\n')
                 continue # do the next for loop
         # test if dataframe is empty, if values exist for this period
     if not df.empty: # if dataframe is not empty, value were registered, the first part is run : a path to register the csv file is created, and the dataframe is registered in a csv file
@@ -506,12 +529,12 @@ def dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_pat
         return df,period# there is no dataframe to return
 
 
-# In[15]:
+# In[16]:
 
 
 # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
 def register_data(climate_variable_path,name_project,index_dates,dates,experiment,model,df):
-    print('FUNCTION REGISTER DATA')
+    print('Registering the data in a dataframe')
     Open_path = Dataset(climate_variable_path) # open netcdf file
     lat_dataframe = np.ma.getdata(Open_path.variables['lat']).data
     lon_dataframe = np.ma.getdata(Open_path.variables['lon']).data
@@ -539,7 +562,7 @@ def register_data(climate_variable_path,name_project,index_dates,dates,experimen
     return df
 
 
-# In[16]:
+# In[21]:
 
 
 # function to return column name in the netCDF file
@@ -548,15 +571,16 @@ def register_data(climate_variable_path,name_project,index_dates,dates,experimen
 # take of 'time', 'time_bnds', 'lat', 'lat_bnds', 'lon', 'lon_bnds'
 def find_column_name(Open_path):
     # make a list with every variables of the netCDF file of interest
-    climate_variables_variables=list(Open_path.variables)
+    climate_variable_variables=list(Open_path.variables)
     # variables that are not the column name of interest 
-    elements_not_climate_var =['time', 'time_bnds', 'lat', 'lat_bnds', 'lon', 'lon_bnds']
-    # difference between the 2 lists to select the column name of the climate variable of interest
-    column_name = list(set(climate_variables_variables).difference(elements_not_climate_var))
-    return column_name[0]
+    elements_not_climate_var =['time', 'time_bnds', 'bnds','lat', 'lat_bnds', 'lon', 'lon_bnds','time_bounds','bounds','lat_bounds','lon_bounds']
+    for str in elements_not_climate_var:
+        if str in climate_variable_variables:
+            climate_variable_variables.remove(str)
+    return climate_variable_variables[0]
 
 
-# In[17]:
+# In[18]:
 
 
 def file_already_downloaded(path_for_csv,title_file):
@@ -585,7 +609,7 @@ def file_already_downloaded(path_for_csv,title_file):
 
 # ### Display map
 
-# In[18]:
+# In[19]:
 
 
 # function to display a map
@@ -614,7 +638,7 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 
 # ### Display map project
 
-# In[19]:
+# In[20]:
 
 
 ########################################## Display project on map ############################################
@@ -658,6 +682,12 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
     plt.suptitle(title_for_image) # give a global name to the image
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
