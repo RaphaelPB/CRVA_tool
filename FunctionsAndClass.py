@@ -358,7 +358,7 @@ def download_extract(path_for_file,file_download,source):
     return path_file
 
 
-# In[11]:
+# In[22]:
 
 
 # seach_for_nc is a function looking in path_for_file for a document in .nc format
@@ -368,9 +368,13 @@ def search_for_nc(path_for_file):
     for file in os.listdir(path_for_file):
         if file.endswith(".nc"):
             final_path=os.path.join(path_for_file, file)
+            
             print('The file is in the path Function copernicus search for nc\n')
-            print('The final path for the nc file is: '+final_path)
+            print('Before path_length, The final path for the nc file is: '+final_path)
+            answer = str(os.path.isfile(final_path))
+            print('\n The final path for nc file exists ? '+answer+'\n')
             final_path=path_length(final_path) # check if length of path is too long
+            print('After path_length, The final path for the nc file is: '+final_path)
             answer = str(os.path.isfile(final_path))
             print('\n The final path for nc file exists ? '+answer+'\n')
             return final_path # the function returns the path of the nc file of interest
