@@ -3,7 +3,7 @@
 
 # ### Import python packages
 
-# In[6]:
+# In[1]:
 
 
 #Import python packages
@@ -34,7 +34,7 @@ import datetime # to have actual date
 
 # ### Calendar class
 
-# In[7]:
+# In[2]:
 
 
 # class to define parameter of time that remain constant durinf the whole script
@@ -64,7 +64,7 @@ class calendar:
 
 # ### Map class
 
-# In[8]:
+# In[3]:
 
 
 # this class contains all the latitude and logitude needed to do a map
@@ -75,7 +75,7 @@ class map_elements:
 
 # ### Copernicus class
 
-# In[9]:
+# In[22]:
 
 
 ## Definition of tuples that will be useful to search which data are available or not
@@ -84,6 +84,7 @@ class copernicus_elements:
     # there is 58 models
     models =('access_cm2','awi_cm_1_1_mr','bcc_csm2_mr','cams_csm1_0','canesm5_canoe','cesm2_fv2','cesm2_waccm_fv2','cmcc_cm2_hr4','cmcc_esm2','cnrm_cm6_1_hr','e3sm_1_0','e3sm_1_1_eca','ec_earth3_aerchem','ec_earth3_veg','fgoals_f3_l','fio_esm_2_0','giss_e2_1_g','hadgem3_gc31_ll','iitm_esm','inm_cm5_0','ipsl_cm6a_lr','kiost_esm','miroc6','miroc_es2l','mpi_esm1_2_hr','mri_esm2_0','norcpm1','noresm2_mm','taiesm1','access_esm1_5','awi_esm_1_1_lr','bcc_esm1','canesm5','cesm2','cesm2_waccm','ciesm','cmcc_cm2_sr5','cnrm_cm6_1','cnrm_esm2_1','e3sm_1_1','ec_earth3','ec_earth3_cc','ec_earth3_veg_lr','fgoals_g3','gfdl_esm4','giss_e2_1_h','hadgem3_gc31_mm','inm_cm4_8','ipsl_cm5a2_inca','kace_1_0_g','mcm_ua_1_0','miroc_es2h','mpi_esm_1_2_ham','mpi_esm1_2_lr','nesm3','noresm2_lm','sam0_unicon','ukesm1_0_ll')
     experiments = ('ssp1_1_9','ssp1_2_6','ssp4_3_4','ssp5_3_4os','ssp2_4_5','ssp4_6_0','ssp3_7_0','ssp5_8_5')
+    #'ssp1_1_9',
     experiments_historical=('historical',)
 
 
@@ -91,7 +92,7 @@ class copernicus_elements:
 
 # ### read_cckp_ncdata
 
-# In[10]:
+# In[5]:
 
 
 #def read cckp (world bank) nc files
@@ -130,7 +131,7 @@ def read_nc_data(nc_path,stats,output='tempfile.tif'):
 
 # ### get_cckp_file_name
 
-# In[11]:
+# In[6]:
 
 
 #get filename from cckp based on ssp, period and gcm
@@ -171,7 +172,7 @@ def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
 
 # ### Period for the copernicus function
 
-# In[12]:
+# In[7]:
 
 
 ################################################ Period for copernicus function ################################################
@@ -232,7 +233,7 @@ def date_copernicus(temporal_resolution,year_str):
 # area: area of study
 # month: month to be studied
 
-# In[13]:
+# In[8]:
 
 
 ################################################### Copernicus data function ###################################################
@@ -292,12 +293,16 @@ def copernicus_data(temporal_resolution,SSP,name_variable,model,year,area,path_f
             path_file=os.path.join(path_for_file,source)# data was added because of a problem during downloading
             final_path=search_for_nc(path_file) # looking for the netCDF file in format .nc and look if path length is a problem at the same time
             if final_path is None: # if no nc file exists, need to check again if the file with those parameters exists
-                final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
+                test= os.path.join(file_download,source,'download.zip')
+                if not os.path.join(test):# the file was not downloaded 
+                    final_path = try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source)
+                else: # the file was already downloaded but not not extracted
+                    final_path=download_extract(path_for_file,file_download,source)
                 final_path = search_for_nc(final_path) # looking for the netCDF file in format .nc and look if path length is a problem at the same time
         return final_path
 
 
-# In[14]:
+# In[9]:
 
 
 def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,year,path_for_file,file_download,source):
@@ -337,7 +342,7 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
     return path_file
 
 
-# In[27]:
+# In[21]:
 
 
 # download_extract functions aims to return the path were the downloaded file in zip format is extracted
@@ -359,15 +364,18 @@ def download_extract(path_for_file,file_download,source):
     if not os.path.isdir(file_download): # path_for_file does not exists, need to ensure that is is created
         os.makedirs(file_download) # to ensure the creation of the path
     # moving download to appropriate place
+    #test = os.path.join(file_download,'download.zip')
+    #if not os.path.isfile(test):
     shutil.move('download.zip',file_download) # no need to delete 'download.zip' from inital place
-    
+    #test = os.path.join(path_for_file,source)
+    #if not os.path.isdir(test):
     shutil.move(source,path_for_file) # move extracted data to the path created for them
     path_file=os.path.join(path_for_file,source)
     print('\n The downloaded file is extracted')
     return path_file
 
 
-# In[16]:
+# In[11]:
 
 
 # seach_for_nc is a function looking in path_for_file for a document in .nc format
@@ -395,7 +403,7 @@ def search_for_nc(path_for_file):
     #because it should only appear once all the folder has been examinated and if the break of the if was not used
 
 
-# In[28]:
+# In[12]:
 
 
 # this functions test if the path is too long
@@ -413,7 +421,7 @@ def path_length(str1):
         return str1
 
 
-# In[18]:
+# In[13]:
 
 
 # function to create path for the downloaded file
@@ -431,7 +439,7 @@ def create_file_download_path(start_path,name_variable,name_area,SSP,model,year,
 
 # ### Registering data in dataframe and csv form copernicus CMIP6
 
-# In[19]:
+# In[14]:
 
 
 ########################################### Register data from nc file of Copernicus ############################################
@@ -504,7 +512,7 @@ def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, glo
         return df,period
 
 
-# In[20]:
+# In[15]:
 
 
 # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
@@ -542,7 +550,7 @@ def dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_pat
         return df,period# there is no dataframe to return
 
 
-# In[21]:
+# In[16]:
 
 
 # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
@@ -575,7 +583,7 @@ def register_data(climate_variable_path,name_project,index_dates,dates,experimen
     return df
 
 
-# In[22]:
+# In[17]:
 
 
 # function to return column name in the netCDF file
@@ -593,7 +601,7 @@ def find_column_name(Open_path):
     return climate_variable_variables[0]
 
 
-# In[23]:
+# In[18]:
 
 
 def file_already_downloaded(path_for_csv,title_file):
@@ -622,7 +630,7 @@ def file_already_downloaded(path_for_csv,title_file):
 
 # ### Display map
 
-# In[24]:
+# In[19]:
 
 
 # function to display a map
@@ -651,7 +659,7 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 
 # ### Display map project
 
-# In[25]:
+# In[20]:
 
 
 ########################################## Display project on map ############################################
@@ -702,10 +710,21 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
 # In[ ]:
 
 
+from scipy.optimize import curve_fit ## given some x_data and some y_data and a model function f thaht depends on unknown parameters bveta,
+# the goal of curve fitting is to find the optimal set of parameters beta such that the function y = f(x,beta) best resembles the data
+
+# two ways to obtain beta parameter
+ #### method of least squares : minimize sum of the square of the difference between the model function and y by adjusting beta
+ #### maximum-likelihood : when y has errors, minimize the sum of the ratio between the suqre of the difference of the model function and y
+    # and the square of the variance 
+
+
+# In[ ]:
+
+
 ## PROBELM : when 2 values are the same, what happens ????
 # curve fitting, how to find equation representing, possible to install scipy : https://www.geeksforgeeks.org/scipy-curve-fitting/
 
-r"""
 def return_period(data_series):
     # rank data
     data_series.sort(reverse=True)
@@ -721,12 +740,11 @@ def return_period(data_series):
     # give return period of each value in the time period given
     P = rank / (N+1) # rank / (N+1)
     T=1/P
-    plt.plot(T,data_series)
+    plt.scatter(T,data_series)
     plt.xlabel('Return period')
     plt.ylabel('Climate variable of interest')
     
     return data_series,T
-"""
 
 
 # In[ ]:
@@ -753,65 +771,132 @@ def list_duplicates_of(seq,item):
 
 import random
 
-randomlist = random.sample(range(100, 500), 10)
+randomlist = random.sample(range(100, 500), 365)
 randomlist[0]=randomlist[1]
 
 
 # In[ ]:
 
 
-rank=np.arange(len(randomlist),0,-1,dtype=int)
+#rank=np.arange(len(randomlist),0,-1,dtype=int)
 #rank=rank.tolist()
-rank
+#rank
 
 
 # In[ ]:
 
 
-duplicate=list_duplicates_of(randomlist, randomlist[0])
-type(duplicate)
+#duplicate=list_duplicates_of(randomlist, randomlist[0])
+#type(duplicate)
 
 
 # In[ ]:
 
 
-duplicate
+##duplicate
 
 
 # In[ ]:
 
 
-type(rank[duplicate])
+#type(rank[duplicate])
 
 
 # In[ ]:
 
 
-mean_rank=sum(rank[duplicate].tolist())/len(rank[duplicate].tolist())
+##mean_rank=sum(rank[duplicate].tolist())/len(rank[duplicate].tolist())
 
 
 # In[ ]:
 
 
-mean_rank
+#mean_rank
 
 
 # In[ ]:
 
 
-rank[duplicate]=mean_rank
+#rank[duplicate]=mean_rank
 
 
 # In[ ]:
 
 
-rank # make an integer
+(ranked_data_series,T)=return_period(randomlist)
 
 
 # In[ ]:
 
 
-#(ranked_data_series,T)=return_period(randomlist)
+def model_f1(x, a, b, c):
+    return a*(x-b)**2 + c
+
+
+# In[ ]:
+
+
+import math
+
+def model_f(x, a, b, c):
+    return a*np.exp(x)**b+c
+
+
+# In[ ]:
+
+
+def model_f2(x, a, b, c):
+    return a*np.log(x)**b+c
+
+
+# In[ ]:
+
+
+def model_f3(x, a, b, c):
+    return a*np.log10(x)**b+c
+
+
+# In[ ]:
+
+
+def model_f4(x, a, b, c):
+    return (a)**(b*x)+c
+
+
+# In[ ]:
+
+
+popt, pcov = curve_fit(model_f, T, ranked_data_series, p0=[50,-10,-100])
+
+
+# In[ ]:
+
+
+a_opt, b_opt, c_opt = popt
+x_model = np.linspace(min(T), max(T), 100)
+y_model = model_f(x_model, a_opt, b_opt, c_opt)
+
+
+# In[ ]:
+
+
+plt.scatter(T,ranked_data_series)
+plt.plot(x_model,y_model, color='r')
+plt.show()
+
+
+# In[ ]:
+
+
+plt.imshow(np.log(np.abs(pcov)))
+plt.colorbar()
+plt.show()
+
+
+# In[ ]:
+
+
+# 
 
 
 # In[ ]:
