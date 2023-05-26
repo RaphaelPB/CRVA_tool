@@ -3,7 +3,7 @@
 
 # This file aims to regroup all function involved in file management
 
-# In[7]:
+# In[1]:
 
 
 import os
@@ -12,7 +12,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 
-# In[8]:
+# In[2]:
 
 
 # Gros bug sur cette function
@@ -36,7 +36,7 @@ def download_extract(path_file,path_for_file):
     return
 
 
-# In[9]:
+# In[3]:
 
 
 def path_length(str1):
@@ -51,7 +51,7 @@ def path_length(str1):
         return str1
 
 
-# In[10]:
+# In[4]:
 
 
 def read_nc_file(path):
@@ -59,15 +59,23 @@ def read_nc_file(path):
     
     #df=Dataset(path)
     
-    lat=np.ma.getdata(Dataset(path).variables['lat']).data
-    lon=np.ma.getdata(Dataset(path).variables['lon']).data
-    time=np.ma.getdata(Dataset(path).variables['time']).data
-    variable=np.ma.getdata(Dataset(path).variables[name_variable]).data
+    lat=get_data_nc(path,'lat')
+    lon=get_data_nc(path,'lon')
+    time=get_data_nc(path,'time')
+    variable=return_NaN(path,name_variable)
     
     return lat, lon, time, variable
 
 
-# In[12]:
+# In[5]:
+
+
+def get_data_nc(path,name_variable):
+    variable = np.ma.getdata(Dataset(path).variables[name_variable]).data
+    return variable
+
+
+# In[6]:
 
 
 # function to return column name in the netCDF file
@@ -83,6 +91,17 @@ def find_column_name(path):
         if str in climate_variable_variables:
             climate_variable_variables.remove(str)
     return climate_variable_variables[0]
+
+
+# In[10]:
+
+
+def return_NaN(path,name_variable):
+    variable = get_data_nc(path,name_variable)
+    value_NaN = Dataset(path).variables[name_variable]._FillValue
+    import math
+    #variable[variable==value_NaN] = math.nan#float('NaN')
+    return variable
 
 
 # In[ ]:
