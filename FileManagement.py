@@ -86,14 +86,14 @@ def find_column_name(path):
     # make a list with every variables of the netCDF file of interest
     climate_variable_variables=list(Dataset(path).variables)
     # variables that are not the column name of interest 
-    elements_not_climate_var =['time', 'time_bnds', 'bnds','lat', 'lat_bnds', 'lon', 'lon_bnds','time_bounds','bounds','lat_bounds','lon_bounds']
+    elements_not_climate_var =['time', 'time_bnds', 'bnds','lat', 'lat_bnds', 'lon', 'lon_bnds','time_bounds','bounds','lat_bounds','lon_bounds','height']
     for str in elements_not_climate_var:
         if str in climate_variable_variables:
             climate_variable_variables.remove(str)
     return climate_variable_variables[0]
 
 
-# In[10]:
+# In[7]:
 
 
 def return_NaN(path,name_variable):
@@ -104,8 +104,41 @@ def return_NaN(path,name_variable):
     return variable
 
 
+# In[10]:
+
+
+def time_vector_conversion(path,resolution):
+    from datetime import date
+    (year,month,day) = extract_start_date(path)
+    start = date(year,month,day)
+    time=get_data_nc(path,'time')
+    time_converted = []
+    for day in time:
+        time_converted.append(time_conversion(day,start,resolution))
+    return time_converted
+
+def extract_start_date(path):
+    start_date=Dataset(path).variables['time'].units.replace('days since ','')
+    year = int(start_date[0:4])
+    month = int(start_date[5:7].replace('-',''))
+    day = int(start_date[8:10].replace('-',''))
+    return year,month,day
+
+def time_conversion(days,start,resolution):
+    from datetime import timedelta
+    delta = timedelta(days)     # Create a time delta object from the number of days
+    offset = start + delta
+    if resolution == 'monthly':
+        offset = offset.strftime('%Y-%m')
+    if resolution == 'daily':
+        offset = offset.strftime('%Y-%m-%d')
+    offset
+    return offset
+
+
 # In[ ]:
 
 
-
+def create_xr_array(data,coordonates):
+    data_structure = xr.DataArray(data, coords=[times, locs], dims=["time", "space"])
 
