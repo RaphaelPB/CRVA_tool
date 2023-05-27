@@ -104,7 +104,7 @@ def return_NaN(path,name_variable):
     return variable
 
 
-# In[10]:
+# In[16]:
 
 
 def time_vector_conversion(path,resolution):
@@ -120,12 +120,14 @@ def time_vector_conversion(path,resolution):
 def extract_start_date(path):
     start_date=Dataset(path).variables['time'].units.replace('days since ','')
     year = int(start_date[0:4])
-    month = int(start_date[5:7].replace('-',''))
-    day = int(start_date[8:10].replace('-',''))
+    month = int(start_date[start_date.find('-')+1:start_date.rfind('-')])
+    day = int(start_date[start_date.rfind('-')+1:len(start_date)])
     return year,month,day
 
 def time_conversion(days,start,resolution):
     from datetime import timedelta
+    if not days.dtype == int:
+        days = int(days)
     delta = timedelta(days)     # Create a time delta object from the number of days
     offset = start + delta
     if resolution == 'monthly':
