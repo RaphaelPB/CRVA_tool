@@ -106,7 +106,7 @@ def return_NaN(path,name_variable):
     return variable
 
 
-# In[16]:
+# In[8]:
 
 
 # this function aims to convert the vector of the time vector from Unix time to the format '%Y-%m-%d'
@@ -136,7 +136,7 @@ def extract_start_date(path):
     # the month is always between the first '-' and the second '-' the str start_date
     month = int(start_date[start_date.find('-')+1:start_date.rfind('-')])
     # the day is always after the second '-' and before the end the str start_date
-    day = int(start_date[start_date.rfind('-')+1:len(start_date)])
+    day = int(start_date[start_date.rfind('-')+1:start_date.rfind('-')+3])
     return year,month,day # return year, mont and day in int format
 
 # this function convert time from unix in str format
@@ -207,11 +207,14 @@ def create_dataframe1(temporal_resolution,year_str,experiments,models,out_path, 
         return #df,period# there is no dataframe to return
 
 
-# In[5]:
+# In[11]:
 
 
 def find_path_file(out_path,name_file_list,variable,model,scenario,year):
     name_found = [name for name in name_file_list if scenario in name and model in name and year in name]
+    print(name_found)
+    if name_found == []:
+        return name_found
     path = os.path.join(out_path,name_found[0])
     return path
 
