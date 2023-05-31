@@ -19,7 +19,7 @@ from timeit import default_timer as timer
 
 # # Download files
 
-# In[ ]:
+# In[2]:
 
 
 # Gros bug sur cette function
@@ -289,7 +289,7 @@ def create_xr_array(data,coordonates):
 
 # # Register information from nc files
 
-# In[19]:
+# In[12]:
 
 
 # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
@@ -299,29 +299,20 @@ def register_data_in_dataframe(url_list,temporal_resolution,year_str,time,experi
 
     for i in np.arange(0,len(name_project)):
         for year in year_str:
-            #print('Year '+year)
             for SSP in experiments:
-                #experiment = (SSP,) # create tuple for iteration of dataframe
-                #print('Test with scenario '+SSP)
                 for model_simulation in models:
-                    #model =(model_simulation,) # create tuple for iteration of dataframe
                     print('For the year '+year+' and project '+name_project[i]+', test with scenario '+SSP+', with model '+model_simulation)
-                    # path were the futur downloaded file is registered
-                    #path_for_file= os.path.join(out_path,'Datasets','NEX-GDDP-CMIP6',name_variable,name_project,SSP,model_simulation,period)
-                    # existence of path_for_file tested in copernicus function
-                    # climate_variable_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_project,source)
                     climate_variable_path = find_path_file(out_path,url_list,name_variable,temporal_resolution,model_simulation,SSP,year,'r1i1p1f1_gn')
-                    #df=register_data(climate_variable_path,temporal_resolution,name_project,area_projects,SSP,model_simulation,df)
-                    # area is determined in the "Load shapefiles and plot" part
-                    #df=register_data_in_dataframe(climate_variable_path,temporal_resolution,name_project[i],closest_value_lat[i],closest_value_lon[i],index_closest_lat[i],index_closest_lon[i],SSP,model_simulation,df)
-                    Open_path = Dataset(climate_variable_path) # open netcdf file
-                    ds =  xr.open_dataset(climate_variable_path)
-                    df.loc[(name_project[i],SSP,model_simulation,time,closest_value_lat[i]),('Longitude',closest_value_lon[i])] = ds.pr.isel(lat=index_closest_lat[i],lon=index_closest_lon[i]).values
-                    Open_path.close # to spare memory
+                    if climate_variable_path!= []:
+                        ds =  xr.open_dataset(climate_variable_path)
+                        df.loc[(name_project[i],SSP,model_simulation,time,closest_value_lat[i]),('Longitude',closest_value_lon[i])] = ds.pr.isel(lat=index_closest_lat[i],lon=index_closest_lon[i]).values
+                    else:
+                        continue
     return df
 
-def df_to_csv(df,out_path,title_file,name_variable,period):
-    path_for_csv = os.path.join(out_path,'csv_file',name_variable+period)
+# title_file MUST have the extension of the file
+def df_to_csv(df,out_path,title_file,name_variable,temporal_resolution,period):
+    path_for_csv = os.path.join(out_path,'csv_file',name_variable+'_'+temporal_resolution+'_'+period)
     # test if dataframe is empty, if values exist for this period
     if not df.empty: # if dataframe is not empty, value were registered, the first part is run : a path to register the csv file is created, and the dataframe is registered in a csv file
         if not os.path.isdir(path_for_csv):
@@ -329,9 +320,10 @@ def df_to_csv(df,out_path,title_file,name_variable,period):
         full_name = os.path.join(path_for_csv,title_file)
         print(full_name)
         df.to_csv(full_name) # register dataframe in csv file
-    #else: # if the dataframe is empty, no value were found, there is no value to register or to return
-        #os.remove(path_for_file)# remove path
-        #return #df,period# there is no dataframe to return
+        return full_name
+    else: # if the dataframe is empty, no value were found, there is no value to register or to return
+        print('The dataframe is empty')
+        return []
 
 
 # In[13]:
