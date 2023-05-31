@@ -289,7 +289,7 @@ def create_xr_array(data,coordonates):
 
 # # Register information from nc files
 
-# In[12]:
+# In[19]:
 
 
 # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
@@ -316,12 +316,6 @@ def register_data_in_dataframe(url_list,temporal_resolution,year_str,time,experi
                     #df=register_data_in_dataframe(climate_variable_path,temporal_resolution,name_project[i],closest_value_lat[i],closest_value_lon[i],index_closest_lat[i],index_closest_lon[i],SSP,model_simulation,df)
                     Open_path = Dataset(climate_variable_path) # open netcdf file
                     ds =  xr.open_dataset(climate_variable_path)
-                    print(name_project[i])
-                    print(SSP)
-                    print(model_simulation)
-                    print(time)
-                    print(closest_value_lat[i])
-                    print(closest_value_lon[i])
                     df.loc[(name_project[i],SSP,model_simulation,time,closest_value_lat[i]),('Longitude',closest_value_lon[i])] = ds.pr.isel(lat=index_closest_lat[i],lon=index_closest_lon[i]).values
                     Open_path.close # to spare memory
     return df
