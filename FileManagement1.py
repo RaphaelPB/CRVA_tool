@@ -3,7 +3,7 @@
 
 # This file aims to regroup all function involved in file management
 
-# In[18]:
+# In[1]:
 
 
 import os
@@ -11,6 +11,7 @@ import os.path
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
+import xarray as xr
 import time # to measure elasped time
 from netCDF4 import Dataset
 from timeit import default_timer as timer
@@ -18,7 +19,7 @@ from timeit import default_timer as timer
 
 # # Download files
 
-# In[19]:
+# In[ ]:
 
 
 # Gros bug sur cette function
@@ -44,7 +45,7 @@ def download_extract(path_file,path_for_file):
 
 # # Manage path
 
-# In[20]:
+# In[3]:
 
 
 # This functions aims to check if the path is too long, and if yes to deal with it
@@ -70,7 +71,7 @@ def path_length(str1):
 
 # # Manage with url of files to download
 
-# In[21]:
+# In[4]:
 
 
 # function to extract the name of the file from its url
@@ -91,7 +92,7 @@ def produce_name_list(url_list):
     return name_list # return the list of names in the url_list
 
 
-# In[22]:
+# In[5]:
 
 
 ## those three function are used to have the information concerning a file
@@ -143,7 +144,7 @@ def data_information(name):
 
 # # Reading of nc files
 
-# In[23]:
+# In[6]:
 
 
 # this function aims to read from a netCDF file the information of interest
@@ -177,7 +178,7 @@ def read_nc_file(Open_path):
     return lat, lon, time, variable # return arrays
 
 
-# In[24]:
+# In[7]:
 
 
 # this function 'get_data_nc' aims to acces the masked data of the nc files
@@ -192,7 +193,7 @@ def get_data_nc(Open_path,name_variable):
     return variable
 
 
-# In[25]:
+# In[8]:
 
 
 # function to return column name in the netCDF file
@@ -210,7 +211,7 @@ def find_column_name(Open_path):
     return climate_variable_variables[0]
 
 
-# In[26]:
+# In[9]:
 
 
 # Cette fonction ne fonctionne pas
@@ -225,7 +226,7 @@ def return_NaN(Open_path,name_variable):
 
 # ## Reading of nc file: convert vector time from unix to string
 
-# In[27]:
+# In[10]:
 
 
 # this function aims to convert the vector of the time vector from Unix time to the format '%Y-%m-%d'
@@ -279,7 +280,7 @@ def time_conversion(days,start,resolution):
     return offset
 
 
-# In[28]:
+# In[11]:
 
 
 def create_xr_array(data,coordonates):
@@ -288,46 +289,41 @@ def create_xr_array(data,coordonates):
 
 # # Register information from nc files
 
-# In[29]:
+# In[12]:
 
 
 # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
 # and then produce a csv file if the data exists
 
-def create_dataframe(url_list,temporal_resolution,year_str,experiments,models,out_path, name_variable, name_project,lon_project,lat_project,df):    
-    #df = pd.DataFrame() # create an empty dataframe
-    for year in year_str:
-        #print('Year '+year)
-        for SSP in experiments:
-            #experiment = (SSP,) # create tuple for iteration of dataframe
-            #print('Test with scenario '+SSP)
-            for model_simulation in models:
-                #model =(model_simulation,) # create tuple for iteration of dataframe
-                print('For the year '+year+', test with scenario '+SSP+' and with model '+model_simulation)
-                # path were the futur downloaded file is registered
-                #path_for_file= os.path.join(out_path,'Datasets','NEX-GDDP-CMIP6',name_variable,name_project,SSP,model_simulation,period)
-                # existence of path_for_file tested in copernicus function
-                # climate_variable_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_project,source)
-                start = timer()
-                climate_variable_path = find_path_file(out_path,url_list,name_variable,model_simulation,SSP,year,'r1i1p1f1_gn')
-                end = timer()
-                if (end - start)  > 1.0 :
-                    print('Time to execute the function find_path_file: ' + str(end - start)+' seconds')
-                    print('\n')
-                #df=register_data(climate_variable_path,temporal_resolution,name_project,area_projects,SSP,model_simulation,df)
-                # area is determined in the "Load shapefiles and plot" part
-                if climate_variable_path != []:
-                    # register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
-                    start = timer()
-                    df=register_data(climate_variable_path,temporal_resolution,name_project,lon_project,lat_project,SSP,model_simulation,df)
-                    end = timer()
-                    if (end - start)  > 1.0 :
-                        print('Time to execute the function register_data: ' + str(end - start)+' seconds')
-                        print('\n')
-                    #print('\nValue were found for the period and the project tested\n')
-                else:
-                    print('\nNo value were found for the period and the project tested\n')
-                    continue # do the next for loop
+def register_data_in_dataframe(url_list,temporal_resolution,year_str,time,experiments,models,out_path, name_variable, name_project,lon_project,lat_project,index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon,df):    
+
+    for i in np.arange(0,len(name_project)):
+        for year in year_str:
+            #print('Year '+year)
+            for SSP in experiments:
+                #experiment = (SSP,) # create tuple for iteration of dataframe
+                #print('Test with scenario '+SSP)
+                for model_simulation in models:
+                    #model =(model_simulation,) # create tuple for iteration of dataframe
+                    print('For the year '+year+' and project '+name_project[i]+', test with scenario '+SSP+', with model '+model_simulation)
+                    # path were the futur downloaded file is registered
+                    #path_for_file= os.path.join(out_path,'Datasets','NEX-GDDP-CMIP6',name_variable,name_project,SSP,model_simulation,period)
+                    # existence of path_for_file tested in copernicus function
+                    # climate_variable_path=copernicus_data(temporal_resolution,SSP,name_variable,model_simulation,year_str,area,path_for_file,out_path,name_project,source)
+                    climate_variable_path = find_path_file(out_path,url_list,name_variable,temporal_resolution,model_simulation,SSP,year,'r1i1p1f1_gn')
+                    #df=register_data(climate_variable_path,temporal_resolution,name_project,area_projects,SSP,model_simulation,df)
+                    # area is determined in the "Load shapefiles and plot" part
+                    #df=register_data_in_dataframe(climate_variable_path,temporal_resolution,name_project[i],closest_value_lat[i],closest_value_lon[i],index_closest_lat[i],index_closest_lon[i],SSP,model_simulation,df)
+                    Open_path = Dataset(climate_variable_path) # open netcdf file
+                    ds =  xr.open_dataset(climate_variable_path)
+                    print(name_project[i])
+                    print(SSP)
+                    print(model_simulation)
+                    print(time)
+                    print(closest_value_lat[i])
+                    print(closest_value_lon[i])
+                    df.loc[(name_project[i],SSP,model_simulation,time,closest_value_lat[i]),('Longitude',closest_value_lon[i])] = ds.pr.isel(lat=index_closest_lat[i],lon=index_closest_lon[i]).values
+                    Open_path.close # to spare memory
     return df
 
 def df_to_csv(df,out_path,title_file,name_variable,period):
@@ -344,96 +340,7 @@ def df_to_csv(df,out_path,title_file,name_variable,period):
         #return #df,period# there is no dataframe to return
 
 
-# In[30]:
-
-
-# register data concerning each project under the form of a csv, with the model, scenario, period, latitude and longitude
-def register_data(climate_variable_path,temporal_resolution,name_project,lon_project,lat_project,experiment,model,df):
-    print('Registering the data in a dataframe')
-    experiment=(experiment,)
-    model=(model,)
-    Open_path = Dataset(climate_variable_path) # open netcdf file
-    # register latitude, longitude and time under the form of arrays
-    lat_dataframe = get_data_nc(Open_path,'lat')
-    lon_dataframe = get_data_nc(Open_path,'lon')
-    start = timer()
-    time_dataframe = time_vector_conversion(Open_path,temporal_resolution)
-    end = timer()
-    if (end - start)  > 1.0 :
-        print('Time to execute the function time_vector_conversion: ' + str(end - start)+' seconds')
-        print('\n')    
-    # register values of the file
-    column_name = find_column_name(Open_path) # find the name of the variable of interest
-    data_with_all = get_data_nc(Open_path,column_name) # register all of the values of the file concerned
-    
-    # find indexes of latitudes and longitudes between the values of interest
-    start = timer()
-    (index_closest_lat, closest_value_lat)=closest_lat_lon_to_proj(lat_project,lat_dataframe)
-    #index_lat_project=find_index_project(lat_dataframe,area_projects[0],area_projects[1])
-    end = timer()
-    if (end - start)  > 1.0 :
-        print('Time to execute the function closest_lat_lon_to_proj for latitudes: ' + str(end - start)+' seconds')
-        print('\n')
-    start = timer()
-    (index_closest_lon, closest_value_lon)=closest_lat_lon_to_proj(lon_project,lon_dataframe)
-    #index_lon_project=find_index_project(lon_dataframe,area_projects[2],area_projects[3])
-    end = timer()
-    if (end - start)  > 1.0 :
-        print('Time to execute the function closest_lat_lon_to_proj for longitudes: ' + str(end - start)+' seconds')
-        print('\n')
-    # select only the latitude and longitude of interest, done before
-    #lat_dataframe =lat_dataframe[index_lat_project]
-    #lon_dataframe =lon_dataframe[index_lon_project]
-    # select only data of interest
-    data_with_all=data_with_all[:,index_closest_lat,index_closest_lon] # len(array) = 365 (number of day in that year)
-    #print(data_with_all)
-    # register data in dataframe
-    start1 = timer()
-    
-    for (moment,index_moment) in zip(time_dataframe,np.arange(0,len(time_dataframe)-1)): # case if temporal resolution is daily
-        data_dataframe = data_with_all[index_moment]
-        #print(data_dataframe)
-        Date = (moment,) # create tuple for iteration of dataframe
-        Name_Project = (name_project,)
-        
-        start2 = timer()
-        
-        # Create the MultiIndex
-        midx = pd.MultiIndex.from_product([Name_Project,experiment, model, Date, closest_value_lat],names=['Name project','Experiment', 'Model', 'Date', 'Latitude'])
-        # multiindex to name the columns
-        lon_str = ('Longitude',)
-        cols = pd.MultiIndex.from_product([lon_str,closest_value_lon])
-        # Create the Dataframe
-        end2 = timer()
-        if (end2 - start2)  > 1.0 :
-            print('Time to create the multiIndex: ' + str(end2 - start2)+ ' seconds')
-            print('\n')
-        start3 = timer()
-        Variable_dataframe = pd.DataFrame(data = data_dataframe, 
-                                    index = midx,
-                                    columns = cols)
-        end3 = timer()
-        if (end3 - start3)  > 1.0 :
-            print('Time to register data in dataframe: ' + str(end3 - start3)+' seconds')
-            print('\n')        
-        # Concatenate former and new dataframe
-        start4 = timer()
-        
-        df = pd.concat([df,Variable_dataframe])# register information for project
-        end4 = timer()
-        if (end4 - start4)  > 1.0 :
-            print('Time to concat two dataframe: ' + str(end4 - start4)+' seconds')
-            print('\n')      
-    end1 = timer()
-    if (end1 - start1)  > 1.0 :
-        print('Time to register one year in a dataframe: ' + str(end1 - start1)+' seconds')
-        print('\n')
-    
-    Open_path.close # to spare memory
-    return df
-
-
-# In[31]:
+# In[13]:
 
 
 ## this function is used in register_data. The function aims to select in a vector, elements between the values min_vector 
@@ -460,7 +367,7 @@ def find_index_project(vector,min_vector,max_vector):
     return index_item # a vector containing the indexes of the vectors elements, which are between min_vector and max_vector
 
 
-# In[32]:
+# In[14]:
 
 
 # this function is used in 'create_dataframe'. The function aims to return the path of the file of interest
@@ -476,9 +383,9 @@ def find_index_project(vector,min_vector,max_vector):
 # the output is:
 #    the path of the file corresponding to all the parameters indicated in input
 
-def find_path_file(out_path,name_file_list,variable,model,scenario,year,ensemble):
+def find_path_file(out_path,name_file_list,variable,temporal_resolution,model,scenario,year,ensemble):
     # look into the list of names if find a name with every parameter indicated in inputs
-    name_found = [name for name in name_file_list if scenario in name and model in name and year in name and ensemble in name]
+    name_found = [name for name in name_file_list if scenario in name and model in name and year in name and ensemble in name and temporal_resolution in name]
     print(name_found)
     if name_found == []:
         # no name with all the parameters indicated as inputs was found
@@ -488,7 +395,7 @@ def find_path_file(out_path,name_file_list,variable,model,scenario,year,ensemble
     return path # return the path of the file of interest
 
 
-# In[33]:
+# In[15]:
 
 
 # this function aims to select the closest point to the geographical point of the project
@@ -509,7 +416,7 @@ def closest_lat_lon_to_proj(location_project,vector):
         
         # the function np.where() returns the index for which (vector - location_project) == min(abs(vector - location_project))
         index_closest = np.where((vector - location_project) == min(abs(vector - location_project)))[0]
-        closest_value = vector[index-closest]
+        closest_value = vector[index_closest]
     else:
         # the function any() returned False
         # there is NO element in the vector that is equal to the minimum of the absolute value of the difference 
@@ -518,10 +425,90 @@ def closest_lat_lon_to_proj(location_project,vector):
         # the function np.where() returns the index for which (vector - location_project) == -min(abs(vector - location_project))
         index_closest = np.where((vector - location_project) == -min(abs(vector - location_project)))[0]
         closest_value = vector[index_closest]
-    return index_closest[0], closest_value 
+    return index_closest, closest_value 
     # the function returns
     #     first, the value of the index of the element of vector, that is the closest to location_project    
     #     second, the array containing the element of vector, that is the closest to location_project
+
+
+# In[16]:
+
+
+# this function aims to create the empty dataframe that will be filled
+
+def create_empty_dataframe(name_project,scenarios,models,time,closest_value_lat,closest_value_lon):
+    df = pd.DataFrame()
+    for i in np.arange(0,len(name_project)):
+        midx = pd.MultiIndex.from_product([(name_project[i],),scenarios, models, time, (closest_value_lat[i],)],names=['Name project','Experiment', 'Model', 'Date', 'Latitude'])
+        cols = pd.MultiIndex.from_product([('Longitude',),(closest_value_lon[i],)])
+        Variable_dataframe = pd.DataFrame(data = [], 
+                                    index = midx,
+                                    columns = cols)
+        df = pd.concat([df,Variable_dataframe])
+    return df
+
+
+# In[17]:
+
+
+# this functions aims to regroup all the scenarios, models, time_aggregation and variables in vectors
+# the function use the function 'data_information'
+
+def information_files_in_vectors(name_list):
+    variables= []
+    time_aggregations= []
+    models= []
+    scenarios= []
+    for file_name in name_list:
+        (variable, time_aggregation, model, scenario, year) = data_information(file_name) 
+        # use function data_information to find information concerning the file_name
+        if variable not in variables:
+            variables.append(variable)
+        if time_aggregation not in time_aggregations:
+            time_aggregations.append(time_aggregation)
+        if model not in models:
+            models.append(model)
+        if scenario not in scenarios:
+            scenarios.append(scenario)
+    return variables, time_aggregations,models,scenarios
+
+
+# In[18]:
+
+
+# this functions aims to return the time, latitudes and longitudes of the files of concern
+def time_lat_lon(path,lat_projects,lon_projects):
+    ds =  xr.open_dataset(path)
+    time = ds.indexes['time'].strftime('%d-%m-%Y').values 
+    # ds.indexes['time'] gives back CFTimeIndex format, with hours. The strftime('%d-%m-%Y') permits to have time 
+    # as an index, with format '%d-%m-%Y'. The .values permits to have an array
+    lat  = ds.lat.values
+    lon  = ds.lon.values
+    # preallocate space for the future vectors
+    index_closest_lat = []
+    index_closest_lon = []
+    closest_value_lat = []
+    closest_value_lon = []
+    for j in np.arange(0,len(lat_projects)):
+        (A,B)=closest_lat_lon_to_proj(lat_projects[j],lat)
+        index_closest_lat.append(A[0])
+        closest_value_lat.append(B[0])
+        (C,D)=closest_lat_lon_to_proj(lon_projects[j],lon)
+        index_closest_lon.append(C[0])
+        closest_value_lon.append(D[0])
+    return time, index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
