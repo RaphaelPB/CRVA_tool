@@ -295,7 +295,7 @@ def create_xr_array(data,coordonates):
 # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
 # and then produce a csv file if the data exists
 
-def register_data_in_dataframe(url_list,temporal_resolution,year_str,time,experiments,models,out_path, name_variable, name_project,lon_project,lat_project,index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon,df):    
+def register_data_in_dataframe(url_list,temporal_resolution,year_str,experiments,models,out_path, name_variable, name_project,lon_project,lat_project,index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon,df):    
 
     for i in np.arange(0,len(name_project)):
         for year in year_str:
@@ -304,8 +304,13 @@ def register_data_in_dataframe(url_list,temporal_resolution,year_str,time,experi
                     print('For the year '+year+' and project '+name_project[i]+', test with scenario '+SSP+', with model '+model_simulation)
                     climate_variable_path = find_path_file(out_path,url_list,name_variable,temporal_resolution,model_simulation,SSP,year,'r1i1p1f1_gn')
                     if climate_variable_path!= []:
-                        ds =  xr.open_dataset(climate_variable_path)
-                        df.loc[(name_project[i],SSP,model_simulation,time,closest_value_lat[i]),('Longitude',closest_value_lon[i])] = ds.pr.isel(lat=index_closest_lat[i],lon=index_closest_lon[i]).values
+                        try:
+                            ds =  xr.open_dataset(climate_variable_path)
+                            time = ds.indexes['time'].strftime('%d-%m-%Y').values
+                            df.loc[(name_project[i],SSP,model_simulation,time,closest_value_lat[i]),('Longitude',closest_value_lon[i])] = ds.pr.isel(lat=index_closest_lat[i],lon=index_closest_lon[i]).values
+                            ds.close() # to spare memory
+                        except:
+                            continue
                     else:
                         continue
     return df
@@ -463,13 +468,13 @@ def information_files_in_vectors(name_list):
 
 
 # this functions aims to return the time, latitudes and longitudes of the files of concern
-def time_lat_lon(path,lat_projects,lon_projects):
-    ds =  xr.open_dataset(path)
-    time = ds.indexes['time'].strftime('%d-%m-%Y').values 
+def _lat_lon(path,lat_projects,lon_projects):
+    ds =  xr.open_dataset(path) 
     # ds.indexes['time'] gives back CFTimeIndex format, with hours. The strftime('%d-%m-%Y') permits to have time 
     # as an index, with format '%d-%m-%Y'. The .values permits to have an array
     lat  = ds.lat.values
     lon  = ds.lon.values
+    ds.close() # to spare memory
     # preallocate space for the future vectors
     index_closest_lat = []
     index_closest_lon = []
@@ -482,7 +487,31 @@ def time_lat_lon(path,lat_projects,lon_projects):
         (C,D)=closest_lat_lon_to_proj(lon_projects[j],lon)
         index_closest_lon.append(C[0])
         closest_value_lon.append(D[0])
-    return time, index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon
+    return index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
