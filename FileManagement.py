@@ -292,43 +292,87 @@ def create_xr_array(data,coordonates):
 # In[12]:
 
 
-# the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
-# and then produce a csv file if the data exists
+# the register_data_in_dataframe function aims to test if data with the specific parameters exist in the folder of concern
+# As inputs :
+#      the list of urls of the files of interest. The name of the file will be extracted from them
+#      temporal_resolution: the temporal resolution of the climate variable in question in string format
+#      year_str: a vector containing the year of the period of interest in a string format
+#      scenarios: a list of the scenorios of interest in string format
+#      models: a list of the models of interest in string format
+#      out_path: the out_path in a string format
+#      name_variable: the name of the variable of interest (example: 'pr' for precipitation)
+#      name_project: the list of names of the project of interest
+#      index_closest_lat: array containing an index for each project, 
+#                           corresponding to the index of the value in latitude vector which is the closest to 
+#                           the project latitude
+#      index_closest_lat: array containing an index for each project, 
+#                           corresponding to the index of the value in longitude vector which is the closest to 
+#                           the project longitude
+#      closest_value_lat: array containing a value for each project, corresponding to the value in the 
+#                           latitude vector which is the closest to the project's latitude
+#      closest_value_lon: array containing a value for each project, corresponding to the value in the 
+#                           longitude vector which is the closest to the project's longitude
+#      df : empty dataframe to fill
 
-def register_data_in_dataframe(url_list,temporal_resolution,year_str,experiments,models,out_path, name_variable, name_project,lon_project,lat_project,index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon,df):    
-    path_file_not_found =[]
-    ds_did_not_open =[]
-    for i in np.arange(0,len(name_project)):
-        for year in year_str:
-            for SSP in experiments:
-                for model_simulation in models:
-                    print('For the year '+year+' and project '+name_project[i]+', test with scenario '+SSP+', with model '+model_simulation)
-                    climate_variable_path = find_path_file(out_path,url_list,name_variable,temporal_resolution,model_simulation,SSP,year,'r1i1p1f1_gn')
-                    if climate_variable_path!= []:
-                        try:
-                            ds =  xr.open_dataset(climate_variable_path)
-                            time = ds.indexes['time'].strftime('%d-%m-%Y').values
+# Outputs are:
+#      df: the filled dataframe with the values of interest
+#      path_file_not_found: the list of files that were not found with the parameters asked
+#      ds_did_not_open: the list of files that could not be read
+
+def register_data_in_dataframe(name_list,temporal_resolution,year_str,scenarios,models,out_path, name_variable, name_project,index_closest_lat,index_closest_lon,closest_value_lat,closest_value_lon,df):    
+    path_file_not_found = [] # create empty list to register names of files that were not found with the corresponding parameters
+    ds_did_not_open = [] # create empty list to register names of files that couldn't be opened
+    for year in year_str:
+        for SSP in scenarios:
+            for model_simulation in models:
+                # for each year, each scenarios and each models, test if there is a corresponding file existing
+                # with function 'find_path_file'
+                climate_variable_path = find_path_file(out_path,name_list,name_variable,temporal_resolution,model_simulation,SSP,year,'r1i1p1f1_gn')
+                if climate_variable_path!= []:
+                    # a file with the corresponding parameters were found
+                    ds =  xr.open_dataset(climate_variable_path) # open the file corresponding to the parameters
+                    time = ds.indexes['time'].strftime('%d-%m-%Y').values # register the time in the file
+                    for i in np.arange(0,len(name_project)):
+                        print('For the year '+year+' and project '+name_project[i]+', test with scenario '+SSP+', with model '+model_simulation)
+                        try: # to register information from the dataset ds in the dataframe df
+                            # for each year, scenarios, models and each project, the values of the opened dataset ds
+                            # are registered in the empty dataframe df, to a specific place corresponding to the parameters of the loop
                             df.loc[(name_project[i],SSP,model_simulation,time,closest_value_lat[i]),('Longitude',closest_value_lon[i])] = ds.pr.isel(lat=index_closest_lat[i],lon=index_closest_lon[i]).values
-                            ds.close() # to spare memory
-                        except:
-                            ds_did_not_open.append(climate_variable_path)
-                            continue
-                    else:
-                        path_file_not_found.append(name_variable+'_'+temporal_resolution+'_'+model_simulation+'_'+SSP+'_'+year+'_'+'r1i1p1f1_gn')
-                        continue
+                        except: # the dataset ds can not be read
+                            # add information of the dataset that can't be read in the empty list ds_did_not_open
+                            ds_did_not_open.append(climate_variable_path+'_'+'project_'+name_project[i])
+                            continue # try with next project
+                    ds.close() # the opened dataset is closed to spare memory
+                else:
+                    # NO file with the corresponding parameters were found
+                    # add information of the missing file in the empty list path_file_not_found
+                    path_file_not_found.append(name_variable+'_'+temporal_resolution+'_'+model_simulation+'_'+SSP+'_'+year+'_'+'r1i1p1f1_gn')
+                    continue # try another file
     return df,path_file_not_found,ds_did_not_open
 
-# title_file MUST have the extension of the file
-def df_to_csv(df,out_path,title_file,name_variable,temporal_resolution,period):
-    path_for_csv = os.path.join(out_path,'csv_file',name_variable+'_'+temporal_resolution+'_'+period)
+# the function df_to_csv aims to return the filled dataframe in a csv format
+# Inputs are:
+#       df: the dataframe that should be register in a csv file
+#      path_for_csv: this is the path where the csv file should be registered, in a string format
+#      title_file: this is the name of the csv file to be created in a string format
+#                  CAREFUL --> title_file MUST have the extension of the file in the string (.csv for example)
+# Output is:
+#      in the case where the dataframe is not empty, the ouput is the full path to the created csv file
+#      in the case where the dataframe is empty, the output is an empty list
+def df_to_csv(df,path_for_csv,title_file):
     # test if dataframe is empty, if values exist for this period
-    if not df.empty: # if dataframe is not empty, value were registered, the first part is run : a path to register the csv file is created, and the dataframe is registered in a csv file
+    if not df.empty: 
+        # if dataframe is not empty, value were registered, the first part is run : 
+        # a path to register the csv file is created, .....
         if not os.path.isdir(path_for_csv):
-            os.makedirs(path_for_csv) # to ensure creation of file
+            # the path to the file does not exist
+            os.makedirs(path_for_csv) # to ensure creation of the folder
+            # creation of the path for the csv file, in a string format
         full_name = os.path.join(path_for_csv,title_file)
-        print(full_name)
+        # ..... and the dataframe is registered in a csv file
         df.to_csv(full_name) # register dataframe in csv file
-        return full_name
+        print('Path for csv file is: ' + full_name)
+        return full_name # return the full path that leads to the created csv file
     else: # if the dataframe is empty, no value were found, there is no value to register or to return
         print('The dataframe is empty')
         return []
@@ -380,7 +424,7 @@ def find_index_project(vector,min_vector,max_vector):
 def find_path_file(out_path,name_file_list,variable,temporal_resolution,model,scenario,year,ensemble):
     # look into the list of names if find a name with every parameter indicated in inputs
     name_found = [name for name in name_file_list if scenario in name and model in name and year in name and ensemble in name and temporal_resolution in name]
-    print(name_found)
+    print('The name of the file is ' + name_found[0])
     if name_found == []:
         # no name with all the parameters indicated as inputs was found
         return name_found # return an empty element instead of a path, the function does not run the following lines
