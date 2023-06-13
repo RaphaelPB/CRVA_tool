@@ -214,6 +214,9 @@ def delete_NaN_model(df):
         # look value of longitude for each project
         for j in np.arange(0,len(df_copy.loc[[project]].columns)):
             if ~df_copy[[df_copy.columns[j]]].isnull().values.all():
+                # can check if a pandas DataFrame contains NaN/None values in any cell 
+                # (all rows & columns ). This method returns True if it finds NaN/None 
+                # on any cell of a DataFrame, returns False when not found
                 longitude.append(df_copy.columns[j])
                 continue
         
@@ -320,7 +323,7 @@ def dataframe_n_day_event(df,number_day):
                         df_temp_one_year_n_event=n_day_maximum_rainfall(number_day,df_temp_one_year) # use function to calculate cumulative precipitation
                         #return df_temp_one_year_n_event
                         # format time vector differently
-                        time = [df_temp_one_year_n_event.index.tolist()[i][0] for i in np.arange(0,len(df_temp_one_year_n_event.index.tolist()))].tolist()
+                        time = [df_temp_one_year_n_event.index.tolist()[i][0] for i in np.arange(0,len(df_temp_one_year_n_event.index.tolist()))]
                         # fill dataframe
                         df_temp_one_year_n_event = fill_dataframe((project,),(scenario,),(model,),time,df_temp_one_year_n_event.values,'Maximum '+str(number_day)+' days rainfall mm')
                         df_n_day_event = pd.concat([df_n_day_event,df_temp_one_year_n_event])
@@ -422,28 +425,41 @@ def level_exposure(df):
     
     # create empty dataframe
     #midx = pd.MultiIndex.from_product([df_years_avg_2041_2060_distribution.index.tolist(),precipitation_2021_2060_copy.index.levels[1].tolist(),models],names=['Name project','Experiment', 'Model'])
-    cols = pd.MultiIndex.from_product([('Exposure level',),('Incremental air temperature change', 'Extreme temperature increase','Incremental rainfall change','Extreme rainfall change')])
+    cols = pd.MultiIndex.from_product([('Exposure level',),df.columns.levels[0].tolist()]) # df.columns.levels[0].tolist() is liste of climate variable
     ExposureLevel = pd.DataFrame(data = [],
-                            index = precipitation_2021_2060_copy.index.levels[0].tolist(),
+                            index = df.index.tolist(),
                             columns = cols)
     
-    # comment faire avec les differents climate var et leur nombre variable d indicateur
-    #for name_p in ExposureLevel.index.tolist():
-    #if changes_past_future_avg_yearly_pr.loc[name_p,'Change in the median in %']>20 or (changes_past_future_avg_yearly_pr.loc[name_p,'Change in 10-th percentile %']>50 or changes_past_future_avg_yearly_pr.loc[name_p,'Change in 90-th percentile %']>50):
-    #    ExposureLevel.loc[name_p,('Exposure level','Incremental rainfall change')] = 'High'
-    #if (changes_past_future_avg_yearly_pr.loc[name_p,'Change in 10-th percentile %']>20 or changes_past_future_avg_yearly_pr.loc[name_p,'Change in 90-th percentile %']>20):
-    #    ExposureLevel.loc[name_p,('Exposure level','Incremental rainfall change')] = 'Medium'    
-    #if (changes_past_future_avg_yearly_pr.loc[name_p,'Change in 10-th percentile %']<20 and changes_past_future_avg_yearly_pr.loc[name_p,'Change in 90-th percentile %']<20):
-    #    ExposureLevel.loc[name_p,('Exposure level','Incremental rainfall change')] = 'Low'  
+    for name_p in ExposureLevel.index.tolist():
+        for climate_variable in changes_past_future_indicator.columns.levels[0].tolist():
+            print('For project '+name_p+', climate variable '+climate_variable)
+            # select the columns of interest in the list of columns
+            col_interest_med= [cols for cols in changes_past_future_indicator.columns.tolist() if climate_variable in cols and changes_past_future_indicator.columns.levels[2][2] in cols]
+            col_interest_p10= [cols for cols in changes_past_future_indicator.columns.tolist() if climate_variable in cols and changes_past_future_indicator.columns.levels[2][0] in cols]
+            col_interest_p90= [cols for cols in changes_past_future_indicator.columns.tolist() if climate_variable in cols and changes_past_future_indicator.columns.levels[2][1] in cols]
+
+            if (changes_past_future_indicator.loc[(name_p),col_interest_med][abs(changes_past_future_indicator.loc[(name_p),col_interest_med])>20].notnull().values.any()) or (changes_past_future_indicator.loc[(name_p),col_interest_p10][abs(changes_past_future_indicator.loc[(name_p),col_interest_p10])>50].notnull().values.any() or changes_past_future_indicator.loc[(name_p),col_interest_p90][abs(changes_past_future_indicator.loc[(name_p),col_interest_p90])>50].notnull().values.any()):
+                # test if there are any True, if any value is over the threshold indicated
+                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'High' # attribute value to exposure level
+            if (changes_past_future_indicator.loc[(name_p),col_interest_p10][abs(changes_past_future_indicator.loc[(name_p),col_interest_p10])>20].notnull().values.any() or changes_past_future_indicator.loc[(name_p),col_interest_p90][abs(changes_past_future_indicator.loc[(name_p),col_interest_p90])>20].notnull().values.any()):
+                # test if there are any True, if any value is over the threshold indicated
+                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'Medium' # attribute value to exposure level
+            if (changes_past_future_indicator.loc[(name_p),col_interest_p10][abs(changes_past_future_indicator.loc[(name_p),col_interest_p10])<20].notnull().values.any() or changes_past_future_indicator.loc[(name_p),col_interest_p90][abs(changes_past_future_indicator.loc[(name_p),col_interest_p90])<20].notnull().values.any()):
+                # test if there are any True, if any value is under the threshold indicated
+                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'Low' # attribute value to exposure level
     
-    
+    ExposureLevel.style.apply(exposureColor) # apply color depending on value of Exposure
     return ExposureLevel
 
 
-# In[ ]:
+# In[22]:
 
 
-
+def exposureColor(series):
+    green = 'background-color: lightgreen'
+    orange = 'background-color: orange'
+    red = 'background-color: red'
+    return [red if value == 'High' else orange if value == 'Medium' else green for value in series]
 
 
 # In[ ]:
