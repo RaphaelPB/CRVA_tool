@@ -36,7 +36,7 @@ import math
 # In[4]:
 
 
-def value_return_period(Z,T):
+def threshold_coresponding_to_return_period(Z,T):
     (loc,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
     # gumbel_r is chosen because
     p_non_exceedance = 1 - (1/T)
@@ -44,6 +44,7 @@ def value_return_period(Z,T):
         threshold_coresponding = round(gumbel_r.ppf(p_non_exceedance,loc,scale))
     except OverflowError: # the result is not finite
         if math.isinf(gumbel_r.ppf(p_non_exceedance,loc,scale)) and gumbel_r.ppf(p_non_exceedance,loc,scale)<0:
+            # ppf is the inverse of cdf
             # the result is -inf
             threshold_coresponding = 0 # the value of wero is imposed
     return threshold_coresponding
@@ -55,7 +56,46 @@ def value_return_period(Z,T):
 # In[5]:
 
 
-def dataframe_return_period(df):
+def dataframe_threshold_coresponding_to_return_period(df):
+    df_copy=df.copy(deep=True)
+    df_copy=df_copy.drop(labels='Date',axis=1)
+    df_max = df_copy.groupby(['Name project','Experiment','Model','Year']).max() # maximum    
+    midx = pd.MultiIndex.from_product([list(set(df_copy[df_copy.columns[0]])),list(set(df_copy[df_copy.columns[1]])),list(set(df_copy[df_copy.columns[2]]))],names=['Name project','Experiment', 'Model'])
+    cols = ['Value for return period 50 years mm/day','Value for return period 100 years mm/day']
+    return_period = pd.DataFrame(data = [], 
+                                index = midx,
+                                columns = cols)
+    for name_p in return_period.index.levels[0].tolist():
+        for ssp in return_period.index.levels[1].tolist():
+            for model in return_period.index.levels[2].tolist():
+                print('Name project '+name_p+ ' ssp '+ssp+ ' model '+model)
+                Z=df_max.loc[(name_p,ssp,model)].values.reshape(len(df_max.index.levels[3]),)
+                return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = threshold_coresponding_to_return_period(Z,50)
+                return_period.loc[(name_p,ssp,model),('Value for return period 100 years mm/day')] = threshold_coresponding_to_return_period(Z,100)
+    return return_period
+
+
+# In[6]:
+
+
+def return_period_coresponding_to_threshold(Z):
+    (loc,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
+    # gumbel_r is chosen because
+    #try:
+    p_non_exceedance = round(gumbel_r.cdf(max(Z),loc,scale))
+    #except OverflowError: # the result is not finite
+        
+   #     if math.isinf(gumbel_r.cdf(threshold,loc,scale)) and gumbel_r.cdf(max(Z),loc,scale)<0:
+   #         # the result is -inf
+    #        threshold_coresponding = 0 # the value of wero is imposed
+    return_period_coresponding = 1/(1-p_non_exceedance)
+    return return_period_coresponding
+
+
+# In[7]:
+
+
+def dataframe_future_return_period_of_1_day_event(df):
     df_copy=df.copy(deep=True)
     df_copy=df_copy.drop(labels='Date',axis=1)
     df_max = df_copy.groupby(['Name project','Experiment','Model','Year']).max() # maximum    
@@ -69,18 +109,11 @@ def dataframe_return_period(df):
             for model in return_period.index.levels[2].tolist():
                 print('Name project '+name_p+ ' ssp '+ssp+ ' model '+model)
                 Z=df_max.loc[(name_p,ssp,model)].values.reshape(len(df_max.index.levels[3]),)
-                return_period.loc[(name_p,ssp,model),('Return period 50 years mm/day')] = value_return_period(Z,50)
-                return_period.loc[(name_p,ssp,model),('Return period 100 years mm/day')] = value_return_period(Z,100)
+                return_period.loc[(name_p,ssp,model),('Return period 1 day event')] = return_period_coresponding_to_threshold(Z)
     return return_period
 
 
-# In[ ]:
-
-
-
-
-
-# In[6]:
+# In[8]:
 
 
 r'''
@@ -103,13 +136,13 @@ if not os.path.isdir(path_figure):
 plt.show()'''
 
 
-# In[7]:
+# In[9]:
 
 
 # accross models and scenarios
 
 
-# In[8]:
+# In[10]:
 
 
 r'''
@@ -125,7 +158,7 @@ test.drop(labels='NESM3',level=1,inplace=True)
 '''
 
 
-# In[9]:
+# In[11]:
 
 
 r'''
@@ -149,7 +182,7 @@ plt.show()
 '''
 
 
-# In[10]:
+# In[12]:
 
 
 # questions Temps retour :
@@ -165,7 +198,7 @@ plt.show()
 
 # ### N-day event 
 
-# In[11]:
+# In[13]:
 
 
 # some models to not have any values for some scenarios
@@ -204,7 +237,7 @@ def delete_NaN_model(df):
     return []
 
 
-# In[12]:
+# In[14]:
 
 
 # this functions aims to calculate the n_day_event
@@ -225,24 +258,24 @@ def n_day_maximum_rainfall(number_day,df):
     return Dataframe_n_day_event
 
 
-# In[13]:
+# In[15]:
 
 
 # this function aims to create the empty dataframe that will be filled
 
 def fill_dataframe(name_project,scenario,model,time,data_df,name_col):
     #df = pd.DataFrame()
-    for i in np.arange(0,len(name_project)):
-        midx = pd.MultiIndex.from_product([(name_project,),(scenario,),(model,) , time],names=['Name project','Experiment', 'Model', 'Date'])
-        name_col = [name_col]#['Precipitation '+str(number_day)+' day event mm']
-        Variable_dataframe = pd.DataFrame(data = data_df, 
-                                    index = midx,
-                                    columns = name_col)
+    #for i in np.arange(0,len(name_project)):
+    midx = pd.MultiIndex.from_product([name_project,scenario,model , time],names=['Name project','Experiment', 'Model', 'Date'])
+    name_col = [name_col]#['Precipitation '+str(number_day)+' day event mm']
+    Variable_dataframe = pd.DataFrame(data = data_df, 
+                                index = midx,
+                                columns = name_col)
         #df = pd.concat([df,Variable_dataframe])
     return Variable_dataframe
 
 
-# In[20]:
+# In[16]:
 
 
 # function dataframe_n_day_event produce a dataframe, with the n_day event precipitation for the period, models and scenarios asked
@@ -254,7 +287,9 @@ def dataframe_n_day_event(df,number_day):
     df_n_day_event = pd.DataFrame() # create empty dataframe, that will be filled later
     # extract years of the period of interest, make a vector containing all the years of interest
     years = np.arange(int(df.index.levels[3].tolist()[0][6:10]),int(df.index.levels[3].tolist()[len(df.index.levels[3].tolist())-1][6:10])+1)
-    models_index=delete_NaN_model(df_copy) # use function 'delete_NaN_model' to know which models have no Nan values
+    #models_index=delete_NaN_model(df_copy) # use function 'delete_NaN_model' to know which models have no Nan values
+    models_index = df_copy.index.levels[2].tolist()
+    models_index.remove('NESM3')
     df_copy=df_copy.droplevel(level=4) # drop latitude index
     df_copy.columns = df_copy.columns.droplevel(0) # drop first level of column name
     for project in df_copy.index.levels[0].tolist(): # projects
@@ -285,14 +320,14 @@ def dataframe_n_day_event(df,number_day):
                         df_temp_one_year_n_event=n_day_maximum_rainfall(number_day,df_temp_one_year) # use function to calculate cumulative precipitation
                         #return df_temp_one_year_n_event
                         # format time vector differently
-                        time = [df_temp_one_year_n_event.index.tolist()[i][0] for i in np.arange(0,len(df_temp_one_year_n_event.index.tolist()))]
+                        time = [df_temp_one_year_n_event.index.tolist()[i][0] for i in np.arange(0,len(df_temp_one_year_n_event.index.tolist()))].tolist()
                         # fill dataframe
-                        df_temp_one_year_n_event = fill_dataframe(project,scenario,model,time,df_temp_one_year_n_event.values,'Maximum '+str(number_day)+' days rainfall mm')
+                        df_temp_one_year_n_event = fill_dataframe((project,),(scenario,),(model,),time,df_temp_one_year_n_event.values,'Maximum '+str(number_day)+' days rainfall mm')
                         df_n_day_event = pd.concat([df_n_day_event,df_temp_one_year_n_event])
     return df_n_day_event # return a dataframe, with all the projects, scenarios, models and period of n day
 
 
-# In[15]:
+# In[17]:
 
 
 def dataframe_1_day_event(df):
@@ -305,7 +340,7 @@ def dataframe_1_day_event(df):
 
 # ### Yearly average precipitation
 
-# In[16]:
+# In[18]:
 
 
 def yearly_avg_pr(df,title_column):
@@ -328,7 +363,7 @@ def yearly_avg_pr(df,title_column):
 
 # ### Seasonal average precipitation
 
-# In[17]:
+# In[19]:
 
 
 def avg_dry_season_precipitation(df,title_column):
@@ -357,13 +392,13 @@ def avg_dry_season_precipitation(df,title_column):
 
 # # Changes in indicators
 
-# In[18]:
+# In[20]:
 
 
-def changes_in_indicators(df_past,df_futur,title_indicator):
+def changes_in_indicators(df_past,df_futur,title_indicator,climate_var):
     # create empty dataframe
     #midx = pd.MultiIndex.from_product([df_years_avg_2041_2060_distribution.index.tolist(),precipitation_2021_2060_copy.index.levels[1].tolist(),models],names=['Name project','Experiment', 'Model'])
-    cols = pd.MultiIndex.from_product([(title_indicator,),('Change in the median in %', 'Change in 10-th percentile %','Change in 90-th percentile %')])
+    cols = pd.MultiIndex.from_product([(climate_var,),(title_indicator,),('Change in the median in %', 'Change in 10-th percentile %','Change in 90-th percentile %')])
     changes_past_future_indicator = pd.DataFrame(data = [], 
         index = df_past.index.tolist(),
         columns = cols)
@@ -377,7 +412,7 @@ def changes_in_indicators(df_past,df_futur,title_indicator):
 
 # # Level of exposure
 
-# In[19]:
+# In[21]:
 
 
 ## Functions not finished
@@ -403,6 +438,90 @@ def level_exposure(df):
     
     
     return ExposureLevel
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
