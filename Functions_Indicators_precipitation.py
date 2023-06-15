@@ -457,7 +457,7 @@ def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
 
 # # Level of exposure
 
-# In[22]:
+# In[23]:
 
 
 ## Functions not finished
@@ -475,20 +475,25 @@ def level_exposure(df):
     for name_p in ExposureLevel.index.tolist():
         for climate_variable in df.columns.levels[0].tolist():
             print('For project '+name_p+', climate variable '+climate_variable)
-            # select the columns of interest in the list of columns
-            col_interest_med= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in the median in %' in cols]
-            col_interest_p10= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in 10-th percentile %' in cols]
-            col_interest_p90= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in 90-th percentile %' in cols]
+            if ExposureLevel.loc[name_p,('Exposure level',climate_variable)] != 'High':
+                # select the columns of interest in the list of columns
+                col_interest_med= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in the median in %' in cols]
+                col_interest_p10= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in 10-th percentile %' in cols]
+                col_interest_p90= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in 90-th percentile %' in cols]
+                
+                if ExposureLevel.loc[name_p,('Exposure level',climate_variable)] != 'Medium':
+                    if (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])<20].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])<20].notnull().values.any()):
+                        # test if there are any True, if any value is under the threshold indicated
+                        ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'No' # attribute value to exposure level
 
-            if (df.loc[(name_p),col_interest_med][abs(df.loc[(name_p),col_interest_med])>20].notnull().values.any()) or (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])>50].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])>50].notnull().values.any()):
-                # test if there are any True, if any value is over the threshold indicated
-                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'High' # attribute value to exposure level
-            if (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])>20].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])>20].notnull().values.any()):
-                # test if there are any True, if any value is over the threshold indicated
-                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'Medium' # attribute value to exposure level
-            if (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])<20].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])<20].notnull().values.any()):
-                # test if there are any True, if any value is under the threshold indicated
-                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'No' # attribute value to exposure level
+                    if (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])>20].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])>20].notnull().values.any()):
+                    # test if there are any True, if any value is over the threshold indicated
+                        ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'Medium' # attribute value to exposure level
+
+
+                if (df.loc[(name_p),col_interest_med][abs(df.loc[(name_p),col_interest_med])>20].notnull().values.any()) or (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])>50].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])>50].notnull().values.any()):
+                    # test if there are any True, if any value is over the threshold indicated
+                    ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'High' # attribute value to exposure level
     
     ExposureLevel=ExposureLevel.style.apply(exposureColor) # apply color depending on value of Exposure
     ExposureLevel=ExposureLevel.set_table_styles([{'selector': 'th.col_heading', 'props': 'text-align: left;'}],[{'selector': 'td', 'props': 'text-align: center;'}],overwrite = True) # place first level column to the left
@@ -496,7 +501,7 @@ def level_exposure(df):
     return ExposureLevel
 
 
-# In[23]:
+# In[24]:
 
 
 # function use in function 'level_exposure' to color result depending on the result
@@ -505,6 +510,12 @@ def exposureColor(series):
     orange = 'background-color: orange'
     red = 'background-color: red'
     return [red if value == 'High' else orange if value == 'Medium' else green for value in series]
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
