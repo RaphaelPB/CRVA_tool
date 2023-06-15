@@ -36,9 +36,7 @@ import math
 # In[4]:
 
 
-def threshold_coresponding_to_return_period(Z,T):
-    (loc,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
-    # gumbel_r is chosen because
+def threshold_coresponding_to_return_period(loc,scale,T):
     p_non_exceedance = 1 - (1/T)
     try:
         threshold_coresponding = round(gumbel_r.ppf(p_non_exceedance,loc,scale))
@@ -70,8 +68,11 @@ def dataframe_threshold_coresponding_to_return_period(df):
             for model in return_period.index.levels[2].tolist():
                 print('Name project '+name_p+ ' ssp '+ssp+ ' model '+model)
                 Z=df_max.loc[(name_p,ssp,model)].values.reshape(len(df_max.index.levels[3]),)
-                return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = threshold_coresponding_to_return_period(Z,50)
-                return_period.loc[(name_p,ssp,model),('Value for return period 100 years mm/day')] = threshold_coresponding_to_return_period(Z,100)
+                (loc1,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
+                # choice of gumbel because suits to extreme precipitation
+                return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = threshold_coresponding_to_return_period(loc1,scale,50)
+                return_period.loc[(name_p,ssp,model),('Value for return period 100 years mm/day')] = threshold_coresponding_to_return_period(loc1,scale,100)
+                
     return return_period
 
 
@@ -83,6 +84,7 @@ def return_period_coresponding_to_threshold(Z):
     # gumbel_r is chosen because
     #try:
     p_non_exceedance = round(gumbel_r.cdf(max(Z),loc,scale))
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.ppf.html
     #except OverflowError: # the result is not finite
         
    #     if math.isinf(gumbel_r.cdf(threshold,loc,scale)) and gumbel_r.cdf(max(Z),loc,scale)<0:
@@ -341,9 +343,41 @@ def dataframe_1_day_event(df):
     return df_max
 
 
+# In[18]:
+
+
+# the function df_to_csv aims to return the filled dataframe in a csv format
+# Inputs are:
+#       df: the dataframe that should be register in a csv file
+#      path_for_csv: this is the path where the csv file should be registered, in a string format
+#      title_file: this is the name of the csv file to be created in a string format
+#                  CAREFUL --> title_file MUST have the extension of the file in the string (.csv for example)
+# Output is:
+#      in the case where the dataframe is not empty, the ouput is the full path to the created csv file
+#      in the case where the dataframe is empty, the output is an empty list
+
+def df_to_csv(df,path_for_csv,title_file):
+    # test if dataframe is empty, if values exist for this period
+    if not df.empty: 
+        # if dataframe is not empty, value were registered, the first part is run : 
+        # a path to register the csv file is created, .....
+        if not os.path.isdir(path_for_csv):
+            # the path to the file does not exist
+            os.makedirs(path_for_csv) # to ensure creation of the folder
+            # creation of the path for the csv file, in a string format
+        full_name = os.path.join(path_for_csv,title_file)
+        # ..... and the dataframe is registered in a csv file
+        df.to_csv(full_name) # register dataframe in csv file
+        print('Path for csv file is: ' + full_name)
+        return full_name # return the full path that leads to the created csv file
+    else: # if the dataframe is empty, no value were found, there is no value to register or to return
+        print('The dataframe is empty')
+        return []
+
+
 # ### Yearly average precipitation
 
-# In[18]:
+# In[19]:
 
 
 def yearly_avg_pr(df,title_column):
@@ -366,7 +400,7 @@ def yearly_avg_pr(df,title_column):
 
 # ### Seasonal average precipitation
 
-# In[19]:
+# In[20]:
 
 
 def avg_dry_season_precipitation(df,title_column):
@@ -395,27 +429,35 @@ def avg_dry_season_precipitation(df,title_column):
 
 # # Changes in indicators
 
-# In[20]:
+# In[21]:
 
 
-def changes_in_indicators(df_past,df_futur,title_indicator,climate_var):
+def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
     # create empty dataframe
     #midx = pd.MultiIndex.from_product([df_years_avg_2041_2060_distribution.index.tolist(),precipitation_2021_2060_copy.index.levels[1].tolist(),models],names=['Name project','Experiment', 'Model'])
-    cols = pd.MultiIndex.from_product([(climate_var,),(title_indicator,),('Change in the median in %', 'Change in 10-th percentile %','Change in 90-th percentile %')])
+    cols = pd.MultiIndex.from_product([(climate_var,),(title_indicator,),('Median for the past period '+unit,'Change in the median in %','10-th percentile for the past period '+unit, 'Change in 10-th percentile %','90-th percentile for the past period '+unit,'Change in 90-th percentile %')])
     changes_past_future_indicator = pd.DataFrame(data = [], 
         index = df_past.index.tolist(),
         columns = cols)
     
-    changes_past_future_indicator[[changes_past_future_indicator.columns[0]]]=(((df_futur[[df_futur.columns[5]]].values-df_past[[df_past.columns[5]]].values)/df_past[[df_past.columns[5]]].values)*100).reshape(len(df_past[[df_past.columns[5]]].values,),1)
-    changes_past_future_indicator[[changes_past_future_indicator.columns[1]]]=(((df_futur[[df_futur.columns[4]]].values-df_past[[df_past.columns[4]]].values)/df_past[[df_past.columns[4]]].values)*100).reshape(len(df_past[[df_past.columns[4]]].values,),1)
-    changes_past_future_indicator[[changes_past_future_indicator.columns[2]]]=(((df_futur[[df_futur.columns[6]]].values-df_past[[df_past.columns[6]]].values)/df_past[[df_past.columns[6]]].values)*100).reshape(len(df_past[[df_past.columns[6]]].values,),1)
+    changes_past_future_indicator[[changes_past_future_indicator.columns[0]]]=df_past[[df_past.columns[5]]]
+    
+    changes_past_future_indicator[[changes_past_future_indicator.columns[1]]]=(((df_futur[[df_futur.columns[5]]].values-df_past[[df_past.columns[5]]].values)/df_past[[df_past.columns[5]]].values)*100).reshape(len(df_past[[df_past.columns[5]]].values,),1)
+    
+    changes_past_future_indicator[[changes_past_future_indicator.columns[2]]]=df_past[[df_past.columns[4]]]
+    
+    changes_past_future_indicator[[changes_past_future_indicator.columns[3]]]=(((df_futur[[df_futur.columns[4]]].values-df_past[[df_past.columns[4]]].values)/df_past[[df_past.columns[4]]].values)*100).reshape(len(df_past[[df_past.columns[4]]].values,),1)
+    
+    changes_past_future_indicator[[changes_past_future_indicator.columns[4]]]=df_past[[df_past.columns[6]]]
+    
+    changes_past_future_indicator[[changes_past_future_indicator.columns[5]]]=(((df_futur[[df_futur.columns[6]]].values-df_past[[df_past.columns[6]]].values)/df_past[[df_past.columns[6]]].values)*100).reshape(len(df_past[[df_past.columns[6]]].values,),1)
     
     return changes_past_future_indicator
 
 
 # # Level of exposure
 
-# In[21]:
+# In[22]:
 
 
 ## Functions not finished
@@ -431,30 +473,33 @@ def level_exposure(df):
                             columns = cols)
     
     for name_p in ExposureLevel.index.tolist():
-        for climate_variable in changes_past_future_indicator.columns.levels[0].tolist():
+        for climate_variable in df.columns.levels[0].tolist():
             print('For project '+name_p+', climate variable '+climate_variable)
             # select the columns of interest in the list of columns
-            col_interest_med= [cols for cols in changes_past_future_indicator.columns.tolist() if climate_variable in cols and changes_past_future_indicator.columns.levels[2][2] in cols]
-            col_interest_p10= [cols for cols in changes_past_future_indicator.columns.tolist() if climate_variable in cols and changes_past_future_indicator.columns.levels[2][0] in cols]
-            col_interest_p90= [cols for cols in changes_past_future_indicator.columns.tolist() if climate_variable in cols and changes_past_future_indicator.columns.levels[2][1] in cols]
+            col_interest_med= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in the median in %' in cols]
+            col_interest_p10= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in 10-th percentile %' in cols]
+            col_interest_p90= [cols for cols in df.columns.tolist() if climate_variable in cols and 'Change in 90-th percentile %' in cols]
 
-            if (changes_past_future_indicator.loc[(name_p),col_interest_med][abs(changes_past_future_indicator.loc[(name_p),col_interest_med])>20].notnull().values.any()) or (changes_past_future_indicator.loc[(name_p),col_interest_p10][abs(changes_past_future_indicator.loc[(name_p),col_interest_p10])>50].notnull().values.any() or changes_past_future_indicator.loc[(name_p),col_interest_p90][abs(changes_past_future_indicator.loc[(name_p),col_interest_p90])>50].notnull().values.any()):
+            if (df.loc[(name_p),col_interest_med][abs(df.loc[(name_p),col_interest_med])>20].notnull().values.any()) or (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])>50].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])>50].notnull().values.any()):
                 # test if there are any True, if any value is over the threshold indicated
                 ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'High' # attribute value to exposure level
-            if (changes_past_future_indicator.loc[(name_p),col_interest_p10][abs(changes_past_future_indicator.loc[(name_p),col_interest_p10])>20].notnull().values.any() or changes_past_future_indicator.loc[(name_p),col_interest_p90][abs(changes_past_future_indicator.loc[(name_p),col_interest_p90])>20].notnull().values.any()):
+            if (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])>20].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])>20].notnull().values.any()):
                 # test if there are any True, if any value is over the threshold indicated
                 ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'Medium' # attribute value to exposure level
-            if (changes_past_future_indicator.loc[(name_p),col_interest_p10][abs(changes_past_future_indicator.loc[(name_p),col_interest_p10])<20].notnull().values.any() or changes_past_future_indicator.loc[(name_p),col_interest_p90][abs(changes_past_future_indicator.loc[(name_p),col_interest_p90])<20].notnull().values.any()):
+            if (df.loc[(name_p),col_interest_p10][abs(df.loc[(name_p),col_interest_p10])<20].notnull().values.any() or df.loc[(name_p),col_interest_p90][abs(df.loc[(name_p),col_interest_p90])<20].notnull().values.any()):
                 # test if there are any True, if any value is under the threshold indicated
-                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'Low' # attribute value to exposure level
+                ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'No' # attribute value to exposure level
     
-    ExposureLevel.style.apply(exposureColor) # apply color depending on value of Exposure
+    ExposureLevel=ExposureLevel.style.apply(exposureColor) # apply color depending on value of Exposure
+    ExposureLevel=ExposureLevel.set_table_styles([{'selector': 'th.col_heading', 'props': 'text-align: left;'}],[{'selector': 'td', 'props': 'text-align: center;'}],overwrite = True) # place first level column to the left
+    # meant to place element in dataframe, but do not work very well
     return ExposureLevel
 
 
-# In[22]:
+# In[23]:
 
 
+# function use in function 'level_exposure' to color result depending on the result
 def exposureColor(series):
     green = 'background-color: lightgreen'
     orange = 'background-color: orange'
