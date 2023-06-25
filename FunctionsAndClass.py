@@ -28,6 +28,7 @@ import warnings
 warnings.filterwarnings('ignore') # to ignore the warnings
 import cdsapi # for copernicus function
 import datetime # to have actual date
+from netCDF4 import Dataset
 
 
 # # Class
@@ -75,7 +76,7 @@ class map_elements:
 
 # ### Copernicus class
 
-# In[22]:
+# In[4]:
 
 
 ## Definition of tuples that will be useful to search which data are available or not
@@ -182,8 +183,8 @@ def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
 
 # function year_copernicus produce 
 # year: a vector containing all the year in the period of interest
-# year_str: a ???? containing all the year in the period of interest in the string format
-# index: a ????? containing the index of the year and year_str
+# year_str: an array containing all the year in the period of interest in the string format
+# index: an array containing the index of the year and year_str
 #### Parameters of the function
 # first_year: number in int format, of the first year of the period of interest
 # last_year: number in int format, of the last year of the period of interest
@@ -342,7 +343,7 @@ def try_download_copernicus(temporal_resolution,SSP,name_variable,model,area,yea
     return path_file
 
 
-# In[21]:
+# In[10]:
 
 
 # download_extract functions aims to return the path were the downloaded file in zip format is extracted
@@ -498,18 +499,18 @@ def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, glo
         os.makedirs(path_for_csv) # to ensure the creation of the path
         # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
         # and then produce a csv file if the data exists
-        (df,period)=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
-        return df,period
+        df=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
+        return df
     else:# test if the data were already downloaded; if yes, this part of the if is applied
         if len(os.listdir(path_for_csv)) == 0: #test if the directory is empty
             # the csv file does not exist, even if the path exist
             # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
             # and then produce a csv file if the data exists
-            (df,period)=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
+            df=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
         else: # the directory is not empty
             df=file_already_downloaded(path_for_csv,title_file)
 
-        return df,period
+        return df
 
 
 # In[15]:
@@ -544,10 +545,10 @@ def dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_pat
         full_name = os.path.join(path_for_csv,title_file)
         print(full_name)
         df.to_csv(full_name) # register dataframe in csv file
-        return df,period 
+        return df 
     else: # if the dataframe is empty, no value were found, there is no value to register or to return
         #os.remove(path_for_file)# remove path
-        return df,period# there is no dataframe to return
+        return #df,period# there is no dataframe to return
 
 
 # In[16]:
@@ -594,7 +595,7 @@ def find_column_name(Open_path):
     # make a list with every variables of the netCDF file of interest
     climate_variable_variables=list(Open_path.variables)
     # variables that are not the column name of interest 
-    elements_not_climate_var =['time', 'time_bnds', 'bnds','lat', 'lat_bnds', 'lon', 'lon_bnds','time_bounds','bounds','lat_bounds','lon_bounds']
+    elements_not_climate_var =['time', 'time_bnds', 'bnds','lat', 'lat_bnds', 'lon', 'lon_bnds','time_bounds','bounds','lat_bounds','lon_bounds','height']
     for str in elements_not_climate_var:
         if str in climate_variable_variables:
             climate_variable_variables.remove(str)
@@ -707,7 +708,7 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
 
 # ## Return period function
 
-# In[ ]:
+# In[21]:
 
 
 from scipy.optimize import curve_fit ## given some x_data and some y_data and a model function f thaht depends on unknown parameters bveta,
@@ -719,7 +720,7 @@ from scipy.optimize import curve_fit ## given some x_data and some y_data and a 
     # and the square of the variance 
 
 
-# In[ ]:
+# In[22]:
 
 
 ## PROBELM : when 2 values are the same, what happens ????
@@ -747,7 +748,7 @@ def return_period(data_series):
     return data_series,T
 
 
-# In[ ]:
+# In[23]:
 
 
 def list_duplicates_of(seq,item):
@@ -764,7 +765,7 @@ def list_duplicates_of(seq,item):
     return locs
 
 
-# In[ ]:
+# In[24]:
 
 
 # to test return_period
@@ -775,7 +776,7 @@ randomlist = random.sample(range(100, 500), 365)
 randomlist[0]=randomlist[1]
 
 
-# In[ ]:
+# In[25]:
 
 
 #rank=np.arange(len(randomlist),0,-1,dtype=int)
@@ -783,47 +784,41 @@ randomlist[0]=randomlist[1]
 #rank
 
 
-# In[ ]:
+# In[26]:
 
 
 #duplicate=list_duplicates_of(randomlist, randomlist[0])
 #type(duplicate)
 
 
-# In[ ]:
+# In[27]:
 
 
 ##duplicate
 
 
-# In[ ]:
+# In[28]:
 
 
 #type(rank[duplicate])
 
 
-# In[ ]:
+# In[29]:
 
 
 ##mean_rank=sum(rank[duplicate].tolist())/len(rank[duplicate].tolist())
 
 
-# In[ ]:
+# In[30]:
 
 
 #mean_rank
 
 
-# In[ ]:
+# In[31]:
 
 
 #rank[duplicate]=mean_rank
-
-
-# In[ ]:
-
-
-(ranked_data_series,T)=return_period(randomlist)
 
 
 # In[ ]:
@@ -866,31 +861,39 @@ def model_f4(x, a, b, c):
 # In[ ]:
 
 
+r'''
 popt, pcov = curve_fit(model_f, T, ranked_data_series, p0=[50,-10,-100])
+'''
 
 
 # In[ ]:
 
 
+r'''
 a_opt, b_opt, c_opt = popt
 x_model = np.linspace(min(T), max(T), 100)
 y_model = model_f(x_model, a_opt, b_opt, c_opt)
+'''
 
 
 # In[ ]:
 
 
+r'''
 plt.scatter(T,ranked_data_series)
 plt.plot(x_model,y_model, color='r')
 plt.show()
+'''
 
 
 # In[ ]:
 
 
+r'''
 plt.imshow(np.log(np.abs(pcov)))
 plt.colorbar()
 plt.show()
+'''
 
 
 # In[ ]:
