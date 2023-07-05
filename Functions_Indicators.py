@@ -780,14 +780,14 @@ def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new
     return data_NEXGDDPCMIP6
 
 
-# In[38]:
+# In[40]:
 
 
 def infos_str(climate_var,temporal_resolution):
-    if climate_var=='pr':
+    if 'pr' in climate_var.lower():
         climate_var_longName = 'precipitation'
         unit='mm/'+temporal_resolution[0].lower()+temporal_resolution[1:len(temporal_resolution)]
-    if 'tas' in climate_var:
+    if 'tas' in climate_var.lower():
         unit=u'\N{DEGREE SIGN}C'
         climate_var_longName = 'temperature'
     if climate_var=='tasmax':
