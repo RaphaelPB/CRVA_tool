@@ -3,7 +3,7 @@
 
 # This notebook aims to contain all functions for indicators.
 
-# In[54]:
+# In[1]:
 
 
 from scipy import stats
@@ -17,19 +17,19 @@ import os.path
 import math
 
 
-# In[55]:
+# In[2]:
 
 
 # Treat data
 
 
-# In[56]:
+# In[3]:
 
 
 ## Add Year, Month and Season to df
 
 
-# In[57]:
+# In[4]:
 
 
 def add_year_month_season(df,column_date):
@@ -66,7 +66,7 @@ def add_year_month_season(df,column_date):
     return df
 
 
-# In[81]:
+# In[5]:
 
 
 def str_month(int_m):
@@ -97,29 +97,61 @@ def str_month(int_m):
     return str_m
 
 
-# In[ ]:
+# In[6]:
 
 
+# this function is meant to filter the data wnated 
+def filter_dataframe(df,name_location,list_model_to_kill,start_y=1950,stop_y=2100):
+    df = df.reset_index() # to take out multiindex that may exist and complicate filtering process
+    
+    for name_model in list_model_to_kill:
+        df = df[df['Model']!=name_model]
+    
+    df = df[df['Name project']==name_location] # select only data of interest
+    df=add_year_month_season(df,'Date') # add column 'Year', 'Month', 'Season'
+    
+    if start_y!=1950 or stop_y!=2100:
+        df = df[df['Year'].between(start_y,stop_y)] # select only the years of interest
+    
+    return df
 
+
+# In[7]:
+
+
+# this function aims to find the correct name of the column of interest
+
+def find_name_col(df,climate_var_longName):
+    try:
+        try:
+            try:
+                old_title_column=df.filter(like=climate_var_longName, axis=1).columns[0]
+            except:
+                old_title_column=df.filter(like=climate_var_longName.capitalize(), axis=1).columns[0]
+        except:
+            old_title_column=df.filter(like=climate_var_longName.upper(), axis=1).columns[0]
+    except:
+        old_title_column=df.filter(like=climate_var_longName.lower(), axis=1).columns[0]
+    return old_title_column
 
 
 # # Precipitation
 
 # ### Return period
 
-# In[58]:
+# In[8]:
 
 
 # return period for each project, model, scenario
 
 
-# In[59]:
+# In[9]:
 
 
 # function value for return period
 
 
-# In[60]:
+# In[10]:
 
 
 def threshold_coresponding_to_return_period(loc,scale,T):
@@ -137,7 +169,7 @@ def threshold_coresponding_to_return_period(loc,scale,T):
     #print('This threshold corresponds to a return period of '+str(round(return_period))+ ' year event over a '+str(n)+' year period')
 
 
-# In[61]:
+# In[11]:
 
 
 def dataframe_threshold_coresponding_to_return_period(df):
@@ -162,7 +194,7 @@ def dataframe_threshold_coresponding_to_return_period(df):
     return return_period
 
 
-# In[62]:
+# In[12]:
 
 
 def return_period_coresponding_to_threshold(Z):
@@ -180,7 +212,7 @@ def return_period_coresponding_to_threshold(Z):
     return return_period_coresponding
 
 
-# In[63]:
+# In[13]:
 
 
 def dataframe_future_return_period_of_1_day_event(df):
@@ -201,7 +233,7 @@ def dataframe_future_return_period_of_1_day_event(df):
     return return_period
 
 
-# In[64]:
+# In[14]:
 
 
 r'''
@@ -224,13 +256,13 @@ if not os.path.isdir(path_figure):
 plt.show()'''
 
 
-# In[65]:
+# In[15]:
 
 
 # accross models and scenarios
 
 
-# In[66]:
+# In[16]:
 
 
 r'''
@@ -246,7 +278,7 @@ test.drop(labels='NESM3',level=1,inplace=True)
 '''
 
 
-# In[67]:
+# In[17]:
 
 
 r'''
@@ -270,7 +302,7 @@ plt.show()
 '''
 
 
-# In[68]:
+# In[18]:
 
 
 # questions Temps retour :
@@ -286,7 +318,7 @@ plt.show()
 
 # ### N-day event 
 
-# In[69]:
+# In[19]:
 
 
 # some models to not have any values for some scenarios
@@ -328,7 +360,7 @@ def delete_NaN_model(df):
     return []
 
 
-# In[70]:
+# In[20]:
 
 
 # this functions aims to calculate the n_day_event
@@ -349,7 +381,7 @@ def n_day_maximum_rainfall(number_day,df):
     return Dataframe_n_day_event
 
 
-# In[71]:
+# In[21]:
 
 
 # this function aims to create the empty dataframe that will be filled
@@ -366,7 +398,7 @@ def fill_dataframe(name_project,scenario,model,time,data_df,name_col):
     return Variable_dataframe
 
 
-# In[72]:
+# In[22]:
 
 
 # function dataframe_n_day_event produce a dataframe, with the n_day event precipitation for the period, models and scenarios asked
@@ -418,7 +450,7 @@ def dataframe_n_day_event(df,number_day):
     return df_n_day_event # return a dataframe, with all the projects, scenarios, models and period of n day
 
 
-# In[73]:
+# In[23]:
 
 
 def dataframe_1_day_event(df):
@@ -429,7 +461,7 @@ def dataframe_1_day_event(df):
     return df_max
 
 
-# In[74]:
+# In[24]:
 
 
 # the function df_to_csv aims to return the filled dataframe in a csv format
@@ -463,19 +495,27 @@ def df_to_csv(df,path_for_csv,title_file):
 
 # ### Yearly average precipitation
 
-# In[75]:
+# In[32]:
 
 
-def yearly_avg(df,title_column):
+def temporal_avg(df,climate_var_long_name,title_column,temporal_resolution):
     df_yearly_avg = df.copy(deep =True)
-    df_yearly_avg=df_yearly_avg.drop(labels='Date',axis=1)
-    df_yearly_avg=df_yearly_avg.rename(columns={df_yearly_avg.columns[3]:title_column})
-    df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year']).sum() # sum per year
-    df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model']).mean()
+    old_name_column = find_name_col(df,climate_var_long_name)
+    df_yearly_avg=df_yearly_avg.rename(columns={old_name_column:title_column})
+    if 'pr' in title_column.lower():
+        if temporal_resolution == 'year':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].mean()*365.25
+        if temporal_resolution == 'month':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].mean()*30
+    else:
+        if temporal_resolution == 'year':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].mean()
+        if temporal_resolution == 'month':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].mean()
     return df_yearly_avg
 
 
-# In[76]:
+# In[26]:
 
 
 def yearly_avg_distr(df_yearly_avg):
@@ -487,7 +527,7 @@ def yearly_avg_distr(df_yearly_avg):
 
 # ### Seasonal average precipitation
 
-# In[77]:
+# In[27]:
 
 
 def avg_dry_season_precipitation(df,title_column):
@@ -516,7 +556,7 @@ def avg_dry_season_precipitation(df,title_column):
 
 # # Changes in indicators
 
-# In[78]:
+# In[28]:
 
 
 def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
@@ -544,7 +584,7 @@ def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
 
 # # Level of exposure
 
-# In[79]:
+# In[29]:
 
 
 ## Functions not finished
@@ -590,7 +630,7 @@ def level_exposure(df):
     return ExposureLevel
 
 
-# In[80]:
+# In[30]:
 
 
 # function use in function 'level_exposure' to color result depending on the result
@@ -610,37 +650,151 @@ def exposureColor(series):
 # In[ ]:
 
 
+# graphs
 
 
-
-# In[ ]:
-
+# In[34]:
 
 
+# data_1 : first set of data to be used, should only contains the location of interest
+# source_1 : source of the first set of data
+# data_2 : second set of dat to be used, should only contains the location of interest
+# source_2 : source of the second set of data
+
+def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100):
+    
+    (climate_var_longName,unit)= infos_str(climate_var,temporal_resolution)
+    
+    # define the new common name, that will be used as y_axis for boxplots and line
+    new_name_col = temporal_resolution+'ly '+climate_var_longName+' '+unit
+    
+    if 'NEX-GDDP-CMIP6' in source_1:
+        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
+            data_1=data_1[data_1['Year'].between(start_year_boxplot,stop_year_boxplot)]
+        data_boxplot=prepare_NEX_GDDP_CMIP6(data_1,climate_var_longName,stats,temporal_resolution,new_name_col)
+        source_boxplot=source_1
+    if 'NEX-GDDP-CMIP6' in source_2:
+        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
+            data_2=data_2[data_2['Year'].between(start_year_boxplot,stop_year_boxplot)]
+        data_boxplot=prepare_NEX_GDDP_CMIP6(data_2,climate_var_longName,stats,temporal_resolution,new_name_col)
+        source_boxplot=source_2
+    if 'NOAA' in source_1:
+        if (start_year_line!=1970) or (stop_year_line!=2014):
+            data_1=data_1[data_1['Year'].between(start_year_line,stop_year_line)]
+        title_column=title_column_NOAA_obs(source_1,climate_var)
+        data_line=prepare_NOAA(data_1,title_column,temporal_resolution,new_name_col)
+        source_line=source_1
+    if 'NOAA' in source_2:
+        if (start_year_line!=1970) or (stop_year_line!=2014):
+            data_2=data_2[data_2['Year'].between(start_year_line,stop_year_line)]
+        title_column=title_column_NOAA_obs(source_2,climate_var)
+        data_line=prepare_NOAA(data_2,title_column,temporal_resolution,new_name_col)
+        source_line=source_2
+    
+    if temporal_resolution == 'Month': # to plot the data in the chronological order of the months
+        month_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+        data_boxplot=data_boxplot.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()
+        data_line=data_line.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()    
+    
+    if stats == 'Sum':
+        title_plot = climate_var_longName+' '+unit+', modeled by '+source_boxplot+',\nbetween '+str(start_year_boxplot)+' and '+str(stop_year_boxplot)+' at '+location+' compared with '+source_line+'\nobservation data, between '+str(start_year_line)+' and '+str(stop_year_line)
+    else:
+        title_plot = stats+' '+climate_var_longName+' '+unit+', modeled by '+source_boxplot+',\nbetween '+str(start_year_boxplot)+' and '+str(stop_year_boxplot)+' at '+location+' compared with '+source_line+'\nobservation data, between '+str(start_year_line)+' and '+str(stop_year_line)
+        
+    boxplots_line(data_boxplot,data_line,temporal_resolution,new_name_col,source_line,title_plot)
 
 
-# In[ ]:
+# In[35]:
 
 
+# data_boxplot : dataframr that will be used to do the boxplots
+# data_line : dataframe that will be used to add a line
+# x_axis : Name of the column that wil be used for the x_axis
+# y_axis : Name of the column that wil be used for the y_axis
+# ----> x_axis and y_axis are both a str, and both should be used as name of colum in the dataframes for the boxplots and 
+#       the line
+# source_line : name of the source of the data plot in the line
+# title_plot : title for this plot. Should be defined in the function before
+# categories : default parameters, will be used for the hue of the boxplot. The hue is a third dimension along a depth axis, 
+#              where different levels are plotted with different colors
+
+#stats+' monthly precipitation mm/month between '+start_year+' and '+stop_year+'\n with '+source_obs+' observed data and '+source_model+' modeled data, at '+location
+
+def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,categories='Experiment'):
+    fig,ax=plt.subplots()
+    sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,ax=ax)
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    sns.lineplot(data=data_line,x=x_axis, y=y_axis,ax=ax,label=source_line)
+    
+    # display the common legend for the line and boxplots
+    handles, labels=ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.2, 0.5),title='Legend')
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    plt.title(title_plot)
+    path_figure=os.path.join(r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures','trend_month.png')
+    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+    plt.show()
 
 
-
-# In[ ]:
-
+# In[36]:
 
 
+def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
+    df_NOAA = df_NOAA.reset_index()
+    df = df_NOAA[[title_column,temporal_resolution]].groupby(temporal_resolution).mean().rename(columns={title_column:new_name_col}).reset_index()
+    
+    print('title_column '+title_column)
+    print('temporal_resolution '+temporal_resolution)
+    
+    
+    if 'PR' in title_column and temporal_resolution=='Month':
+        print('pr and month, multiplication by 30')
+        df[new_name_col] = df[[new_name_col]].values*30
+    
+    return df
 
 
-# In[ ]:
+# In[37]:
 
 
+def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new_name_col):
+    try:
+        try:
+            title_column=df.filter(like=climate_var_longName, axis=1).columns[0]
+        except:
+            title_column=df.filter(like=climate_var_longName.capitalize(), axis=1).columns[0]
+    except:
+        title_column=df.filter(like=climate_var_longName.upper(), axis=1).columns[0]
+        
+    if stats == 'Average':
+        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).mean().rename(columns={title_column:new_name_col}).reset_index()
+    if stats == 'Sum':
+        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).sum().rename(columns={title_column:new_name_col}).reset_index()
+    if stats == 'Median':
+        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).median().rename(columns={title_column:new_name_col}).reset_index()
+    
+    if 'pr' in climate_var_longName and temporal_resolution =='Month':
+        data_NEXGDDPCMIP6[new_name_col] = data_NEXGDDPCMIP6[[new_name_col]].values*30
+    
+    return data_NEXGDDPCMIP6
 
 
-
-# In[ ]:
-
+# In[38]:
 
 
+def infos_str(climate_var,temporal_resolution):
+    if climate_var=='pr':
+        climate_var_longName = 'precipitation'
+        unit='mm/'+temporal_resolution[0].lower()+temporal_resolution[1:len(temporal_resolution)]
+    if 'tas' in climate_var:
+        unit=u'\N{DEGREE SIGN}C'
+        climate_var_longName = 'temperature'
+    if climate_var=='tasmax':
+        climate_var_longName = 'Daily Maximum Near-Surface Air Temperature '
+    if climate_var=='tasmin':
+        climate_var_longName = 'minimum '+climate_var_longName
+    return climate_var_longName,unit
 
 
 # In[ ]:

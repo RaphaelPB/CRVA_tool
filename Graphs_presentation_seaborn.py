@@ -24,6 +24,11 @@
 
 emplacement_of_int = 'Gorongosa'
 
+start_year_hist = 1980
+stop_year_hist = 2014
+
+tuple_error_bar = ('pi',80) # default one is confidence interval of 95%
+
 
 # In[2]:
 
@@ -47,7 +52,7 @@ from matplotlib import pyplot as plt
 def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit):
     # import data
     
-    path_NEX_GDDP_CMIP6_EmplacementStation=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_'+unit+'_day_1980-2060',climate_var+'_1980-2060_projectsMoz_wrong_emplacement.csv')
+    path_NEX_GDDP_CMIP6_EmplacementStation=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_'+unit+'_day_1950-2100',climate_var+'_1950-2100_projectsMoz.csv')
     
     data_NEX_GDDP_CMIP6_EmplacementStation = pd.read_csv(path_NEX_GDDP_CMIP6_EmplacementStation)
     
@@ -124,7 +129,7 @@ def str_month(int_m):
     return str_m
 
 
-# In[105]:
+# In[6]:
 
 
 # this function is meant to find which meteo stations are the closest to the projects of interest
@@ -167,7 +172,7 @@ def find_closest_meteo_station_to_projects(data_obs_NOAA,name_projects,lat_proje
         print('\n')
 
 
-# In[106]:
+# In[7]:
 
 
 coords_1 = (2,3)
@@ -207,7 +212,7 @@ lat_projects = pd.Series(lat_projects_data)
 #find_closest_meteo_station_to_projects(daily_sum_obs_from_NOAA,name_projects,lat_projects,lon_projects)
 
 
-# In[10]:
+# In[138]:
 
 
 daily_sum_obs_from_NOAA_gorongosa = daily_sum_obs_from_NOAA[daily_sum_obs_from_NOAA['NAME']=='CHIMOIO, MZ']
@@ -221,21 +226,178 @@ daily_sum_obs_from_NOAA_gorongosa
 daily_sum_obs_from_NOAA_gorongosa
 
 
+# How much precipitation data are we missing in those data coming from NOAA ?
+
+# In[12]:
+
+
+def countna(data):
+    return data.isna().sum()
+
+
+# In[13]:
+
+
+na_values_daily_sum_obs_from_NOAA_gorongosa_PRCP=daily_sum_obs_from_NOAA_gorongosa[['PRCP','Year']].groupby(['Year']).agg(countna).reset_index()
+
+
+# In[14]:
+
+
+len(daily_sum_obs_from_NOAA_gorongosa['PRCP'])
+
+
+# In[15]:
+
+
+print('The missing value represent '+str((daily_sum_obs_from_NOAA_gorongosa['PRCP'].isna().sum()/len(daily_sum_obs_from_NOAA_gorongosa['PRCP']))*100)+' % of the total')
+
+
 # ### Precipitation : observation from Gorongosa
 # 
 # Observation precipitation data given by André Görgens (Cosnultant, Water resources Management, Zutari) in an email, on the 20th of June 2023.
 
-# In[12]:
+# In[16]:
 
 
 path = r'C:\Users\CLMRX\COWI\A248363 - Climate analysis - Documents\General\CRVA_tool\Master_thesis\Project\3 - Implementation\1 - Data\1-BC\DirecltyfromMoz\Precipitation_Gorongosa_reformat.csv'
 pr_obs_gorongosa_from_gorongosa = pd.read_csv(path)
 
 
-# In[13]:
+# In[17]:
 
 
-daily_sum_obs_gorongosa_from_NOAA = daily_sum_obs_from_NOAA[daily_sum_obs_from_NOAA['NAME']=='CHIMOIO, MZ']
+pr_obs_gorongosa_from_gorongosa=add_year_month_season(pr_obs_gorongosa_from_gorongosa,'time')
+
+
+# In[18]:
+
+
+pr_obs_gorongosa_from_gorongosa['pr'].iloc[0]
+
+
+# In[19]:
+
+
+pr_obs_gorongosa_from_gorongosa['pr'][pr_obs_gorongosa_from_gorongosa['pr']=='s/i'] = pr_obs_gorongosa_from_gorongosa['pr'].iloc[0]
+
+
+# In[20]:
+
+
+pr_obs_gorongosa_from_gorongosa['pr'] = pr_obs_gorongosa_from_gorongosa['pr'].astype(float)
+
+
+# In[21]:
+
+
+pr_obs_gorongosa_from_gorongosa['pr'].iloc[14971]
+
+
+# How much precipitation data are we missing in those data coming from the measuring station ?
+
+# In[22]:
+
+
+pr_obs_gorongosa_from_gorongosa['pr'].isna().sum()
+
+
+# In[23]:
+
+
+len(pr_obs_gorongosa_from_gorongosa['pr'])
+
+
+# In[24]:
+
+
+print('The missing value represent '+str((pr_obs_gorongosa_from_gorongosa['pr'].isna().sum()/len(pr_obs_gorongosa_from_gorongosa['pr']))*100)+' % of the total')
+
+
+# In[25]:
+
+
+na_values_pr_obs_gorongosa_from_gorongosa=pr_obs_gorongosa_from_gorongosa.groupby(['Year']).agg(countna).reset_index()
+
+
+# ### Temperature : NOAA
+
+# How much average temperature data are we missing in those data coming from the measuring station ?
+
+# In[26]:
+
+
+daily_sum_obs_from_NOAA_gorongosa['TAVG'].isna().sum()
+
+
+# In[27]:
+
+
+len(daily_sum_obs_from_NOAA_gorongosa['TAVG'])
+
+
+# In[28]:
+
+
+print('The missing value represent '+str((daily_sum_obs_from_NOAA_gorongosa['TAVG'].isna().sum()/len(daily_sum_obs_from_NOAA_gorongosa['TAVG']))*100)+' % of the total')
+
+
+# In[29]:
+
+
+na_values_daily_sum_obs_from_NOAA_gorongosa_TAVG=daily_sum_obs_from_NOAA_gorongosa[['TAVG','Year']].groupby(['Year']).agg(countna).reset_index()
+
+
+# How much maximum temperature data are we missing in those data coming from the measuring station ?
+
+# In[30]:
+
+
+daily_sum_obs_from_NOAA_gorongosa['TMAX'].isna().sum()
+
+
+# In[31]:
+
+
+len(daily_sum_obs_from_NOAA_gorongosa['TMAX'])
+
+
+# In[32]:
+
+
+print('The missing value represent '+str((daily_sum_obs_from_NOAA_gorongosa['TMAX'].isna().sum()/len(daily_sum_obs_from_NOAA_gorongosa['TAVG']))*100)+' % of the total')
+
+
+# In[33]:
+
+
+na_values_daily_sum_obs_from_NOAA_gorongosa_TMAX=daily_sum_obs_from_NOAA_gorongosa[['TMAX','Year']].groupby(['Year']).agg(countna).reset_index()
+
+
+# How much minimum temperature data are we missing in those data coming from the measuring station ?
+
+# In[34]:
+
+
+daily_sum_obs_from_NOAA_gorongosa['TMIN'].isna().sum()
+
+
+# In[35]:
+
+
+len(daily_sum_obs_from_NOAA_gorongosa['TMIN'])
+
+
+# In[36]:
+
+
+print('The missing value represent '+str((daily_sum_obs_from_NOAA_gorongosa['TMIN'].isna().sum()/len(daily_sum_obs_from_NOAA_gorongosa['TMIN']))*100)+' % of the total')
+
+
+# In[37]:
+
+
+na_values_daily_sum_obs_from_NOAA_gorongosa_TMIN=daily_sum_obs_from_NOAA_gorongosa[['TMIN','Year']].groupby(['Year']).agg(countna).reset_index()
 
 
 # ## Modeled data
@@ -245,24 +407,37 @@ daily_sum_obs_gorongosa_from_NOAA = daily_sum_obs_from_NOAA[daily_sum_obs_from_N
 
 # ### Precipitation NEX GDDP CMIP6
 
-# In[14]:
+# In[38]:
 
 
 # at the emplacement of our sub projects
-path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\pr\pr_mm_per_day_day_1980-2060\pr_1980-2060_projectsMoz_wrong_emplacement.csv'
-pr_wrong_modeled_NEXGDDPCMIP6 = import_treat_modeled_NEX_GDDP_CMIP6('pr', 'mm_per_day')
-pr_wrong_historic_modeled_NEXGDDPCMIP6 = pr_wrong_modeled_NEXGDDPCMIP6[pr_wrong_modeled_NEXGDDPCMIP6['Experiment']=='historical']
-pr_wrong_future_modeled_NEXGDDPCMIP6 = pr_wrong_modeled_NEXGDDPCMIP6[pr_wrong_modeled_NEXGDDPCMIP6['Experiment']!='historical']
-pr_futur_model_NEXGDDPCMIP6_gorongosa=pr_wrong_future_modeled_NEXGDDPCMIP6[pr_wrong_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB']
+path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\pr\pr_mm_per_day_day_1950-2100\pr_1950-2100_projectsMoz.csv'
+pr_modeled_NEXGDDPCMIP6 = import_treat_modeled_NEX_GDDP_CMIP6('pr', 'mm_per_day')
+pr_historic_modeled_NEXGDDPCMIP6 = pr_modeled_NEXGDDPCMIP6[pr_modeled_NEXGDDPCMIP6['Experiment']=='historical']
+pr_future_modeled_NEXGDDPCMIP6 = pr_modeled_NEXGDDPCMIP6[pr_modeled_NEXGDDPCMIP6['Experiment']!='historical']
+pr_historic_modeled_NEXGDDPCMIP6_gorongosa = pr_historic_modeled_NEXGDDPCMIP6[pr_historic_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB']
+pr_futur_model_NEXGDDPCMIP6_gorongosa=pr_future_modeled_NEXGDDPCMIP6[pr_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB']
 
 
-# In[15]:
+# In[111]:
 
 
-pr_wrong_future_modeled_NEXGDDPCMIP6[pr_wrong_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB']
+pr_modeled_NEXGDDPCMIP6_gorongosa = pr_modeled_NEXGDDPCMIP6[pr_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB']
 
 
-# In[16]:
+# In[183]:
+
+
+list(set(pr_modeled_NEXGDDPCMIP6['Name project']))
+
+
+# In[184]:
+
+
+pr_modeled_NEXGDDPCMIP6_mutua = pr_modeled_NEXGDDPCMIP6[pr_modeled_NEXGDDPCMIP6['Name project']=='WTP_Mutua_EIB']
+
+
+# In[39]:
 
 
 # to compare with NOAA observation data
@@ -273,17 +448,18 @@ pr_model_NEX_GDDPCMIP6_to_comp_NOAA_gorongosa = pr_model_NEX_GDDPCMIP6_to_comp_N
 
 # ### Temperature NEX-GDDP-CMIP6
 
-# In[17]:
+# In[118]:
 
 
 # at the emplacement of our sub projects
-path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\tas\tas_Celsius_day_1950-2100\tas_1950-2100_projectsMoz_wrong_emplacement.csv'
-tas_wrong_modeled_NEXGDDPCMIP6 = import_treat_modeled_NEX_GDDP_CMIP6('tas', 'Celsius')
-tas_wrong_historic_modeled_NEXGDDPCMIP6 = tas_wrong_modeled_NEXGDDPCMIP6[tas_wrong_modeled_NEXGDDPCMIP6['Experiment']=='historical']
-tas_wrong_future_modeled_NEXGDDPCMIP6 = tas_wrong_modeled_NEXGDDPCMIP6[tas_wrong_modeled_NEXGDDPCMIP6['Experiment']!='historical']
+path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\tas\tas_Celsius_day_1950-2100\tas_1950-2100_projectsMoz.csv'
+tas_modeled_NEXGDDPCMIP6 = import_treat_modeled_NEX_GDDP_CMIP6('tas', 'Celsius')
+tas_modeled_NEXGDDPCMIP6_gorongosa = tas_modeled_NEXGDDPCMIP6[tas_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB']
+tas_historic_modeled_NEXGDDPCMIP6 = tas_modeled_NEXGDDPCMIP6[tas_modeled_NEXGDDPCMIP6['Experiment']=='historical']
+tas_future_modeled_NEXGDDPCMIP6 = tas_modeled_NEXGDDPCMIP6[tas_modeled_NEXGDDPCMIP6['Experiment']!='historical']
 
 
-# In[18]:
+# In[41]:
 
 
 # to compare with NOAA observation data
@@ -293,23 +469,349 @@ tas_model_NEX_GDDPCMIP6_to_comp_NOAA_gorongosa = tas_model_NEX_GDDPCMIP6_to_comp
 tas_model_NEX_GDDPCMIP6_to_comp_NOAA_gorongosa
 
 
+# ### Maximum temperature NEX-GDDPCMIP6
+
+# In[121]:
+
+
+# at the emplacement of our sub projects
+path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\tasmax\tasmax_Celsius_day_1950-2100\tasmax_1950-2100_projectsMoz.csv'
+tasmax_modeled_NEXGDDPCMIP6 = import_treat_modeled_NEX_GDDP_CMIP6('tasmax', 'Celsius')
+tasmax_modeled_NEXGDDPCMIP6_gorongosa = tasmax_modeled_NEXGDDPCMIP6[tasmax_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB']
+tasmax_historic_modeled_NEXGDDPCMIP6 = tasmax_modeled_NEXGDDPCMIP6[tasmax_modeled_NEXGDDPCMIP6['Experiment']=='historical']
+tasmax_future_modeled_NEXGDDPCMIP6 = tasmax_modeled_NEXGDDPCMIP6[tasmax_modeled_NEXGDDPCMIP6['Experiment']!='historical']
+
+
+# ### Minimum temperature NEX-GDDPCMIP6
+
 # # Compare historic observed vs historic model
 
-# In[19]:
+# ## Precipitation
+
+# In[42]:
 
 
-# deja fait, reproduire ce qui a ete fait sans seaborn
+pr_historic_modeled_NEXGDDPCMIP6_gorongosa=pr_historic_modeled_NEXGDDPCMIP6_gorongosa[pr_historic_modeled_NEXGDDPCMIP6_gorongosa['Year'].between(start_year_hist,stop_year_hist)]
 
 
-# In[ ]:
+# In[43]:
 
 
+pr_obs_gorongosa_from_gorongosa = pr_obs_gorongosa_from_gorongosa[pr_obs_gorongosa_from_gorongosa['Year'].between(start_year_hist,stop_year_hist)]
 
+
+# In[53]:
+
+
+pr_obs_gorongosa_from_gorongosa
+
+
+# In[62]:
+
+
+pr_historic_modeled_NEXGDDPCMIP6_gorongosa
+
+
+# In[63]:
+
+
+pr_historic_modeled_NEXGDDPCMIP6_gorongosa.groupby(['Experiment','Model','Year'])[['Mean of the daily precipitation rate mm_per_day']].mean()
+
+
+# In[180]:
+
+
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+
+sns.lineplot(data=pr_historic_modeled_NEXGDDPCMIP6_gorongosa.groupby(['Experiment','Model','Year'])[['Mean of the daily precipitation rate mm_per_day']].mean()*365.25,x='Year', y='Mean of the daily precipitation rate mm_per_day',hue='Model',errorbar=tuple_error_bar,ax=ax)
+sns.lineplot(data=pr_obs_gorongosa_from_gorongosa.groupby('Year')[['Mean of the daily precipitation rate mm_per_day']].mean()*365.25,x='Year', y='Mean of the daily precipitation rate mm_per_day',color='black',label='Observation from Gorongosa',errorbar=tuple_error_bar,ax=ax)
+
+# display the legend
+handles, labels=ax.get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.38, 0.88),title='Legend')
+ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+plt.ylabel('Yearly average precipitation mm_per_year')
+plt.title('Modeled NEX-GDDP-CMIP6 yearly average precipitation accross time at Gorongosa,\n compared to observed yearly average temperature from gorongosa, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Comp_hist_m_o_pr.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+plt.show()
+
+
+# In[176]:
+
+
+pr_historic_modeled_NEXGDDPCMIP6_gorongosa['Mean of the daily precipitation rate mm_per_year']=pr_historic_modeled_NEXGDDPCMIP6_gorongosa[['Mean of the daily precipitation rate mm_per_day']].values*365.25
+
+
+# In[179]:
+
+
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+
+sns.lineplot(data=pr_historic_modeled_NEXGDDPCMIP6_gorongosa.groupby(['Experiment','Model','Year'])[['Mean of the daily precipitation rate mm_per_year']].mean(),x='Year', y='Mean of the daily precipitation rate mm_per_year',hue='Model',errorbar=tuple_error_bar,ax=ax)
+data_line=daily_sum_obs_from_NOAA_gorongosa[daily_sum_obs_from_NOAA_gorongosa['Year'].between(1980,2014)]
+data_line = data_line.groupby('Year')[['PRCP']].mean()*365.25
+sns.lineplot(data=data_line,x='Year', y='PRCP',color='black',label='Observation from NOAA',errorbar=tuple_error_bar,ax=ax)
+
+# display the legend
+handles, labels=ax.get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.38, 0.88),title='Legend')
+ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+plt.title('Modeled NEX-GDDP-CMIP6 yearly average precipitation accross time at Gorongosa,\n compared to observed yearly average temperature from NOAA, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Comp_hist_m_o_pr.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+plt.show()
+
+
+# In[140]:
+
+
+daily_sum_obs_from_NOAA
+
+
+# In[137]:
+
+
+daily_sum_obs_from_NOAA
+
+
+# In[77]:
+
+
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+
+sns.lineplot(data=pr_historic_modeled_NEXGDDPCMIP6_gorongosa.groupby(['Experiment','Model','Year'])[['Mean of the daily precipitation rate mm_per_day']].mean(),x='Year', y='Mean of the daily precipitation rate mm_per_day',label='Variation accross models',errorbar=tuple_error_bar,ax=ax)
+sns.lineplot(data=pr_obs_gorongosa_from_gorongosa.groupby('Year')[['Mean of the daily precipitation rate mm_per_day']].mean(),x='Year', y='Mean of the daily precipitation rate mm_per_day',color='black',label='Observation from Gorongosa',errorbar=tuple_error_bar,ax=ax)
+ax2 = plt.twinx()
+sns.lineplot(data=na_values_pr_obs_gorongosa_from_gorongosa,x='Year',y='pr',label='Missing value',ax=ax2)
+
+# display the legend
+handles, labels=ax.get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.38, 0.88),title='Legend')
+ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+plt.title('Modeled NEX-GDDP-CMIP6 yearly average precipitation accross time at Gorongosa,\n compared to observed yearly average temperature from gorongosa, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Comp_hist_m_o_pr2.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+plt.show()
+
+
+# In[73]:
+
+
+na_values_pr_obs_gorongosa_from_gorongosa
+
+
+# In[75]:
+
+
+sns.lineplot(data=na_values_pr_obs_gorongosa_from_gorongosa,x='Year',y='pr')
+
+
+# In[78]:
+
+
+pr_obs_gorongosa_from_gorongosa['Model']='Observation from Gorongosa'
+pr_obs_gorongosa_from_gorongosa=pr_obs_gorongosa_from_gorongosa.rename(columns={'pr':'Mean of the daily precipitation rate mm_per_day'})
+pr_obs_gorongosa_from_gorongosa
+
+
+# In[79]:
+
+
+df_boxplot=pd.concat([pr_obs_gorongosa_from_gorongosa,pr_historic_modeled_NEXGDDPCMIP6_gorongosa])
+df_boxplot
+
+
+# In[80]:
+
+
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+
+cols = ['pink' if (x =='Observation from Gorongosa') else 'skyblue' for x in df_boxplot.Model.drop_duplicates().values]
+sns.boxplot(data=df_boxplot,x=df_boxplot.Model, y='Mean of the daily precipitation rate mm_per_day',palette=cols,ax=ax)
+
+# display the legend
+#handles, labels=ax.get_legend_handles_labels()
+#fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
+#ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+plt.title('Compare observation for precipitation average from Gorongosa,\n with modeled data by NEX-GDDP-CMIP6, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\BoxplotsComp_hist_m_o_pr.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+plt.show()
+
+
+# In[81]:
+
+
+# without outliers
+
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+
+cols = ['pink' if (x =='Observation from Gorongosa') else 'skyblue' for x in df_boxplot.Model.drop_duplicates().values]
+sns.boxplot(data=df_boxplot,x=df_boxplot.Model, y='Mean of the daily precipitation rate mm_per_day', fliersize=0,palette=cols,ax=ax)
+
+# display the legend
+#handles, labels=ax.get_legend_handles_labels()
+#fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
+#ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+plt.ylim((0,10))
+plt.title('Compare observation for precipitation average from Gorongosa,\n with modeled data by NEX-GDDP-CMIP6, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Boxplots_without_outliers_Comp_hist_m_o_pr.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+plt.show()
+
+
+# ## Temperature
+
+# In[82]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa=tas_historic_modeled_NEXGDDPCMIP6[tas_historic_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'].drop('Name project',axis=1)
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa=add_year_month_season(tas_historic_modeled_NEXGDDPCMIP6_gorongosa,'Date')
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa = tas_historic_modeled_NEXGDDPCMIP6_gorongosa[tas_historic_modeled_NEXGDDPCMIP6_gorongosa['Year'].between(start_year_hist,stop_year_hist)]
+
+
+# In[83]:
+
+
+daily_sum_obs_from_NOAA_gorongosa = daily_sum_obs_from_NOAA_gorongosa[daily_sum_obs_from_NOAA_gorongosa['Year'].between(start_year_hist,stop_year_hist)]
+
+
+# In[84]:
+
+
+# with confidence interval of 95 %
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+
+sns.lineplot(data=tas_historic_modeled_NEXGDDPCMIP6_gorongosa,x='Year', y='Daily Near-Surface Air Temperature °C',hue='Model',ax=ax)
+sns.lineplot(data=daily_sum_obs_from_NOAA_gorongosa,x='Year', y='TAVG',color='black',label='Observation NOAA',ax=ax)
+
+# display the legend
+handles, labels=ax.get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.21, 0.87),title='Legend')
+ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+plt.title('Modeled NEX-GDDP-CMIP6 yearly average temperature accross time,\n compared to observed yearly average temperature from NOAA, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Graphs_ci95_Comp_hist_m_o_tas.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+
+plt.show()
+
+
+# In[135]:
+
+
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+data1 = tas_historic_modeled_NEXGDDPCMIP6_gorongosa.groupby(['Experiment','Model','Year'])[['Daily Near-Surface Air Temperature °C']].mean().reset_index()
+sns.lineplot(data=data1,x='Year', y='Daily Near-Surface Air Temperature °C',hue='Model',errorbar=tuple_error_bar,ax=ax)
+sns.lineplot(data=daily_sum_obs_from_NOAA_gorongosa[['Year','TAVG']].groupby('Year')[['TAVG']].mean(),x='Year', y='TAVG',color='black',label='Observation NOAA',errorbar=tuple_error_bar,ax=ax)
+
+# display the legend
+handles, labels=ax.get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 0.87),title='Legend')
+ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+plt.title('Modeled NEX-GDDP-CMIP6 yearly average temperature accross time and scenarios,\n compared to observed yearly average temperature from NOAA, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Graphs_pi80_Comp_hist_m_o_tas.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+
+plt.show()
+
+
+# In[133]:
+
+
+daily_sum_obs_from_NOAA_gorongosa
+
+
+# In[130]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa.groupby(['Experiment','Model','Year'])[['Daily Near-Surface Air Temperature °C']].mean().reset_index()
+
+
+# In[131]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa.Model.unique()
+
+
+# In[86]:
+
+
+daily_sum_obs_from_NOAA_gorongosa['Model']='Observation NOAA'
+daily_sum_obs_from_NOAA_gorongosa=daily_sum_obs_from_NOAA_gorongosa.rename(columns={'TAVG':'Daily Near-Surface Air Temperature °C'})
+daily_sum_obs_from_NOAA_gorongosa
+
+
+# In[87]:
+
+
+df_boxplot=pd.concat([daily_sum_obs_from_NOAA_gorongosa,tas_historic_modeled_NEXGDDPCMIP6_gorongosa])
+df_boxplot
+
+
+# In[88]:
+
+
+fig,ax=plt.subplots()
+plt.tight_layout() # Adjust the padding between and around subplots.
+cols = ['pink' if (x =='Observation NOAA') else 'skyblue' for x in df_boxplot.Model.drop_duplicates().values]
+sns.boxplot(data=df_boxplot,x=df_boxplot.Model, y='Daily Near-Surface Air Temperature °C',palette=cols,whis=[10,90],ax=ax)
+
+# display the legend
+#handles, labels=ax.get_legend_handles_labels()
+#fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
+#ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+plt.title('Compare observation for temperature average from NOAA between 1970 and 2014,\n with modeled data by NEX-GDDP-CMIP6 between 1950 to 2014')
+
+path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Boxplots_whis10_90_Comp_hist_m_o_tas.png'
+plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+plt.show()
+
+
+# We can see that 'CMCC-CM2-SR5' and 'TaiESM1' do not have the same behaviour as the other models. We will take them off for the following analysis of the temperature
+
+# In[89]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa
+
+
+# In[90]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa=tas_historic_modeled_NEXGDDPCMIP6_gorongosa[tas_historic_modeled_NEXGDDPCMIP6_gorongosa['Model']!='TaiESM1']
+
+
+# In[91]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa=tas_historic_modeled_NEXGDDPCMIP6_gorongosa[tas_historic_modeled_NEXGDDPCMIP6_gorongosa['Model']!='CMCC-CM2-SR5']
+
+
+# In[92]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa
 
 
 # # Create overview of trends (monthly, annual evolution)
 
-# In[54]:
+# In[167]:
 
 
 # data_1 : first set of data to be used, should only contains the location of interest
@@ -317,7 +819,7 @@ tas_model_NEX_GDDPCMIP6_to_comp_NOAA_gorongosa
 # data_2 : second set of dat to be used, should only contains the location of interest
 # source_2 : source of the second set of data
 
-def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2060):
+def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100):
     
     (climate_var_longName,unit)= infos_str(climate_var,temporal_resolution)
     
@@ -325,12 +827,12 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
     new_name_col = temporal_resolution+'ly '+climate_var_longName+' '+unit
     
     if 'NEX-GDDP-CMIP6' in source_1:
-        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2060):
+        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
             data_1=data_1[data_1['Year'].between(start_year_boxplot,stop_year_boxplot)]
         data_boxplot=prepare_NEX_GDDP_CMIP6(data_1,climate_var_longName,stats,temporal_resolution,new_name_col)
         source_boxplot=source_1
     if 'NEX-GDDP-CMIP6' in source_2:
-        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2060):
+        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
             data_2=data_2[data_2['Year'].between(start_year_boxplot,stop_year_boxplot)]
         data_boxplot=prepare_NEX_GDDP_CMIP6(data_2,climate_var_longName,stats,temporal_resolution,new_name_col)
         source_boxplot=source_2
@@ -360,7 +862,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
     boxplots_line(data_boxplot,data_line,temporal_resolution,new_name_col,source_line,title_plot)
 
 
-# In[21]:
+# In[168]:
 
 
 # select years because impossible to read
@@ -385,7 +887,7 @@ def trends_year(climate_var,data_1,source_1,stats,location,start_year,stop_year,
         boxplots(df_filter,temporal_resolution,new_name_col,title_plot)
 
 
-# In[22]:
+# In[169]:
 
 
 def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new_name_col):
@@ -403,19 +905,32 @@ def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new
         data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).sum().rename(columns={title_column:new_name_col}).reset_index()
     if stats == 'Median':
         data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).median().rename(columns={title_column:new_name_col}).reset_index()
+    
+    if 'pr' in climate_var_longName and temporal_resolution =='Month':
+        data_NEXGDDPCMIP6[new_name_col] = data_NEXGDDPCMIP6[[new_name_col]].values*30
+    
     return data_NEXGDDPCMIP6
 
 
-# In[23]:
+# In[174]:
 
 
 def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
     df_NOAA = df_NOAA.reset_index()
     df = df_NOAA[[title_column,temporal_resolution]].groupby(temporal_resolution).mean().rename(columns={title_column:new_name_col}).reset_index()
+    
+    print('title_column '+title_column)
+    print('temporal_resolution '+temporal_resolution)
+    
+    
+    if 'PR' in title_column and temporal_resolution=='Month':
+        print('pr and month, multiplication by 30')
+        df[new_name_col] = df[[new_name_col]].values*30
+    
     return df
 
 
-# In[24]:
+# In[126]:
 
 
 def infos_str(climate_var,temporal_resolution):
@@ -426,13 +941,13 @@ def infos_str(climate_var,temporal_resolution):
         unit=u'\N{DEGREE SIGN}C'
         climate_var_longName = 'temperature'
     if climate_var=='tasmax':
-        climate_var_longName = 'maximum '+climate_var_longName
+        climate_var_longName = 'Daily Maximum Near-Surface Air Temperature '
     if climate_var=='tasmin':
         climate_var_longName = 'minimum '+climate_var_longName
     return climate_var_longName,unit
 
 
-# In[25]:
+# In[98]:
 
 
 def title_column_NOAA_obs(source,climate_var):
@@ -448,7 +963,7 @@ def title_column_NOAA_obs(source,climate_var):
         return title_column
 
 
-# In[29]:
+# In[99]:
 
 
 # data_boxplot : dataframr that will be used to do the boxplots
@@ -475,6 +990,9 @@ def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,ca
     fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.2, 0.5),title='Legend')
     ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
     plt.title(title_plot)
+    path_figure=os.path.join(r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures','trend_month.png')
+    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
     plt.show()
     
 # data_boxplot : dataframr that will be used to do the boxplots
@@ -489,7 +1007,8 @@ def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,ca
 
 def boxplots(data_boxplot,x_axis,y_axis,title_plot,categories='Experiment'):
     fig,ax=plt.subplots()
-    sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,ax=ax)
+    plt.tight_layout() # Adjust the padding between and around subplots.
+    sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,whis=[10,90],ax=ax)
     
     # display the legend
     handles, labels=ax.get_legend_handles_labels()
@@ -499,119 +1018,161 @@ def boxplots(data_boxplot,x_axis,y_axis,title_plot,categories='Experiment'):
     plt.show()
 
 
-# In[66]:
+# In[100]:
 
 
-def plot_spaghetti(data,x_axis,y_axis):
+def plot_spaghetti(data,x_axis,y_axis,title_plot,have_legend):
     fig,ax=plt.subplots()
     sns.lineplot(data=data,x=x_axis, y=y_axis,ax=ax)
         # display the legend
-    handles, labels=ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.1, 0.5),title='Legend')
+    if have_legend == 'yes':
+        handles, labels=ax.get_legend_handles_labels()
+        fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.1, 0.5),title='Legend')
     #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
-    #plt.title(title_plot)
+    plt.title(title_plot)
     plt.show()
 
 
-# In[27]:
+# In[101]:
 
 
 path = r'C:\Users\CLMRX\COWI\A248363 - Climate analysis - Documents\General\CRVA_tool\Master_thesis\Project\3 - Implementation\1 - Data\1-BC\NOAA-ClimateDataOnline\3370204.csv'
 daily_sum_obs_from_NOAA = pd.read_csv(path)
 daily_sum_obs_from_NOAA_gorongosa = daily_sum_obs_from_NOAA[daily_sum_obs_from_NOAA['NAME']=='CHIMOIO, MZ']
 daily_sum_obs_from_NOAA_gorongosa = add_year_month_season(daily_sum_obs_from_NOAA_gorongosa,'DATE')
-daily_sum_obs_from_NOAA_gorongosa
+daily_sum_obs_from_NOAA_gorongosa = daily_sum_obs_from_NOAA_gorongosa[daily_sum_obs_from_NOAA_gorongosa['Year'].between(start_year_hist,stop_year_hist)]
 
 
-# In[57]:
+# In[145]:
 
 
-trends_month('pr',pr_futur_model_NEXGDDPCMIP6_gorongosa,'NEX-GDDP-CMIP6',daily_sum_obs_from_NOAA_gorongosa,'NOAA','Median','Gorongosa')
+pr_modeled_NEXGDDPCMIP6_gorongosa
 
 
-# In[39]:
+# In[175]:
 
 
-trends_year('pr',pr_futur_model_NEXGDDPCMIP6_gorongosa,'NEX-GDDP-CMIP6','Average','Gorongosa',2020,2040)
+trends_month('pr',pr_modeled_NEXGDDPCMIP6_gorongosa,'NEX-GDDP-CMIP6',daily_sum_obs_from_NOAA_gorongosa,'NOAA','Average','Gorongosa',start_year_line=start_year_hist,stop_year_line=stop_year_hist,start_year_boxplot=1970,stop_year_boxplot=2100)
 
 
-# In[62]:
+# In[159]:
 
 
-trends_month('tas',tas_wrong_future_modeled_NEXGDDPCMIP6[tas_wrong_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'],'NEX-GDDP-CMIP6',daily_sum_obs_from_NOAA_gorongosa,'NOAA','Average','Gorongosa')
+df['New col'] = df[['Monthly precipitation mm/month']].values*30
+df
 
 
-# In[61]:
+# In[113]:
 
 
-trends_year('tas',tas_wrong_future_modeled_NEXGDDPCMIP6[tas_wrong_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'],'NEX-GDDP-CMIP6','Average','Gorongosa',2020,2040)
+trends_month('pr',pr_modeled_NEXGDDPCMIP6_gorongosa,'NEX-GDDP-CMIP6',daily_sum_obs_from_NOAA_gorongosa,'NOAA','Average','Gorongosa',start_year_line=start_year_hist,stop_year_line=stop_year_hist)
 
 
-# In[67]:
+# In[120]:
 
 
-plot_spaghetti(tas_wrong_future_modeled_NEXGDDPCMIP6[tas_wrong_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'],'Date','Daily Near-Surface Air Temperature °C')
+trends_month('tas',tas_modeled_NEXGDDPCMIP6_gorongosa,'NEX-GDDP-CMIP6',daily_sum_obs_from_NOAA_gorongosa,'NOAA','Average','Gorongosa',start_year_line=start_year_hist,stop_year_line=stop_year_hist,start_year_boxplot=1970,stop_year_boxplot=2100)
 
 
-# In[96]:
+# In[127]:
 
 
-tas_wrong_future_modeled_NEXGDDPCMIP6_gorongosa=tas_wrong_future_modeled_NEXGDDPCMIP6[tas_wrong_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'].drop(['Name project','Latitude','Longitude'],axis=1).groupby(['Experiment','Model','Year'])[['Daily Near-Surface Air Temperature °C']].mean().reset_index()
+trends_month('tasmax',tasmax_modeled_NEXGDDPCMIP6_gorongosa,'NEX-GDDP-CMIP6',daily_sum_obs_from_NOAA_gorongosa,'NOAA','Average','Gorongosa',start_year_line=start_year_hist,stop_year_line=stop_year_hist,start_year_boxplot=1970,stop_year_boxplot=2100)
 
 
-# In[97]:
+# In[123]:
 
 
-tas_wrong_future_modeled_NEXGDDPCMIP6_gorongosa
+tasmax_modeled_NEXGDDPCMIP6_gorongosa
 
 
-# In[99]:
+# In[107]:
 
 
-g = sns.FacetGrid(tas_wrong_future_modeled_NEXGDDPCMIP6_gorongosa, col="Experiment", height=4, aspect=.5)
+trends_year('tas',tas_future_modeled_NEXGDDPCMIP6[tas_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'],'NEX-GDDP-CMIP6','Average','Gorongosa',2020,2040)
+
+
+# In[108]:
+
+
+plot_spaghetti(tas_future_modeled_NEXGDDPCMIP6[tas_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'],'Date','Daily Near-Surface Air Temperature °C','title','Yes')
+
+
+# In[109]:
+
+
+tas_future_modeled_NEXGDDPCMIP6_gorongosa=tas_future_modeled_NEXGDDPCMIP6[tas_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'].drop(['Name project','Latitude','Longitude'],axis=1).groupby(['Experiment','Model','Year'])[['Daily Near-Surface Air Temperature °C']].mean().reset_index()
+
+
+# In[ ]:
+
+
+tas_future_modeled_NEXGDDPCMIP6_gorongosa
+
+
+# In[ ]:
+
+
+g = sns.FacetGrid(tas_future_modeled_NEXGDDPCMIP6_gorongosa, col="Experiment", height=4, aspect=.5)
 g.map(sns.lineplot, "Year",'Daily Near-Surface Air Temperature °C')
 
 
-# In[101]:
+# In[ ]:
 
 
-tas_wrong_future_modeled_NEXGDDPCMIP6_gorongosa_overMandS=tas_wrong_future_modeled_NEXGDDPCMIP6[tas_wrong_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'].drop(['Name project','Latitude','Longitude'],axis=1).groupby(['Year'])[['Daily Near-Surface Air Temperature °C']].mean().reset_index()
-
-
-# In[104]:
-
-
-sns.lineplot(tas_wrong_future_modeled_NEXGDDPCMIP6,x='Year',y='Daily Near-Surface Air Temperature °C')
+sns.lineplot(data=tas_future_modeled_NEXGDDPCMIP6_gorongosa, x="Year",y='Daily Near-Surface Air Temperature °C',hue='Experiment')
 
 
 # In[ ]:
 
 
-
-
-
-# In[ ]:
-
-
-
+tas_future_modeled_NEXGDDPCMIP6_gorongosa_overMandS=tas_future_modeled_NEXGDDPCMIP6[tas_future_modeled_NEXGDDPCMIP6['Name project']=='Gorongosa_EIB'].drop(['Name project','Latitude','Longitude'],axis=1).groupby(['Year'])[['Daily Near-Surface Air Temperature °C']].mean().reset_index()
 
 
 # In[ ]:
 
 
-
-
-
-# In[ ]:
-
-
-
+sns.lineplot(tas_future_modeled_NEXGDDPCMIP6,x='Year',y='Daily Near-Surface Air Temperature °C')
 
 
 # In[ ]:
 
 
+plot_spaghetti(tas_future_modeled_NEXGDDPCMIP6,'Year','Daily Near-Surface Air Temperature °C','title','No')
 
+
+# In[ ]:
+
+
+tas_historic_modeled_NEXGDDPCMIP6_gorongosa
+
+
+# In[ ]:
+
+
+fig,ax=plt.subplots() # sans aire
+sns.lineplot(data=tas_historic_modeled_NEXGDDPCMIP6_gorongosa,x= 'Month',y='Daily Near-Surface Air Temperature °C',hue='Model',ax=ax)#,errorbar=('pi',50) )
+sns.lineplot(data=daily_sum_obs_from_NOAA_gorongosa,x='Month',y='TAVG',color='black',ax=ax)
+
+
+# In[ ]:
+
+
+fig,ax=plt.subplots() # sans aire
+sns.lineplot(data=tas_historic_modeled_NEXGDDPCMIP6_gorongosa,x= 'Year',y='Daily Near-Surface Air Temperature °C',hue='Model',ax=ax)#,errorbar=('pi',50) )
+sns.lineplot(data=daily_sum_obs_from_NOAA_gorongosa,x='Year',y='TAVG',color='black',ax=ax)
+
+
+# In[ ]:
+
+
+sns.lineplot(data=na_values,y='TAVG',x='Year')
+
+
+# In[ ]:
+
+
+daily_sum_obs_from_NOAA_gorongosa['TAVG']
 
 
 # In[ ]:
