@@ -653,7 +653,7 @@ def exposureColor(series):
 # graphs
 
 
-# In[34]:
+# In[44]:
 
 
 # data_1 : first set of data to be used, should only contains the location of interest
@@ -663,7 +663,7 @@ def exposureColor(series):
 
 def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100):
     
-    (climate_var_longName,unit)= infos_str(climate_var,temporal_resolution)
+    (climate_var_longName,climate_var,unit)= infos_str(climate_var,temporal_resolution)
     
     # define the new common name, that will be used as y_axis for boxplots and line
     new_name_col = temporal_resolution+'ly '+climate_var_longName+' '+unit
@@ -672,6 +672,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
         if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
             data_1=data_1[data_1['Year'].between(start_year_boxplot,stop_year_boxplot)]
         data_boxplot=prepare_NEX_GDDP_CMIP6(data_1,climate_var_longName,stats,temporal_resolution,new_name_col)
+        return data_boxplot
         source_boxplot=source_1
     if 'NEX-GDDP-CMIP6' in source_2:
         if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
@@ -690,7 +691,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
         title_column=title_column_NOAA_obs(source_2,climate_var)
         data_line=prepare_NOAA(data_2,title_column,temporal_resolution,new_name_col)
         source_line=source_2
-    
+    return data_boxplot
     if temporal_resolution == 'Month': # to plot the data in the chronological order of the months
         month_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
         data_boxplot=data_boxplot.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()
@@ -755,7 +756,7 @@ def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
     return df
 
 
-# In[37]:
+# In[46]:
 
 
 def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new_name_col):
@@ -766,41 +767,54 @@ def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new
             title_column=df.filter(like=climate_var_longName.capitalize(), axis=1).columns[0]
     except:
         title_column=df.filter(like=climate_var_longName.upper(), axis=1).columns[0]
-        
+    print('title_column '+title_column)
     if stats == 'Average':
-        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).mean().rename(columns={title_column:new_name_col}).reset_index()
+        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].mean().rename(columns={title_column:new_name_col}).reset_index()
+        print(temporal_resolution)
+        print(data_NEXGDDPCMIP6)
     if stats == 'Sum':
-        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).sum().rename(columns={title_column:new_name_col}).reset_index()
+        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].sum().rename(columns={title_column:new_name_col}).reset_index()
     if stats == 'Median':
-        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution]).median().rename(columns={title_column:new_name_col}).reset_index()
+        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].median().rename(columns={title_column:new_name_col}).reset_index()
     
-    if 'pr' in climate_var_longName and temporal_resolution =='Month':
+    if 'pr' in climate_var_longName.lower() and temporal_resolution =='Month':
         data_NEXGDDPCMIP6[new_name_col] = data_NEXGDDPCMIP6[[new_name_col]].values*30
-    
+    print(data_NEXGDDPCMIP6)
     return data_NEXGDDPCMIP6
 
 
-# In[40]:
+# In[42]:
 
 
 def infos_str(climate_var,temporal_resolution):
     if 'pr' in climate_var.lower():
         climate_var_longName = 'precipitation'
         unit='mm/'+temporal_resolution[0].lower()+temporal_resolution[1:len(temporal_resolution)]
-    if 'tas' in climate_var.lower():
+        climate_var='pr'
+    if 'tas' in climate_var.lower() or 'temp' in climate_var.lower():
         unit=u'\N{DEGREE SIGN}C'
         climate_var_longName = 'temperature'
     if climate_var=='tasmax':
         climate_var_longName = 'Daily Maximum Near-Surface Air Temperature '
     if climate_var=='tasmin':
-        climate_var_longName = 'minimum '+climate_var_longName
-    return climate_var_longName,unit
+        climate_var_longName = 'Daily Minimum Near-Surface Air Temperature '
+    return climate_var_longName,climate_var,unit
 
 
-# In[ ]:
+# In[43]:
 
 
-
+def title_column_NOAA_obs(source,climate_var):
+    if source == 'NOAA':
+        if 'pr' in climate_var:
+            title_column='PRCP'
+        if climate_var=='tas':
+            title_column='TAVG'
+        if climate_var=='tasmax':
+            title_column='TMAX'
+        if climate_var=='tasmin':
+            title_column='TMIN'
+        return title_column
 
 
 # In[ ]:
