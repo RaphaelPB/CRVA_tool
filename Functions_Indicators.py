@@ -17,11 +17,7 @@ import os.path
 import math
 
 
-# In[2]:
-
-
-# Treat data
-
+# # Treat data
 
 # In[3]:
 
@@ -97,7 +93,7 @@ def str_month(int_m):
     return str_m
 
 
-# In[6]:
+# In[5]:
 
 
 # this function is meant to filter the data wnated 
@@ -112,6 +108,8 @@ def filter_dataframe(df,name_location,list_model_to_kill,start_y=1950,stop_y=210
     
     if start_y!=1950 or stop_y!=2100:
         df = df[df['Year'].between(start_y,stop_y)] # select only the years of interest
+    if 'index' in df.columns:
+        df= df.drop('index',axis=1)
     
     return df
 
@@ -135,7 +133,39 @@ def find_name_col(df,climate_var_longName):
     return old_title_column
 
 
-# # Precipitation
+# In[ ]:
+
+
+# the function df_to_csv aims to return the filled dataframe in a csv format
+# Inputs are:
+#       df: the dataframe that should be register in a csv file
+#      path_for_csv: this is the path where the csv file should be registered, in a string format
+#      title_file: this is the name of the csv file to be created in a string format
+#                  CAREFUL --> title_file MUST have the extension of the file in the string (.csv for example)
+# Output is:
+#      in the case where the dataframe is not empty, the ouput is the full path to the created csv file
+#      in the case where the dataframe is empty, the output is an empty list
+
+def df_to_csv(df,path_for_csv,title_file):
+    # test if dataframe is empty, if values exist for this period
+    if not df.empty: 
+        # if dataframe is not empty, value were registered, the first part is run : 
+        # a path to register the csv file is created, .....
+        if not os.path.isdir(path_for_csv):
+            # the path to the file does not exist
+            os.makedirs(path_for_csv) # to ensure creation of the folder
+            # creation of the path for the csv file, in a string format
+        full_name = os.path.join(path_for_csv,title_file)
+        # ..... and the dataframe is registered in a csv file
+        df.to_csv(full_name) # register dataframe in csv file
+        print('Path for csv file is: ' + full_name)
+        return full_name # return the full path that leads to the created csv file
+    else: # if the dataframe is empty, no value were found, there is no value to register or to return
+        print('The dataframe is empty')
+        return []
+
+
+# # General functions
 
 # ### Return period
 
@@ -172,7 +202,8 @@ def threshold_coresponding_to_return_period(loc,scale,T):
 # In[11]:
 
 
-def dataframe_threshold_coresponding_to_return_period(df):
+# return return period for dataframe of modelled data
+def dataframe_threshold_coresponding_to_return_period_model(df,name_col):
     df_copy=df.copy(deep=True)
     df_copy=df_copy.drop(labels='Date',axis=1)
     df_max = df_copy.groupby(['Name project','Experiment','Model','Year']).max() # maximum    
@@ -185,7 +216,7 @@ def dataframe_threshold_coresponding_to_return_period(df):
         for ssp in return_period.index.levels[1].tolist():
             for model in return_period.index.levels[2].tolist():
                 print('Name project '+name_p+ ' ssp '+ssp+ ' model '+model)
-                Z=df_max.loc[(name_p,ssp,model)].values.reshape(len(df_max.index.levels[3]),)
+                Z=df_max.loc[(name_p,ssp,model)][name_col].values.reshape(len(df_max.loc[(name_p,ssp,model)][name_col]),)
                 (loc1,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
                 # choice of gumbel because suits to extreme precipitation
                 return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = threshold_coresponding_to_return_period(loc1,scale,50)
@@ -194,9 +225,34 @@ def dataframe_threshold_coresponding_to_return_period(df):
     return return_period
 
 
+# In[ ]:
+
+
+# return return period for dataframe of observed data
+def dataframe_threshold_coresponding_to_return_period_obs(df,name_col):
+    df_copy=df.copy(deep=True)
+    df_copy=df_copy.drop(labels='Date',axis=1)
+    df_max = df_copy.groupby(['Name project','Year'])[[name_col]].max() # maximum    
+    midx = pd.MultiIndex.from_product([list(set(df_copy[df_copy.columns[0]]))],names=['Name project'])
+    cols = ['Value for return period 50 years mm/day','Value for return period 100 years mm/day']
+    return_period = pd.DataFrame(data = [], 
+                                index = midx,
+                                columns = cols)
+    for name_p in return_period.index.levels[0].tolist():
+        print('Name project '+name_p)
+        Z=df_max.loc[(name_p)][name_col].values.reshape(len(df_max.loc[(name_p)][name_col]),)
+        (loc1,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
+        # choice of gumbel because suits to extreme precipitation
+        return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = threshold_coresponding_to_return_period(loc1,scale,50)
+        return_period.loc[(name_p,ssp,model),('Value for return period 100 years mm/day')] = threshold_coresponding_to_return_period(loc1,scale,100)
+
+    return return_period
+
+
 # In[12]:
 
 
+# function a check
 def return_period_coresponding_to_threshold(Z):
     (loc,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
     # gumbel_r is chosen because
@@ -212,109 +268,61 @@ def return_period_coresponding_to_threshold(Z):
     return return_period_coresponding
 
 
-# In[13]:
+# In[ ]:
 
 
-def dataframe_future_return_period_of_1_day_event(df):
-    df_copy=df.copy(deep=True)
-    df_copy=df_copy.drop(labels='Date',axis=1)
-    df_max = df_copy.groupby(['Name project','Experiment','Model','Year']).max() # maximum    
-    midx = pd.MultiIndex.from_product([list(set(df_copy[df_copy.columns[0]])),list(set(df_copy[df_copy.columns[1]])),list(set(df_copy[df_copy.columns[2]]))],names=['Name project','Experiment', 'Model'])
-    cols = ['Return period 50 years mm/day','Return period 100 years mm/day']
-    return_period = pd.DataFrame(data = [], 
-                                index = midx,
-                                columns = cols)
-    for name_p in return_period.index.levels[0].tolist():
-        for ssp in return_period.index.levels[1].tolist():
-            for model in return_period.index.levels[2].tolist():
-                print('Name project '+name_p+ ' ssp '+ssp+ ' model '+model)
-                Z=df_max.loc[(name_p,ssp,model)].values.reshape(len(df_max.index.levels[3]),)
-                return_period.loc[(name_p,ssp,model),('Return period 1 day event')] = return_period_coresponding_to_threshold(Z)
-    return return_period
-
-
-# In[14]:
-
-
-r'''
-#Z = test['Precipitation mm/day'].values
-Z.sort()
-(loc,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
-# xaxis is precipitation and yaxis is densiy of probability
-myHist = plt.hist(Z,density=True) # If ``True``, draw and return a probability density: each bin 
-# will display the bin's raw count divided by the total number of counts *and the bin width*
-h = plt.plot(Z,gumbel_r.pdf(Z,loc,scale))
-plt.xlabel('Precipitation value mm/day')
-plt.ylabel('Density of probability' )
-plt.title('Histogram and probability density function of precipitation values\nfor year 2021 for one project ,\n one scenario and one model',fontdict={'fontsize': 10})
-plt.legend(['Probability density function','Histogramm'])
-title_png = 'test_density.png'
-path_figure = os.path.join(out_path,'figures')
-if not os.path.isdir(path_figure):
-    os.makedirs(path_figure)
-#plt.savefig(os.path.join(path_figure,title_png),format ='png')
-plt.show()'''
-
-
-# In[15]:
-
-
-# accross models and scenarios
-
-
-# In[16]:
-
-
-r'''
-test=precipitation_2021_2060_copy.loc[(precipitation_2021_2060_copy.index.levels[0][0])]
-test=test[[('Longitude','36.875')]]
-test=test.droplevel(level=3) # drop latitude index
-test.columns = test.columns.droplevel(0) # drop first level of column name
-test=test.rename(columns={test.columns[0]:'Precipitation mm/day'})
-test=test.swaplevel(0,2,axis=0)
-test = test.filter(like = str(2021), axis=0) # select only data for one year
-#test#['Precipitation mm'].values
-test.drop(labels='NESM3',level=1,inplace=True)
-'''
-
-
-# In[17]:
-
-
-r'''
-Z = test['Precipitation mm/day'].values
-Z.sort()
-(loc,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
-# xaxis is precipitation and yaxis is densiy of probability
-myHist = plt.hist(Z,density=True) # If ``True``, draw and return a probability density: each bin 
-# will display the bin's raw count divided by the total number of counts *and the bin width*
-h = plt.plot(Z,gumbel_r.pdf(Z,loc,scale))
-plt.xlabel('Precipitation value mm/day')
-plt.ylabel('Density of probability' )
-plt.title('Histogram and probability density function of precipitation values\nfor year 2021 for one project ,\n with all scenarios and models',fontdict={'fontsize': 10})
-plt.legend(['Probability density function','Histogramm'])
-title_png = 'test_density.png'
-path_figure = os.path.join(out_path,'figures')
-if not os.path.isdir(path_figure):
-    os.makedirs(path_figure)
-#plt.savefig(os.path.join(path_figure,title_png),format ='png')
-plt.show()
-'''
+# sure de cette function
+def return_period(Z,T,start_y,stop_y):
+    Z = df[df['Year'].between(start_y,stop_y)].groupby('Year')[['pr']].agg(np.nanmax)#.reshape(len(pr_obs_gorongosa_from_gorongosa.groupby('Year')[['pr']].max()),)
+    #Z = Z[~np.isnan(Z)]
+    (loc1,scale1)=scipy.stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
+    value_for_T=threshold_coresponding_to_return_period(loc1,scale1,T)
+    return 
 
 
 # In[18]:
 
 
 # questions Temps retour :
-#      tjs avec maximum ? oui, proba sur un an
+#      
 #      besoin de caler mieux distribution ? package pour le faire automatiquement ? si on fiat pas avec maxima, mais on va faire que avec maxima pour le moment
 
 
-# In[ ]:
+# ## calculation Yearly average
+
+# In[1]:
 
 
+# this function only works for projections
+def temporal_avg(df,climate_var_long_name,title_column,temporal_resolution):
+    df_yearly_avg = df.copy(deep =True)
+    old_name_column = find_name_col(df,climate_var_long_name)
+    df_yearly_avg=df_yearly_avg.rename(columns={old_name_column:title_column})
+    if 'pr' in title_column.lower():
+        if temporal_resolution == 'year':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].mean()*365.25
+        if temporal_resolution == 'month':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].mean()*30
+    else:
+        if temporal_resolution == 'year':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].mean()
+        if temporal_resolution == 'month':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].mean()
+    return df_yearly_avg
 
 
+# In[2]:
+
+
+# this function only works for projections
+def yearly_avg_distr(df_yearly_avg):
+    df_years_avg_distribution = df_yearly_avg.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
+    # if describe() does not return al wanted statistics, it is maybe because the elements in it are not recognized as int
+# add astype(int) as in following example; df.astype(int).groupby(['Name project']).describe(percentiles=[.1, .5, .9])
+    return df_years_avg_distribution
+
+
+# # Precipitation
 
 # ### N-day event 
 
@@ -461,75 +469,12 @@ def dataframe_1_day_event(df):
     return df_max
 
 
-# In[24]:
-
-
-# the function df_to_csv aims to return the filled dataframe in a csv format
-# Inputs are:
-#       df: the dataframe that should be register in a csv file
-#      path_for_csv: this is the path where the csv file should be registered, in a string format
-#      title_file: this is the name of the csv file to be created in a string format
-#                  CAREFUL --> title_file MUST have the extension of the file in the string (.csv for example)
-# Output is:
-#      in the case where the dataframe is not empty, the ouput is the full path to the created csv file
-#      in the case where the dataframe is empty, the output is an empty list
-
-def df_to_csv(df,path_for_csv,title_file):
-    # test if dataframe is empty, if values exist for this period
-    if not df.empty: 
-        # if dataframe is not empty, value were registered, the first part is run : 
-        # a path to register the csv file is created, .....
-        if not os.path.isdir(path_for_csv):
-            # the path to the file does not exist
-            os.makedirs(path_for_csv) # to ensure creation of the folder
-            # creation of the path for the csv file, in a string format
-        full_name = os.path.join(path_for_csv,title_file)
-        # ..... and the dataframe is registered in a csv file
-        df.to_csv(full_name) # register dataframe in csv file
-        print('Path for csv file is: ' + full_name)
-        return full_name # return the full path that leads to the created csv file
-    else: # if the dataframe is empty, no value were found, there is no value to register or to return
-        print('The dataframe is empty')
-        return []
-
-
-# ### Yearly average precipitation
-
-# In[32]:
-
-
-def temporal_avg(df,climate_var_long_name,title_column,temporal_resolution):
-    df_yearly_avg = df.copy(deep =True)
-    old_name_column = find_name_col(df,climate_var_long_name)
-    df_yearly_avg=df_yearly_avg.rename(columns={old_name_column:title_column})
-    if 'pr' in title_column.lower():
-        if temporal_resolution == 'year':
-            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].mean()*365.25
-        if temporal_resolution == 'month':
-            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].mean()*30
-    else:
-        if temporal_resolution == 'year':
-            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].mean()
-        if temporal_resolution == 'month':
-            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].mean()
-    return df_yearly_avg
-
-
-# In[26]:
-
-
-def yearly_avg_distr(df_yearly_avg):
-    df_years_avg_distribution = df_yearly_avg.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
-    # if describe() does not return al wanted statistics, it is maybe because the elements in it are not recognized as int
-# add astype(int) as in following example; df.astype(int).groupby(['Name project']).describe(percentiles=[.1, .5, .9])
-    return df_years_avg_distribution
-
-
 # ### Seasonal average precipitation
 
 # In[27]:
 
 
+# function a check
 def avg_dry_season_precipitation(df,title_column):
     df_season = df.copy(deep=True)
     df_season=df_season.rename(columns={df_season.columns[4]:title_column})
@@ -639,246 +584,4 @@ def exposureColor(series):
     orange = 'background-color: orange'
     red = 'background-color: red'
     return [red if value == 'High' else orange if value == 'Medium' else green for value in series]
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-# graphs
-
-
-# In[44]:
-
-
-# data_1 : first set of data to be used, should only contains the location of interest
-# source_1 : source of the first set of data
-# data_2 : second set of dat to be used, should only contains the location of interest
-# source_2 : source of the second set of data
-
-def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100):
-    
-    (climate_var_longName,climate_var,unit)= infos_str(climate_var,temporal_resolution)
-    
-    # define the new common name, that will be used as y_axis for boxplots and line
-    new_name_col = temporal_resolution+'ly '+climate_var_longName+' '+unit
-    
-    if 'NEX-GDDP-CMIP6' in source_1:
-        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
-            data_1=data_1[data_1['Year'].between(start_year_boxplot,stop_year_boxplot)]
-        data_boxplot=prepare_NEX_GDDP_CMIP6(data_1,climate_var_longName,stats,temporal_resolution,new_name_col)
-        return data_boxplot
-        source_boxplot=source_1
-    if 'NEX-GDDP-CMIP6' in source_2:
-        if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
-            data_2=data_2[data_2['Year'].between(start_year_boxplot,stop_year_boxplot)]
-        data_boxplot=prepare_NEX_GDDP_CMIP6(data_2,climate_var_longName,stats,temporal_resolution,new_name_col)
-        source_boxplot=source_2
-    if 'NOAA' in source_1:
-        if (start_year_line!=1970) or (stop_year_line!=2014):
-            data_1=data_1[data_1['Year'].between(start_year_line,stop_year_line)]
-        title_column=title_column_NOAA_obs(source_1,climate_var)
-        data_line=prepare_NOAA(data_1,title_column,temporal_resolution,new_name_col)
-        source_line=source_1
-    if 'NOAA' in source_2:
-        if (start_year_line!=1970) or (stop_year_line!=2014):
-            data_2=data_2[data_2['Year'].between(start_year_line,stop_year_line)]
-        title_column=title_column_NOAA_obs(source_2,climate_var)
-        data_line=prepare_NOAA(data_2,title_column,temporal_resolution,new_name_col)
-        source_line=source_2
-    return data_boxplot
-    if temporal_resolution == 'Month': # to plot the data in the chronological order of the months
-        month_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-        data_boxplot=data_boxplot.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()
-        data_line=data_line.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()    
-    
-    if stats == 'Sum':
-        title_plot = climate_var_longName+' '+unit+', modeled by '+source_boxplot+',\nbetween '+str(start_year_boxplot)+' and '+str(stop_year_boxplot)+' at '+location+' compared with '+source_line+'\nobservation data, between '+str(start_year_line)+' and '+str(stop_year_line)
-    else:
-        title_plot = stats+' '+climate_var_longName+' '+unit+', modeled by '+source_boxplot+',\nbetween '+str(start_year_boxplot)+' and '+str(stop_year_boxplot)+' at '+location+' compared with '+source_line+'\nobservation data, between '+str(start_year_line)+' and '+str(stop_year_line)
-        
-    boxplots_line(data_boxplot,data_line,temporal_resolution,new_name_col,source_line,title_plot)
-
-
-# In[35]:
-
-
-# data_boxplot : dataframr that will be used to do the boxplots
-# data_line : dataframe that will be used to add a line
-# x_axis : Name of the column that wil be used for the x_axis
-# y_axis : Name of the column that wil be used for the y_axis
-# ----> x_axis and y_axis are both a str, and both should be used as name of colum in the dataframes for the boxplots and 
-#       the line
-# source_line : name of the source of the data plot in the line
-# title_plot : title for this plot. Should be defined in the function before
-# categories : default parameters, will be used for the hue of the boxplot. The hue is a third dimension along a depth axis, 
-#              where different levels are plotted with different colors
-
-#stats+' monthly precipitation mm/month between '+start_year+' and '+stop_year+'\n with '+source_obs+' observed data and '+source_model+' modeled data, at '+location
-
-def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,categories='Experiment'):
-    fig,ax=plt.subplots()
-    sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,ax=ax)
-    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
-    sns.lineplot(data=data_line,x=x_axis, y=y_axis,ax=ax,label=source_line)
-    
-    # display the common legend for the line and boxplots
-    handles, labels=ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.2, 0.5),title='Legend')
-    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
-    plt.title(title_plot)
-    path_figure=os.path.join(r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures','trend_month.png')
-    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
-
-    plt.show()
-
-
-# In[36]:
-
-
-def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
-    df_NOAA = df_NOAA.reset_index()
-    df = df_NOAA[[title_column,temporal_resolution]].groupby(temporal_resolution).mean().rename(columns={title_column:new_name_col}).reset_index()
-    
-    print('title_column '+title_column)
-    print('temporal_resolution '+temporal_resolution)
-    
-    
-    if 'PR' in title_column and temporal_resolution=='Month':
-        print('pr and month, multiplication by 30')
-        df[new_name_col] = df[[new_name_col]].values*30
-    
-    return df
-
-
-# In[46]:
-
-
-def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new_name_col):
-    try:
-        try:
-            title_column=df.filter(like=climate_var_longName, axis=1).columns[0]
-        except:
-            title_column=df.filter(like=climate_var_longName.capitalize(), axis=1).columns[0]
-    except:
-        title_column=df.filter(like=climate_var_longName.upper(), axis=1).columns[0]
-    print('title_column '+title_column)
-    if stats == 'Average':
-        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].mean().rename(columns={title_column:new_name_col}).reset_index()
-        print(temporal_resolution)
-        print(data_NEXGDDPCMIP6)
-    if stats == 'Sum':
-        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].sum().rename(columns={title_column:new_name_col}).reset_index()
-    if stats == 'Median':
-        data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].median().rename(columns={title_column:new_name_col}).reset_index()
-    
-    if 'pr' in climate_var_longName.lower() and temporal_resolution =='Month':
-        data_NEXGDDPCMIP6[new_name_col] = data_NEXGDDPCMIP6[[new_name_col]].values*30
-    print(data_NEXGDDPCMIP6)
-    return data_NEXGDDPCMIP6
-
-
-# In[42]:
-
-
-def infos_str(climate_var,temporal_resolution):
-    if 'pr' in climate_var.lower():
-        climate_var_longName = 'precipitation'
-        unit='mm/'+temporal_resolution[0].lower()+temporal_resolution[1:len(temporal_resolution)]
-        climate_var='pr'
-    if 'tas' in climate_var.lower() or 'temp' in climate_var.lower():
-        unit=u'\N{DEGREE SIGN}C'
-        climate_var_longName = 'temperature'
-    if climate_var=='tasmax':
-        climate_var_longName = 'Daily Maximum Near-Surface Air Temperature '
-    if climate_var=='tasmin':
-        climate_var_longName = 'Daily Minimum Near-Surface Air Temperature '
-    return climate_var_longName,climate_var,unit
-
-
-# In[43]:
-
-
-def title_column_NOAA_obs(source,climate_var):
-    if source == 'NOAA':
-        if 'pr' in climate_var:
-            title_column='PRCP'
-        if climate_var=='tas':
-            title_column='TAVG'
-        if climate_var=='tasmax':
-            title_column='TMAX'
-        if climate_var=='tasmin':
-            title_column='TMIN'
-        return title_column
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
