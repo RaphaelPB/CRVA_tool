@@ -3,7 +3,7 @@
 
 # This notebook aims to contain all functions for indicators.
 
-# In[1]:
+# In[ ]:
 
 
 from scipy import stats
@@ -19,13 +19,13 @@ import math
 
 # # Treat data
 
-# In[3]:
+# In[ ]:
 
 
 ## Add Year, Month and Season to df
 
 
-# In[4]:
+# In[ ]:
 
 
 def add_year_month_season(df,column_date):
@@ -62,7 +62,7 @@ def add_year_month_season(df,column_date):
     return df
 
 
-# In[5]:
+# In[ ]:
 
 
 def str_month(int_m):
@@ -93,7 +93,7 @@ def str_month(int_m):
     return str_m
 
 
-# In[5]:
+# In[ ]:
 
 
 # this function is meant to filter the data wnated 
@@ -114,7 +114,7 @@ def filter_dataframe(df,name_location,list_model_to_kill,start_y=1950,stop_y=210
     return df
 
 
-# In[7]:
+# In[ ]:
 
 
 # this function aims to find the correct name of the column of interest
@@ -169,19 +169,19 @@ def df_to_csv(df,path_for_csv,title_file):
 
 # ### Return period
 
-# In[8]:
+# In[ ]:
 
 
 # return period for each project, model, scenario
 
 
-# In[9]:
+# In[ ]:
 
 
 # function value for return period
 
 
-# In[10]:
+# In[ ]:
 
 
 def threshold_coresponding_to_return_period(loc,scale,T):
@@ -199,7 +199,7 @@ def threshold_coresponding_to_return_period(loc,scale,T):
     #print('This threshold corresponds to a return period of '+str(round(return_period))+ ' year event over a '+str(n)+' year period')
 
 
-# In[11]:
+# In[ ]:
 
 
 # return return period for dataframe of modelled data
@@ -249,7 +249,7 @@ def dataframe_threshold_coresponding_to_return_period_obs(df,name_col):
     return return_period
 
 
-# In[12]:
+# In[ ]:
 
 
 # function a check
@@ -280,7 +280,7 @@ def return_period(Z,T,start_y,stop_y):
     return 
 
 
-# In[18]:
+# In[ ]:
 
 
 # questions Temps retour :
@@ -290,7 +290,7 @@ def return_period(Z,T,start_y,stop_y):
 
 # ## calculation Yearly average
 
-# In[1]:
+# In[ ]:
 
 
 # this function only works for projections
@@ -311,22 +311,22 @@ def temporal_avg(df,climate_var_long_name,title_column,temporal_resolution):
     return df_yearly_avg
 
 
-# In[2]:
+# In[ ]:
 
 
 # this function only works for projections
-def yearly_avg_distr(df_yearly_avg):
-    df_years_avg_distribution = df_yearly_avg.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
+def df_stat_distr(df):
+    df = df.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
     # if describe() does not return al wanted statistics, it is maybe because the elements in it are not recognized as int
-# add astype(int) as in following example; df.astype(int).groupby(['Name project']).describe(percentiles=[.1, .5, .9])
-    return df_years_avg_distribution
+    # add astype(int) as in following example; df.astype(int).groupby(['Name project']).describe(percentiles=[.1, .5, .9])
+    return df
 
 
 # # Precipitation
 
 # ### N-day event 
 
-# In[19]:
+# In[ ]:
 
 
 # some models to not have any values for some scenarios
@@ -368,7 +368,7 @@ def delete_NaN_model(df):
     return []
 
 
-# In[20]:
+# In[ ]:
 
 
 # this functions aims to calculate the n_day_event
@@ -389,7 +389,7 @@ def n_day_maximum_rainfall(number_day,df):
     return Dataframe_n_day_event
 
 
-# In[21]:
+# In[ ]:
 
 
 # this function aims to create the empty dataframe that will be filled
@@ -406,7 +406,7 @@ def fill_dataframe(name_project,scenario,model,time,data_df,name_col):
     return Variable_dataframe
 
 
-# In[22]:
+# In[ ]:
 
 
 # function dataframe_n_day_event produce a dataframe, with the n_day event precipitation for the period, models and scenarios asked
@@ -458,7 +458,7 @@ def dataframe_n_day_event(df,number_day):
     return df_n_day_event # return a dataframe, with all the projects, scenarios, models and period of n day
 
 
-# In[23]:
+# In[ ]:
 
 
 def dataframe_1_day_event(df):
@@ -471,7 +471,7 @@ def dataframe_1_day_event(df):
 
 # ### Seasonal average precipitation
 
-# In[27]:
+# In[ ]:
 
 
 # function a check
@@ -501,7 +501,7 @@ def avg_dry_season_precipitation(df,title_column):
 
 # # Changes in indicators
 
-# In[28]:
+# In[ ]:
 
 
 def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
@@ -529,7 +529,7 @@ def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
 
 # # Level of exposure
 
-# In[29]:
+# In[ ]:
 
 
 ## Functions not finished
@@ -575,7 +575,7 @@ def level_exposure(df):
     return ExposureLevel
 
 
-# In[30]:
+# In[ ]:
 
 
 # function use in function 'level_exposure' to color result depending on the result

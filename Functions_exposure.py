@@ -138,10 +138,10 @@ def look_best_distr(data,climate_var,unit):
     ax.set_title(u'Data with best fit distribution \n' + dist_str)
     ax.set_xlabel(climate_var+' '+unit)
     ax.set_ylabel('Frequency')
-    return best_dist[0].name, param_str # return as strings
+    return best_dist[0], best_dist[1] # return as strings
 
 
-# In[5]:
+# In[ ]:
 
 
 # before appling this function, need to import the best ditribution function attributed to the distribution, otherwise, it will not work
@@ -152,6 +152,57 @@ def look_best_distr(data,climate_var,unit):
 #rice.cdf(45.512922702726385,1.8,loc=36.01,scale=2.61)
 #rice.ppf(0.95,1.8,loc=36.01,scale=2.61)
 #rice.ppf(0.05,1.8,loc=36.01,scale=2.61)
+
+
+# In[ ]:
+
+
+def exposure(event, name_distr, params):
+    # Separate parts of parameters
+    arg = params[:-2]
+    loc = params[-2]
+    scale = params[-1]
+    
+    # find the function of the distribution based on the name of the function
+    # The getattr() method returns the value of the named attribute of an object. 
+    # If not found, it returns the default value provided to the function.
+    # https://www.programiz.com/python-programming/methods/built-in/getattr
+    distribution = getattr(st, name_distr) # st is the short name for the module 'scipy.stats'
+    
+    pdf_ = distribution.pdf(x, loc=loc, scale=scale, *arg)
+    cdf_ = distribution.cdf(event,loc=loc, scale=scale, *arg)
+    
+    return
+
+
+# In[22]:
+
+
+def range_likelihood(event,unit, distribution, params):
+    
+    arg = params[:-2]
+    loc = params[-2]
+    scale = params[-1]
+    
+    #distribution = getattr(st, name_distr) # st is the short name for the module 'scipy.stats'
+    cdf_event = distribution.ppf(event,loc=loc, scale=scale, *arg)
+    
+    if cdf_event>=0.05 and cdf_event<=0.95:
+        if cdf_event>=0.17 and cdf_event<=0.83:
+            if cdf_event>=0.25 and cdf_event<=0.75:
+                likelihood = str(round(distribution.ppf(0.25,loc=loc, scale=scale, *arg),2))+'-'+str(round(distribution.ppf(0.75,loc=loc, scale=scale, *arg),2))+unit+', probable range' # more likely than not
+                return likelihood
+            likelihood = str(round(distribution.ppf(0.17,loc=loc, scale=scale, *arg),2))+'-'+str(round(distribution.ppf(0.83,loc=loc, scale=scale, *arg),2))+unit+', likely range'
+            return likelihood
+        if cdf_event<0.17 and cdf_event>0.83:
+            likelihood = 'unlikely range'
+            return likelihood
+        likelihood = str(round(distribution.ppf(0.05,loc=loc, scale=scale, *arg),2))+'-'+str(round(distribution.ppf(0.95,loc=loc, scale=scale, *arg),2))+unit+', very likely range'
+        return likelihood
+    else:
+        likelihood = 'unlikely range'
+        return likelihood
+    print('Problem, no likelihood was found')
 
 
 # In[ ]:
