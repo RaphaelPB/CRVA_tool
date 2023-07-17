@@ -10,10 +10,22 @@
 # 
 # ![image.png](attachment:image.png)
 
+# In[2]:
+
+
+import pandas as pd
+import numpy as np
+import os
+import os.path
+import seaborn as sns
+import matplotlib
+from matplotlib import pyplot as plt
+
+
 # #### plot lines
 # ![image-2.png](attachment:image-2.png)
 
-# In[ ]:
+# In[6]:
 
 
 def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_location,y_start=1950,y_stop=2100,tuple_error_bar=('ci',80)):
@@ -26,7 +38,7 @@ def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_loca
     fig.legend(handles1, labels1, loc='upper right', ncol=1, bbox_to_anchor=(1.2, 0.9),title='Legend')
 
     ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
-    plt.title(title_fig+', between '+y_start+' to '+y_stop+' at '+name_city+'\n '+source_data)
+    plt.title(title_fig+', between '+str(y_start)+' to '+str(y_stop)+' at '+name_location+'\n with modelled data '+source_data)
     return
 
 
@@ -237,14 +249,14 @@ def title_column_NOAA_obs(source,climate_var):
         return title_column
 
 
-# # cdf_ plot
+# # cdf_plot_projections
 # example
 # ![image.png](attachment:image.png)
 
 # In[ ]:
 
 
-def cdf_plot(df,title_column,what_is_plot,y_start,y_stop,source_data,location_data,type_):
+def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data,location_data,type_):
     if 'projection' in type_.lower():
         df_historical = df[df['Experiment']=='historical'].sort_values(title_column,na_position='first').dropna()
         df_historical['CDF'] = np.arange(len(df_historical)) / float(len(df_historical))
@@ -282,6 +294,71 @@ def cdf_plot(df,title_column,what_is_plot,y_start,y_stop,source_data,location_da
         plt.title('Cumulative distribution function of the '+what_is_plot+',\naccross models, between '+y_start+' to '+y_stop+' at\n'+location_data+', data modeled with '+source_data)
 
 
+# # cdf_plot_category_or_obs 
+# can plot either the category asked for with the observed value, only the category asked for or only the observed values
+# 
+# category model with obs values
+# ![image-5.png](attachment:image-5.png)
+# 
+# category model without observation values
+# ![image-4.png](attachment:image-4.png)
+# only observed values
+# ![image-3.png](attachment:image-3.png)
+
+# In[1]:
+
+
+def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
+    fig,ax=plt.subplots()
+    str_title_df = ''
+    if not df_initial.empty:
+        start_y_df = str(min(df_initial['Year']))
+        stop_y_df = str(max(df_initial['Year']))
+
+        df = df_initial[[category,name_column_df]].copy(deep=True)
+        
+
+        df['CDF']=df[name_column_df]
+
+        for model in list(set(df[category])):
+            df[df[category]==model]= cdf_(df[df[category]==model],name_column_df)
+
+        sns.lineplot(data=df,x=name_column_df,y='CDF',hue=category,errorbar =('pi',80))
+        str_title_df = 'modelled '+source_df+' data between '+start_y_df+' and '+stop_y_df
+    
+    str_title_obs = ''
+    if not obs_initial.empty:
+        obs = obs_initial.copy(deep=True)
+        obs['CDF']=obs[name_column_obs]
+        obs=cdf_(obs[['CDF',name_column_obs]],name_column_obs)
+        sns.lineplot(data=obs,x=name_column_obs,y='CDF',label='Observation data from '+source_obs,color='black')
+        start_y_obs = str(min(obs_initial['Year']))
+        stop_y_obs = str(max(obs_initial['Year']))
+        str_title_obs = 'observation '+source_obs+' data between '+start_y_obs+' and '+stop_y_obs
+    
+    # legend of the figure
+    
+    # title of the figure
+    if str_title_df!='' and str_title_obs!='':
+        str_title = str_title_df +',\ncompared to CDF of '+str_title_obs
+        x_legend = 1.35
+    else:
+        if str_title_df!='':
+            str_title = str_title_df
+            x_legend = 1.2
+        if str_title_obs!='':
+            str_title = str_title_obs
+            x_legend = 1.35
+    
+    handles, labels=ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(x_legend, 0.8),title='Legend')
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    plt.ylabel('Cumulative distribution function')
+    plt.title('Cumulative distribution function of \n'+str_title+'\n at '+name_location)
+        
+    return
+
+
 # # function cdf_plot_period plot as example
 # ![image.png](attachment:image.png)
 
@@ -307,7 +384,7 @@ def cdf_plot_period(df,periods,name_column):
         df_ssp = pd.DataFrame()
         for ssp in list(set(df['Experiment'])): # go throught all the spp wanted
             # select the ssp and sort the data
-            df_temp_ssp = df_temp[df_temp['Experiment']==ssp].sort_values(name_column,na_position='first').dropna()
+            df_temp_ssp = df_temp[df_temp['Experiment']==ssp]#.sort_values(name_column,na_position='first').dropna()# sort value in cdf_ function
             # calulate the cdf
             df_temp_ssp=cdf_(df_temp_ssp,name_column)
             # concat the result with the other ssps
@@ -325,7 +402,7 @@ def cdf_plot_period(df,periods,name_column):
     g.fig.subplots_adjust(top=0.75) # adjust the Figure in rp
     g.fig.suptitle('Cumulative distribution function of the yearly average temperature\nof the modeled data NEX-GDDP-CMIP6')
     g.fig.tight_layout() # Adjust the padding between and around subplots.
-    sns.move_legend(g, "right", bbox_to_anchor=(1.25, .45), frameon=False)
+    sns.move_legend(g, "right", bbox_to_anchor=(1.25, .45))#, frameon=False)
     plt.show()
 
     return df_final
@@ -335,8 +412,9 @@ def cdf_plot_period(df,periods,name_column):
 
 
 # the dataframe given in this function should have a column named 'CDF'
-def cdf_(df):
-    df['CDF'] = np.arange(len(df)) / float(len(df))
+def cdf_(df,name_column_df):
+    df=df.sort_values(name_column_df,na_position='first').dropna() # sort the values
+    df['CDF'] = np.arange(len(df[name_column_df])) / float(len(df[name_column_df]))
     return df
 
 
