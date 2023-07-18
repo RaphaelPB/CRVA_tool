@@ -299,13 +299,14 @@ def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data
 # 
 # category model with obs values
 # ![image-5.png](attachment:image-5.png)
-# 
+# category scenario with obs values
+# ![image-6.png](attachment:image-6.png)
 # category model without observation values
 # ![image-4.png](attachment:image-4.png)
 # only observed values
 # ![image-3.png](attachment:image-3.png)
 
-# In[1]:
+# In[3]:
 
 
 def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
@@ -314,16 +315,26 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
     if not df_initial.empty:
         start_y_df = str(min(df_initial['Year']))
         stop_y_df = str(max(df_initial['Year']))
+        if category == 'Model':
+            df = df_initial[[category,name_column_df]].copy(deep=True)
+            df['CDF']=df[name_column_df]
 
-        df = df_initial[[category,name_column_df]].copy(deep=True)
-        
-
-        df['CDF']=df[name_column_df]
-
-        for model in list(set(df[category])):
-            df[df[category]==model]= cdf_(df[df[category]==model],name_column_df)
-
-        sns.lineplot(data=df,x=name_column_df,y='CDF',hue=category,errorbar =('pi',80))
+            for model in list(set(df[category])):
+                df[df[category]==model]= cdf_(df[df[category]==model],name_column_df)
+            sns.lineplot(data=df,x=name_column_df,y='CDF',hue=category,errorbar =('pi',80))
+            
+        if category == 'Experiment':
+            palette_color = ['blue','green','orange','pink','red']
+            df = df_initial[[category,'Model',name_column_df]].copy(deep=True)
+            df['CDF']=df[name_column_df]
+            for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
+                for model in list(set(df['Model'])):
+                    df_temp = cdf_(df[(df[category]==ssp) & (df['Model']==model)],name_column_df)
+                    sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80))
+            # hue=category
+            #df = df.drop(['Model'],axis=1)
+                
+        #sns.lineplot(data=df,x=name_column_df,y='CDF',hue=category,errorbar =('pi',80))
         str_title_df = 'modelled '+source_df+' data between '+start_y_df+' and '+stop_y_df
     
     str_title_obs = ''
@@ -350,11 +361,16 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
             str_title = str_title_obs
             x_legend = 1.35
     
-    handles, labels=ax.get_legend_handles_labels()
+    if category == 'Experiment':
+        handles, labels = plt.gca().get_legend_handles_labels()
+        labels, ids = np.unique(labels, return_index=True)
+        handles = [handles[i] for i in ids] 
+    else:
+        handles, labels=ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(x_legend, 0.8),title='Legend')
     ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
     plt.ylabel('Cumulative distribution function')
-    plt.title('Cumulative distribution function of \n'+str_title+'\n at '+name_location)
+    plt.title('Cumulative distribution function of '+name_column_df+'\n'+str_title+'\n at '+name_location)
         
     return
 
