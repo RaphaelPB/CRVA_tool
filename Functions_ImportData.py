@@ -45,16 +45,16 @@ def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
     return data_NEX_GDDP_CMIP6_EmplacementStation
 
 
-# In[4]:
+# In[7]:
 
 
 def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,start_y,stop_y):
     # import data
     
-    if climate_var =='pr':
-        path_NEX_GDDP_CMIP6=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_'+unit+'_'+temporal_resolution+'_'+str(start_y)+'-'+str(stop_y),climate_var+'_'+str(start_y)+'-'+str(stop_y)+'_projectsMoz_before_25.07.csv')
-    else: # temperature
-        path_NEX_GDDP_CMIP6=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_Celsius_day_1950-2100',climate_var+'_1950-2100_projectsMoz_before_25.07.csv')
+    #if climate_var =='pr':
+    path_NEX_GDDP_CMIP6=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_'+unit+'_'+temporal_resolution+'_'+str(start_y)+'-'+str(stop_y),climate_var+'_'+str(start_y)+'-'+str(stop_y)+'_projectsMoz.csv')
+    #else: # temperature
+        #path_NEX_GDDP_CMIP6=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_Celsius_day_1950-2100',climate_var+'_1950-2100_projectsMoz.csv')
         
     data_NEX_GDDP_CMIP6 = pd.read_csv(path_NEX_GDDP_CMIP6)
     
