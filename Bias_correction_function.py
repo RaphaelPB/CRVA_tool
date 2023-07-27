@@ -9,7 +9,7 @@
 # apply cdf for quantile ..
 # impose a version for the past and for the future (without y test, not used for BC, just for presentation of results)
 
-# In[1]:
+# In[ ]:
 
 
 # function to calculte return period
@@ -40,7 +40,7 @@ from Functions_Indicators import add_year_month_season # need to add conversion 
 # [Scikit-downscale](https://github.com/pangeo-data/scikit-downscale/tree/main)
 # [Detailed process here](https://github.com/pangeo-data/scikit-downscale/blob/main/examples/2020ECAHM-scikit-downscale.ipynb)
 
-# In[2]:
+# In[ ]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -89,7 +89,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 sns.set(style='darkgrid')
 
 
-# In[3]:
+# In[ ]:
 
 
 # function to prepare data for the fitting
@@ -102,7 +102,7 @@ def treat_data_for_test(df_obs,name_col_obs,df_model_past,name_col_model,name_st
             new_name = 'temp_max'
         if 'minimum' in name_col_model.lower():
             new_name = 'temp_min'
-        else:
+        if 'maximum' not in name_col_model.lower() and 'minimum' not in name_col_model.lower():
             new_name = 'temp'
     
     # prepare training data
@@ -140,7 +140,7 @@ def treat_data_for_test(df_obs,name_col_obs,df_model_past,name_col_model,name_st
     return df
 
 
-# In[4]:
+# In[ ]:
 
 
 # df_obs and df_model should be under a dataframe format, with no nan values, with a common timelaps, with the data as a string format '%Y-%m-%d', and as index
@@ -161,7 +161,22 @@ def BC(df,name_col,method,name_station,name_project,name_model):
         # plot CDF
         fig, ax = plt.subplots(1, 1, figsize=(8, 8))
         plot_cdf(ax=ax,X=X_test, y=y_test, out=pred)
-        fig.suptitle('Cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
+        # set title and xaxis
+        if name_col == 'pcp':
+            climate_var = 'Precipitation '
+            unit = '[mm/day]'
+        if name_col == 'temp':
+            climate_var = 'Temperature '
+            unit = u'\{°}C'
+        if name_col == 'temp_max':
+            climate_var = 'Maximum temperature '
+            unit = u'\{°}C'
+        if name_col == 'temp_min':
+            climate_var = 'Minimum temperature '
+            unit = u'\{°}C'
+        ax.set_xlabel('Cumulative distribution function')
+        ax.set_ylabel(climate_var+unit)
+        fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
     
     if method == 'Quantile_Linear_Regression':
         (X_train, X_test, y_train, y_test,pred)=Quantile_Linear_Regression(df,name_col) 
@@ -171,7 +186,22 @@ def BC(df,name_col,method,name_station,name_project,name_model):
         # plot CDF
         fig, ax = plt.subplots(1, 1, figsize=(8, 8))
         plot_cdf(ax=ax,X=X_test, y=y_test, out=pred)
-        fig.suptitle('Cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
+        # set title and xaxis
+        if name_col == 'pcp':
+            climate_var = 'Precipitation '
+            unit = '[mm/day]'
+        if name_col == 'temp':
+            climate_var = 'Temperature '
+            unit = u'\{°}C'
+        if name_col == 'temp_max':
+            climate_var = 'Maximum temperature '
+            unit = u'\{°}C'
+        if name_col == 'temp_min':
+            climate_var = 'Minimum temperature '
+            unit = u'\{°}C'
+        ax.set_xlabel('Cumulative distribution function')
+        ax.set_ylabel(climate_var+unit)
+        fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
     
     if method == 'Bcsd_Precipitation':
         (X_train, X_test, y_train, y_test,pred)=BCSD_Precipitation(df)
@@ -182,7 +212,6 @@ def BC(df,name_col,method,name_station,name_project,name_model):
 
     if method == 'Bcsd_Temperature':
         (X_train, X_test, y_train, y_test,pred)=BCSD_Temperature(df)
-        #(X_temp,y_temp)=BCSD_Temperature(df)
         plot_time_series(X_test,y_test,pred,name_model)
         plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
         plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
@@ -191,7 +220,7 @@ def BC(df,name_col,method,name_station,name_project,name_model):
     return pred 
 
 
-# In[5]:
+# In[ ]:
 
 
 def piecewise_regressor(df,name_col):
@@ -230,10 +259,11 @@ def piecewise_regressor(df,name_col):
     if name_col=='pcp':
         pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
         print('Applying correction for precipitation')
-    if 'temp' in name_col.lower():
-        pred = model.predict(X_test.reshape((len(X_test),1)))+X_test.reshape((len(X_test),))
-        print('Applying correction for temperature')
-    if name_col!='pcp' and 'temp' in name_col.lower():
+    #if 'temp' in name_col.lower():
+    #    pred = model.predict(X_test.reshape((len(X_test),1)))+X_test.reshape((len(X_test),))
+    #    print('Applying correction for temperature')
+    #if name_col!='pcp' and 'temp' not in name_col.lower():
+    else:
         pred = model.predict(X_test.reshape((len(X_test),1)))
         print('Applying correction for other climate variable')
     print('Strategy chosen is '+name_strat[int(np.where(score_strat==max(score_strat))[0])])
@@ -241,7 +271,7 @@ def piecewise_regressor(df,name_col):
     return X_train, X_test, y_train, y_test,pred
 
 
-# In[6]:
+# In[ ]:
 
 
 def Quantile_Linear_Regression(df,name_col):
@@ -259,9 +289,10 @@ def Quantile_Linear_Regression(df,name_col):
     model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
     if name_col=='pcp':
         pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
-    if 'temp' in name_col.lower():
-        pred = model.predict(X_test.reshape((len(X_test),1)))+X_test.reshape((len(X_test),))
-    if name_col!='pcp' and 'temp' in name_col.lower():
+    #if 'temp' in name_col.lower():
+        #pred = model.predict(X_test.reshape((len(X_test),1)))+X_test.reshape((len(X_test),))
+    #if name_col!='pcp' and 'temp' not in name_col.lower():
+    else:
         pred = model.predict(X_test.reshape((len(X_test),1)))
     print('mean absolute error')
     print(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))# mean absolute error
@@ -270,7 +301,7 @@ def Quantile_Linear_Regression(df,name_col):
     return (X_train, X_test, y_train, y_test,pred)
 
 
-# In[7]:
+# In[ ]:
 
 
 def BCSD_Precipitation(df):
@@ -287,12 +318,10 @@ def BCSD_Precipitation(df):
     bcsd_temp.fit(X_pcp, y_pcp)
     out = bcsd_temp.predict(X_pcp) * X_pcp # additive for temperature, multiplicative for precipitation
     
-    #out = plot_cdfs(X_test,y_test,out)
-    #out = plot_cdf(X=X_pcp, y=y_pcp, out=out)
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
-# In[8]:
+# In[ ]:
 
 
 def BCSD_Precipitation_one_more_time(df,out):
@@ -305,7 +334,7 @@ def BCSD_Precipitation_one_more_time(df,out):
     return out
 
 
-# In[12]:
+# In[ ]:
 
 
 # missing graphs
@@ -316,8 +345,8 @@ def BCSD_Temperature(df):
     targets = df['targets']
     training.index = pd.to_datetime(training.index)
     targets.index = pd.to_datetime(targets.index)
-    X_temp = training[["temp"]].resample("MS").mean()#MS
-    y_temp = targets[["temp"]].resample("MS").mean()
+    X_temp = training[[training.columns[0]]].resample("MS").mean()#MS
+    y_temp = targets[[training.columns[0]]].resample("MS").mean()
     
     X_temp = X_temp.dropna()
     y_temp = y_temp.dropna()
@@ -341,7 +370,7 @@ def BCSD_Temperature(df):
     return (X_temp,X_temp,y_temp,y_temp,out)
 
 
-# In[10]:
+# In[ ]:
 
 
 # plot results
@@ -374,7 +403,7 @@ def plot_time_series(X_test_to_copy,y_test_to_copy,out_to_copy,name_model):
         axes[0].set_ylabel('Precipitation [mm/day]')
         climate_var = 'precipitation'
     if 'temp' in X_test.columns[0]:
-        axes[0].set_ylabel(u'Temperature [\{°}C]')
+        axes[0].set_ylabel(u'Temperature ['+u'\{°}'+'C]')
         climate_var = 'temperature'
     axes[0].set_ylim(0,max(X_test.values))
 
@@ -385,9 +414,15 @@ def plot_time_series(X_test_to_copy,y_test_to_copy,out_to_copy,name_model):
     #y_test[time_slice][[('targets','pcp')]].plot(ax=axes[1], label='target')
     axes[1].legend()
     if y_test.columns[0]=='pcp':
-        _ = axes[1].set_ylabel('Precipitation [mm/day]')
+        str_ylabel='Precipitation [mm/day]'
     if 'temp' in y_test.columns[0]:
-        _ = axes[1].set_ylabel(u'Temperature [\{°}C]')
+        if X_test.columns[0]=='temp':
+            str_ylabel='Temperature [°C]'
+        if X_test.columns[0]=='temp_max':
+            str_ylabel='Maximum temperature [°C]'
+        if X_test.columns[0]=='temp_min':
+            str_ylabel='Minimum temperature [°C]'
+    _ = axes[1].set_ylabel(str_ylabel)
     axes[1].set_ylim(0,max(y_test.values))
 
     # plot-precipitation
@@ -395,9 +430,15 @@ def plot_time_series(X_test_to_copy,y_test_to_copy,out_to_copy,name_model):
     #out[time_slice][[('training','pcp')]].plot(ax=axes[2], label='out')
     axes[2].legend()
     if X_test.columns[0]=='pcp':
-        _ = axes[2].set_ylabel('Precipitation [mm/day]')
+        str_ylabel='Precipitation [mm/day]'
     if 'temp' in X_test.columns[0]:
-        _ = axes[2].set_ylabel(u'Temperature [\{°}C]')
+        if X_test.columns[0]=='temp':
+            str_ylabel='Temperature [°C]'
+        if X_test.columns[0]=='temp_max':
+            str_ylabel='Maximum temperature [°C]'
+        if X_test.columns[0]=='temp_min':
+            str_ylabel='Minimum temperature [°C]'
+    _ = axes[2].set_ylabel(str_ylabel)
     axes[2].set_ylim(0,max(out.values))
     
     fig.suptitle('Comparison of observed and modeled data ('+name_model+') with '+climate_var+' bias corrected time serie')
@@ -408,6 +449,10 @@ def plot_train_test(X_train, X_test, y_train, y_test,name_station,name_col):
         climate_var = 'Precipitation'
     if name_col == 'temp':
         climate_var = 'Temperature'
+    if name_col == 'temp_max':
+        climate_var = 'Maximum temperature'
+    if name_col == 'temp_min':
+        climate_var = 'Minimum temperature'
         
     sns.set(style='whitegrid')
     c = {'train': 'black', 'predict': 'blue', 'test': 'grey'}
@@ -429,7 +474,11 @@ def plot_train_test_pred(X_train, X_test, y_train, y_test,pred,name_station,name
         climate_var = 'Precipitation'
     if name_col == 'temp':
         climate_var = 'Temperature'
-    
+    if name_col == 'temp_max':
+        climate_var = 'Maximum temperature'
+    if name_col == 'temp_min':
+        climate_var = 'Minimum temperature'
+        
     sns.set(style='whitegrid')
     c = {'train': 'black', 'predict': 'blue', 'test': 'grey'}
     
@@ -451,6 +500,10 @@ def plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_m
         climate_var = 'Precipitation'
     if name_col == 'temp':
         climate_var = 'Temperature'
+    if name_col == 'temp_max':
+        climate_var = 'Maximum temperature'
+    if name_col == 'temp_min':
+        climate_var = 'Minimum temperature'
         
     sns.set(style='whitegrid')
     c = {'train': 'black', 'predict': 'blue', 'test': 'grey'}
@@ -470,16 +523,27 @@ def plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_m
 def plot_cdfs(X_test,y_test,out,name_station,name_project,name_model,name_col):
     if name_col == 'pcp':
         climate_var = 'Precipitation'
+        unit = '[mm/day]'
     if name_col == 'temp':
         climate_var = 'Temperature'
+        unit = '°C'
+    if name_col == 'temp_max':
+        climate_var = 'Maximum temperature'
+        unit = '°C'
+    if name_col == 'temp_min':
+        climate_var = 'Minimum temperature'
+        unit = '°C'
         
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
     plot_cdf(ax=ax,X=X_test, y=y_test, out=out)
-    fig.suptitle(climate_var+' cumulative distribution function with observed data from '+name_station+' and modelled data with '+name_model+' from '+name_project)
+    # set title and xaxis
+    ax.set_xlabel('Cumulative distribution function')
+    ax.set_ylabel(climate_var+unit)
+    fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data with '+name_model+' from '+name_project)
     
     #plot_cdf_by_month(X=X_test, y=y_test.loc[list(X_test.index)], out=out)
     fig=plot_cdf_by_month(X=X_test, y=y_test, out=out)
-    fig.suptitle(climate_var+' cumulative distribution function with observed data from '+name_station+' and modelled data with '+name_model+' from '+name_project+' for each month')
+    fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data with '+name_model+' from '+name_project+' for each month')
     
     return
 
@@ -509,16 +573,23 @@ def plot_cdf_by_month(ax=None, **kwargs):
             ax.plot(pp, vals, label=label)
             ax.set_title(month)
     ax.legend()
+    # set title and xaxis
+    if X.columns[0] == 'pcp':
+        climate_var = 'Precipitation '
+        unit = '[mm/day]'
+    if X.columns[0] == 'temp':
+        climate_var = 'Temperature '
+        unit = '°C'
+    if X.columns[0] == 'temp_max':
+        climate_var = 'Maximum temperature '
+        unit = '°C'
+    if X.columns[0] == 'temp_min':
+        climate_var = 'Minimum temperature '
+        unit = '°C'
+    
+    fig.supxlabel('Cumulative distribution function')
+    fig.supylabel(climate_var+unit)
     return fig
-
-
-# In[11]:
-
-
-# import data
-from Functions_ImportData import import_treat_modeled_NEX_GDDP_CMIP6
-from Functions_ImportData import import_treat_obs_NOAA
-from Functions_ImportData import import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA
 
 
 # In[ ]:
