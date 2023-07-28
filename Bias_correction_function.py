@@ -9,7 +9,7 @@
 # apply cdf for quantile ..
 # impose a version for the past and for the future (without y test, not used for BC, just for presentation of results)
 
-# In[ ]:
+# In[1]:
 
 
 # function to calculte return period
@@ -40,7 +40,7 @@ from Functions_Indicators import add_year_month_season # need to add conversion 
 # [Scikit-downscale](https://github.com/pangeo-data/scikit-downscale/tree/main)
 # [Detailed process here](https://github.com/pangeo-data/scikit-downscale/blob/main/examples/2020ECAHM-scikit-downscale.ipynb)
 
-# In[ ]:
+# In[2]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -89,7 +89,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 sns.set(style='darkgrid')
 
 
-# In[ ]:
+# In[3]:
 
 
 # function to prepare data for the fitting
@@ -140,7 +140,7 @@ def treat_data_for_test(df_obs,name_col_obs,df_model_past,name_col_model,name_st
     return df
 
 
-# In[ ]:
+# In[4]:
 
 
 # df_obs and df_model should be under a dataframe format, with no nan values, with a common timelaps, with the data as a string format '%Y-%m-%d', and as index
@@ -150,58 +150,57 @@ def treat_data_for_test(df_obs,name_col_obs,df_model_past,name_col_model,name_st
 #        Quantile_Linear_Regression
 
 def BC(df,name_col,method,name_station,name_project,name_model):
+    # set title and xaxis
+    if name_col == 'pcp':
+        climate_var = 'Precipitation '
+        unit = '[mm/day]'
+    if name_col == 'temp':
+        climate_var = 'Temperature '
+        unit = u'\{°}C'
+    if name_col == 'temp_max':
+        climate_var = 'Maximum temperature '
+        unit = u'\{°}C'
+    if name_col == 'temp_min':
+        climate_var = 'Minimum temperature '
+        unit = u'\{°}C'
     
     if method == 'piecewise_regressor':
         (X_train, X_test, y_train, y_test,pred)=piecewise_regressor(df,name_col)
         #(X_train, X_test, y_train, y_test,name_strat,score_strat)=piecewise_regressor(df,name_col)
         #return X_train, X_test, y_train, y_test,name_strat,score_strat
-        plot_train_test(X_train, X_test, y_train, y_test,name_station,name_col)
-        plot_train_test_pred(X_train, X_test, y_train, y_test,pred,name_station,name_project,name_model,name_col)
-        plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_model,name_col)
+        plot_train_test(X_train.values, X_test.values, y_train.values, y_test.values,name_station,name_col)
+        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
         # plot CDF
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+        r'''former way of doing it
         fig, ax = plt.subplots(1, 1, figsize=(8, 8))
         plot_cdf(ax=ax,X=X_test, y=y_test, out=pred)
-        # set title and xaxis
-        if name_col == 'pcp':
-            climate_var = 'Precipitation '
-            unit = '[mm/day]'
-        if name_col == 'temp':
-            climate_var = 'Temperature '
-            unit = u'\{°}C'
-        if name_col == 'temp_max':
-            climate_var = 'Maximum temperature '
-            unit = u'\{°}C'
-        if name_col == 'temp_min':
-            climate_var = 'Minimum temperature '
-            unit = u'\{°}C'
         ax.set_xlabel('Cumulative distribution function')
         ax.set_ylabel(climate_var+unit)
         fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
-    
+        '''
     if method == 'Quantile_Linear_Regression':
         (X_train, X_test, y_train, y_test,pred)=Quantile_Linear_Regression(df,name_col) 
         plot_train_test(X_train, X_test, y_train, y_test,name_station,name_col)
         plot_train_test_pred(X_train, X_test, y_train, y_test,pred,name_station,name_project,name_model,name_col)
         plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_model,name_col)
         # plot CDF
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+        r'''former way of doing it
         fig, ax = plt.subplots(1, 1, figsize=(8, 8))
         plot_cdf(ax=ax,X=X_test, y=y_test, out=pred)
-        # set title and xaxis
-        if name_col == 'pcp':
-            climate_var = 'Precipitation '
-            unit = '[mm/day]'
-        if name_col == 'temp':
-            climate_var = 'Temperature '
-            unit = u'\{°}C'
-        if name_col == 'temp_max':
-            climate_var = 'Maximum temperature '
-            unit = u'\{°}C'
-        if name_col == 'temp_min':
-            climate_var = 'Minimum temperature '
-            unit = u'\{°}C'
         ax.set_xlabel('Cumulative distribution function')
         ax.set_ylabel(climate_var+unit)
         fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
+        '''
+    if method == 'Quantile_MLP_Regressor':
+        (X_train, X_test, y_train, y_test,pred)=Quantile_MLP_Regressor(df,name_col)
+        plot_train_test(X_train, X_test, y_train, y_test,name_station,name_col)
+        plot_train_test_pred(X_train, X_test, y_train, y_test,pred,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_model,name_col)
+        # plot CDF
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
     
     if method == 'Bcsd_Precipitation':
         (X_train, X_test, y_train, y_test,pred)=BCSD_Precipitation(df)
@@ -220,7 +219,7 @@ def BC(df,name_col,method,name_station,name_project,name_model):
     return pred 
 
 
-# In[ ]:
+# In[5]:
 
 
 def piecewise_regressor(df,name_col):
@@ -231,8 +230,8 @@ def piecewise_regressor(df,name_col):
     #    It can also be :epkg:`sklearn:dummy:DummyRegressor` to just get
     #    the average on each bucket.
     
-    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]].values#training[[name_col]]['1980': '2000'].values
-    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]].values#targets[[name_col]]['1980': '2000'].values
+    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#training[[name_col]]['1980': '2000'].values
+    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#targets[[name_col]]['1980': '2000'].values
     
     X_train, X_test, y_train, y_test = train_test_split(X, y)# splits data
     
@@ -247,38 +246,42 @@ def piecewise_regressor(df,name_col):
     print('R2 score')
     for strat in name_strat:
         model = PiecewiseRegressor(binner=KBinsDiscretizer(n_bins=n_bins, strategy=strat))
-        model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
-        pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
-        score_strat.append(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))
-        print(strat)
-        print(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))
+        model.fit(X_train, y_train)
+        #model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
+        pred = model.predict(X_test)
+        #pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
+        print(model.score(X_test, y_test))
+        #print(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))
         # how is the score calculated ? r2 score
     #return X_train, X_test, y_train, y_test,name_strat,score_strat
     model = PiecewiseRegressor(binner=KBinsDiscretizer(n_bins=n_bins, strategy=name_strat[int(np.where(score_strat==max(score_strat))[0])]))
-    model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
-    if name_col=='pcp':
-        pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
-        print('Applying correction for precipitation')
+    model.fit(X_train, y_train)
+    #model = PiecewiseRegressor(binner=KBinsDiscretizer(n_bins=n_bins, strategy=name_strat[int(np.where(score_strat==max(score_strat))[0])]))
+    #model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
+    #if name_col=='pcp':
+    #    pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
+    #    print('Applying correction for precipitation')
     #if 'temp' in name_col.lower():
     #    pred = model.predict(X_test.reshape((len(X_test),1)))+X_test.reshape((len(X_test),))
     #    print('Applying correction for temperature')
     #if name_col!='pcp' and 'temp' not in name_col.lower():
-    else:
-        pred = model.predict(X_test.reshape((len(X_test),1)))
-        print('Applying correction for other climate variable')
+    #else:
+    pred = model.predict(X_test)
+    #pred = model.predict(X_test.reshape((len(X_test),1)))
+    #    print('Applying correction for other climate variable')
     print('Strategy chosen is '+name_strat[int(np.where(score_strat==max(score_strat))[0])])
     
     return X_train, X_test, y_train, y_test,pred
 
 
-# In[ ]:
+# In[6]:
 
 
 def Quantile_Linear_Regression(df,name_col):
     from mlinsights.mlmodel import QuantileLinearRegression # in quantile_regression
     
-    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]].values#training[[name_col]]['1980': '2000'].values
-    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]].values#targets[[name_col]]['1980': '2000'].values
+    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#training[[name_col]]['1980': '2000'].values
+    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#targets[[name_col]]['1980': '2000'].values
     
     X_train, X_test, y_train, y_test = train_test_split(X, y)# splits data
     
@@ -287,13 +290,13 @@ def Quantile_Linear_Regression(df,name_col):
     model = QuantileLinearRegression()
 
     model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
-    if name_col=='pcp':
-        pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
+    #if name_col=='pcp':
+       # pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
     #if 'temp' in name_col.lower():
         #pred = model.predict(X_test.reshape((len(X_test),1)))+X_test.reshape((len(X_test),))
     #if name_col!='pcp' and 'temp' not in name_col.lower():
-    else:
-        pred = model.predict(X_test.reshape((len(X_test),1)))
+    #else:
+    pred = model.predict(X_test.reshape((len(X_test),1)))
     print('mean absolute error')
     print(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))# mean absolute error
     
@@ -301,7 +304,27 @@ def Quantile_Linear_Regression(df,name_col):
     return (X_train, X_test, y_train, y_test,pred)
 
 
-# In[ ]:
+# In[7]:
+
+
+def Quantile_MLP_Regressor(df,name_col):
+    from mlinsights.mlmodel import QuantileMLPRegressor # in qunatile_mlpregressor
+    
+    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#training[[name_col]]['1980': '2000'].values
+    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#targets[[name_col]]['1980': '2000'].values
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y)# splits data
+    
+    model = QuantileMLPRegressor()
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
+    print('mean absolute error')
+    print(model.score(X_test, y_test)) # mean absolute error
+    
+    return (X_train, X_test, y_train, y_test,pred)
+
+
+# In[8]:
 
 
 def BCSD_Precipitation(df):
@@ -321,7 +344,7 @@ def BCSD_Precipitation(df):
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
-# In[ ]:
+# In[9]:
 
 
 def BCSD_Precipitation_one_more_time(df,out):
@@ -334,7 +357,7 @@ def BCSD_Precipitation_one_more_time(df,out):
     return out
 
 
-# In[ ]:
+# In[10]:
 
 
 # missing graphs
@@ -370,7 +393,7 @@ def BCSD_Temperature(df):
     return (X_temp,X_temp,y_temp,y_temp,out)
 
 
-# In[ ]:
+# In[11]:
 
 
 # plot results
@@ -604,7 +627,7 @@ def plot_cdf_by_month(ax=None, **kwargs):
 
 
 
-# In[ ]:
+# In[12]:
 
 
 # comment on fait pour savoir chronologie de donnees corrigees ?
