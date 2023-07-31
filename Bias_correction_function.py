@@ -230,8 +230,8 @@ def piecewise_regressor(df,name_col):
     #    It can also be :epkg:`sklearn:dummy:DummyRegressor` to just get
     #    the average on each bucket.
     
-    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#training[[name_col]]['1980': '2000'].values
-    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#targets[[name_col]]['1980': '2000'].values
+    X = df[[('training',name_col)]][min(df.index)[0:4]: max(df.index)[0:4]].values#training[[name_col]]['1980': '2000'].values
+    y = df[[('targets',name_col)]][min(df.index)[0:4]: max(df.index)[0:4]].values#targets[[name_col]]['1980': '2000'].values
     
     X_train, X_test, y_train, y_test = train_test_split(X, y)# splits data
     
@@ -280,8 +280,8 @@ def piecewise_regressor(df,name_col):
 def Quantile_Linear_Regression(df,name_col):
     from mlinsights.mlmodel import QuantileLinearRegression # in quantile_regression
     
-    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#training[[name_col]]['1980': '2000'].values
-    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#targets[[name_col]]['1980': '2000'].values
+    X = df[[('training',name_col)]][min(df.index)[0:4]: max(df.index)[0:4]].values#training[[name_col]]['1980': '2000'].values
+    y = df[[('targets',name_col)]][min(df.index)[0:4]: max(df.index)[0:4]].values#targets[[name_col]]['1980': '2000'].values
     
     X_train, X_test, y_train, y_test = train_test_split(X, y)# splits data
     
@@ -310,8 +310,8 @@ def Quantile_Linear_Regression(df,name_col):
 def Quantile_MLP_Regressor(df,name_col):
     from mlinsights.mlmodel import QuantileMLPRegressor # in qunatile_mlpregressor
     
-    X = df[('training',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#training[[name_col]]['1980': '2000'].values
-    y = df[('targets',name_col)][min(df.index)[0:4]: max(df.index)[0:4]]#.values#targets[[name_col]]['1980': '2000'].values
+    X = df[[('training',name_col)]][min(df.index)[0:4]: max(df.index)[0:4]].values#training[[name_col]]['1980': '2000'].values
+    y = df[[('targets',name_col)]][min(df.index)[0:4]: max(df.index)[0:4]].values#targets[[name_col]]['1980': '2000'].values
     
     X_train, X_test, y_train, y_test = train_test_split(X, y)# splits data
     
@@ -347,6 +347,26 @@ def BCSD_Precipitation(df):
 # In[9]:
 
 
+def BCSD_Precipitation_sans_multi(df):
+    from skdownscale.pointwise_models import BcsdPrecipitation
+
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index)
+    targets.index = pd.to_datetime(targets.index)
+    X_pcp = training[["pcp"]].resample("MS").sum()#MS
+    y_pcp = targets[["pcp"]].resample("MS").sum()
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdPrecipitation()
+    bcsd_temp.fit(X_pcp, y_pcp)
+    out = bcsd_temp.predict(X_pcp)# * X_pcp # additive for temperature, multiplicative for precipitation
+    
+    return (X_pcp,X_pcp,y_pcp,y_pcp,out)
+
+
+# In[10]:
+
+
 def BCSD_Precipitation_one_more_time(df,out):
     
     df=df.loc[out.index]
@@ -357,7 +377,7 @@ def BCSD_Precipitation_one_more_time(df,out):
     return out
 
 
-# In[10]:
+# In[11]:
 
 
 # missing graphs
@@ -393,7 +413,43 @@ def BCSD_Temperature(df):
     return (X_temp,X_temp,y_temp,y_temp,out)
 
 
-# In[11]:
+# In[12]:
+
+
+# missing graphs
+
+def BCSD_Temperature_sans_addi(df):
+    from skdownscale.pointwise_models import BcsdTemperature
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index)
+    targets.index = pd.to_datetime(targets.index)
+    X_temp = training[[training.columns[0]]].resample("MS").mean()#MS
+    y_temp = targets[[training.columns[0]]].resample("MS").mean()
+    
+    X_temp = X_temp.dropna()
+    y_temp = y_temp.dropna()
+    
+    if len(X_temp) != len(y_temp):
+        if len(X_temp) <= len(y_temp):
+            y_temp[y_temp.index.isin(list(X_temp.index))]
+        if len(X_temp) >= len(y_temp):
+            X_temp[X_temp.index.isin(list(y_temp.index))]
+            
+    print('Check for nan values')
+    print(X_temp.isnull().sum())
+    print(y_temp.isnull().sum())
+    print('Check for infinity values')
+    print(np.isinf(y_temp).sum())
+    print(y_temp.isnull().sum())
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdTemperature()
+    bcsd_temp.fit(X_temp, y_temp)
+    out = bcsd_temp.predict(X_temp)# + X_temp # additive for temperature, multiplicative for precipitation
+    return (X_temp,X_temp,y_temp,y_temp,out)
+
+
+# In[13]:
 
 
 # plot results
@@ -627,7 +683,7 @@ def plot_cdf_by_month(ax=None, **kwargs):
 
 
 
-# In[12]:
+# In[ ]:
 
 
 # comment on fait pour savoir chronologie de donnees corrigees ?
