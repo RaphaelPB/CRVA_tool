@@ -168,39 +168,44 @@ def BC(df,name_col,method,name_station,name_project,name_model):
         (X_train, X_test, y_train, y_test,pred)=piecewise_regressor(df,name_col)
         #(X_train, X_test, y_train, y_test,name_strat,score_strat)=piecewise_regressor(df,name_col)
         #return X_train, X_test, y_train, y_test,name_strat,score_strat
-        plot_train_test(X_train.values, X_test.values, y_train.values, y_test.values,name_station,name_col)
-        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
-        plot_test_pred(X_test,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
+        plot_train_test(X_train, X_test, y_train, y_test,name_station,name_col)
+        plot_train_test_pred(X_train, X_test, y_train, y_test,pred,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_model,name_col)
         # plot CDF
-        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
-        r'''former way of doing it
+        #plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+        
         fig, ax = plt.subplots(1, 1, figsize=(8, 8))
         plot_cdf(ax=ax,X=X_test, y=y_test, out=pred)
         ax.set_xlabel('Cumulative distribution function')
         ax.set_ylabel(climate_var+unit)
         fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
-        '''
+        
     if method == 'Quantile_Linear_Regression':
         (X_train, X_test, y_train, y_test,pred)=Quantile_Linear_Regression(df,name_col) 
         plot_train_test(X_train, X_test, y_train, y_test,name_station,name_col)
         plot_train_test_pred(X_train, X_test, y_train, y_test,pred,name_station,name_project,name_model,name_col)
         plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_model,name_col)
         # plot CDF
-        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
-        r'''former way of doing it
+        #plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+        
         fig, ax = plt.subplots(1, 1, figsize=(8, 8))
         plot_cdf(ax=ax,X=X_test, y=y_test, out=pred)
         ax.set_xlabel('Cumulative distribution function')
         ax.set_ylabel(climate_var+unit)
         fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
-        '''
+        
     if method == 'Quantile_MLP_Regressor':
         (X_train, X_test, y_train, y_test,pred)=Quantile_MLP_Regressor(df,name_col)
         plot_train_test(X_train, X_test, y_train, y_test,name_station,name_col)
         plot_train_test_pred(X_train, X_test, y_train, y_test,pred,name_station,name_project,name_model,name_col)
         plot_test_pred(X_test,y_test, y_train, pred,name_station,name_project,name_model,name_col)
         # plot CDF
-        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+        #plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+        fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+        plot_cdf(ax=ax,X=X_test, y=y_test, out=pred)
+        ax.set_xlabel('Cumulative distribution function')
+        ax.set_ylabel(climate_var+unit)
+        fig.suptitle(climate_var+'cumulative distribution function with observed data from '+name_station+' and modelled data from '+name_project)
     
     if method == 'Bcsd_Precipitation':
         (X_train, X_test, y_train, y_test,pred)=BCSD_Precipitation(df)
@@ -208,9 +213,25 @@ def BC(df,name_col,method,name_station,name_project,name_model):
         plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
         plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
         plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
-
+        
+        
+    if method == 'BCSD_Precipitation_without_multi':
+        (X_train, X_test, y_train, y_test,pred)=BCSD_Precipitation_without_multi(df)
+        plot_time_series(X_test,y_test,pred,name_model)
+        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+        
+        
     if method == 'Bcsd_Temperature':
         (X_train, X_test, y_train, y_test,pred)=BCSD_Temperature(df)
+        plot_time_series(X_test,y_test,pred,name_model)
+        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
+    
+    if method == 'BCSD_Temperature_without_addition':
+        (X_train, X_test, y_train, y_test,pred)=BCSD_Temperature_without_addition(df)
         plot_time_series(X_test,y_test,pred,name_model)
         plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
         plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
@@ -246,18 +267,19 @@ def piecewise_regressor(df,name_col):
     print('R2 score')
     for strat in name_strat:
         model = PiecewiseRegressor(binner=KBinsDiscretizer(n_bins=n_bins, strategy=strat))
-        model.fit(X_train, y_train)
-        #model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
-        pred = model.predict(X_test)
-        #pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
-        print(model.score(X_test, y_test))
-        #print(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))
+        #model.fit(X_train, y_train)
+        model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
+        #pred = model.predict(X_test)
+        pred = model.predict(X_test.reshape((len(X_test),1)))#*X_test.reshape((len(X_test),))
+        #print(model.score(X_test, y_test))
+        print(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))
+        score_strat.append(model.score(X_test.reshape((len(X_test),1)), y_test.reshape((len(y_test),))))
         # how is the score calculated ? r2 score
     #return X_train, X_test, y_train, y_test,name_strat,score_strat
-    model = PiecewiseRegressor(binner=KBinsDiscretizer(n_bins=n_bins, strategy=name_strat[int(np.where(score_strat==max(score_strat))[0])]))
-    model.fit(X_train, y_train)
     #model = PiecewiseRegressor(binner=KBinsDiscretizer(n_bins=n_bins, strategy=name_strat[int(np.where(score_strat==max(score_strat))[0])]))
-    #model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
+    #model.fit(X_train, y_train)
+    model = PiecewiseRegressor(binner=KBinsDiscretizer(n_bins=n_bins, strategy=name_strat[int(np.where(score_strat==max(score_strat))[0])]))
+    model.fit(X_train.reshape((len(X_train),1)), y_train.reshape((len(y_train),)))
     #if name_col=='pcp':
     #    pred = model.predict(X_test.reshape((len(X_test),1)))*X_test.reshape((len(X_test),))
     #    print('Applying correction for precipitation')
@@ -347,7 +369,7 @@ def BCSD_Precipitation(df):
 # In[9]:
 
 
-def BCSD_Precipitation_sans_multi(df):
+def BCSD_Precipitation_without_multi(df):
     from skdownscale.pointwise_models import BcsdPrecipitation
 
     training = df['training']
@@ -418,7 +440,7 @@ def BCSD_Temperature(df):
 
 # missing graphs
 
-def BCSD_Temperature_sans_addi(df):
+def BCSD_Temperature_without_addition(df):
     from skdownscale.pointwise_models import BcsdTemperature
     training = df['training']
     targets = df['targets']
@@ -683,7 +705,7 @@ def plot_cdf_by_month(ax=None, **kwargs):
 
 
 
-# In[ ]:
+# In[14]:
 
 
 # comment on fait pour savoir chronologie de donnees corrigees ?
@@ -701,7 +723,7 @@ def plot_cdf_by_month(ax=None, **kwargs):
 
 
 
-# In[ ]:
+# In[15]:
 
 
 # test bcsd one more time
