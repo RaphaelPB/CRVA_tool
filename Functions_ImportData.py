@@ -13,6 +13,8 @@ from Functions_Indicators import str_month
 from Functions_Indicators import add_year_month_season
 
 
+# ## NOAA
+
 # import_treat_obs_NOAA aims to import the original file containing the NOAA observation data. It used in 'Treat DATA NOAA Station'
 
 # In[2]:
@@ -78,7 +80,36 @@ def import_filtered_NOAA_obs():
     return data_obs_NOAA
 
 
+# ## CMIP6
+# 
+# function 'import_CMIP6_past_close_to_NOAA' aims to import past CMIP6 data, at the same emplacement than the NOAA station
+
+# In[35]:
+
+
+def import_CMIP6_past_close_to_NOAA(global_variable,climate_var=''):
+    if 'pr' in global_variable:
+        path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\precipitation\Copernicus-CMIP6\csv\1950-2014'
+    else:
+        out_path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets'
+        path = os.path.join(out_path,global_variable,climate_var,'Copernicus-CMIP6','csv','1950-2014')
+    
+    for name in os.listdir(path):
+        if 'Close_to_NOAA_Station' in name:
+            path_csv = os.path.join(path,name)
+            
+    df = pd.read_csv(path_csv)
+    
+    df = add_year_month_season(df,'Date') # add month, year and season
+    
+    return df
+
+
+# ## NEX-GDDP-CMIP6
+
 # import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA aims to import and treat the NEX GDDP CMIP6 data close to the NOAA station
+# 
+# does not work
 
 # In[5]:
 
@@ -96,6 +127,8 @@ def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
 
 
 # import_treat_modeled_NEX_GDDP_CMIP6 aims to import and treat the NEX GDDP CMIP6 data at the emplacement of the project of interest
+# 
+# does not work
 
 # In[6]:
 
@@ -113,12 +146,6 @@ def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,st
     data_NEX_GDDP_CMIP6 = add_year_month_season(data_NEX_GDDP_CMIP6,'Date')
     
     return data_NEX_GDDP_CMIP6
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:

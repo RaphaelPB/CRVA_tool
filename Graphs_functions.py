@@ -10,7 +10,7 @@
 # 
 # ![image.png](attachment:image.png)
 
-# In[2]:
+# In[ ]:
 
 
 import pandas as pd
@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 # #### plot lines
 # ![image-2.png](attachment:image-2.png)
 
-# In[6]:
+# In[ ]:
 
 
 def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_location,y_start=1950,y_stop=2100,tuple_error_bar=('ci',80)):
@@ -52,7 +52,36 @@ def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_loca
 # In[ ]:
 
 
-# without outliers
+def boxplots_(climate_var,df1,name_col1,df2,name_col2,name_station):
+    
+    df2['Model']='Observation NOAA'
+    df2=df2.rename(columns={name_col2:name_col1})
+    
+    df_boxplot=pd.concat([df2,df1])
+
+    
+    fig,ax=plt.subplots()
+    plt.tight_layout() # Adjust the padding between and around subplots.
+    cols = ['pink' if (x =='Observation NOAA') else 'skyblue' for x in df_boxplot.Model.drop_duplicates().values]
+    sns.boxplot(data=df_boxplot,x=df_boxplot.Model, y=name_col1,palette=cols,whis=[10,90],ax=ax)
+
+    # display the legend
+    #handles, labels=ax.get_legend_handles_labels()
+    #fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
+    #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+    plt.title('Compare observation for '+climate_var+' from NOAA,with modeled data\nby NEX-GDDP-CMIP6 between 1970 to 2014 at '+name_station)
+
+    path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\testBoxplotObs.png'
+    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+    plt.show()
+
+
+# In[ ]:
+
+
+r'''# without outliers
 def boxplots_comp_obs_model(climate_var,df_obs,source_obs,df_model,source_model):
     # find column name of interest
     df_obs['Model'] = 'Observation from ' +source_obs
@@ -75,6 +104,138 @@ def boxplots_comp_obs_model(climate_var,df_obs,source_obs,df_model,source_model)
     path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Boxplots_without_outliers_Comp_hist_m_o_pr.png'
     plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
 
+    plt.show()'''
+
+
+# # compare_3_lines
+
+# ![image.png](attachment:image.png)
+
+# In[1]:
+
+
+def compare_3_lines(title_fig,title_x_axis,clim_var,data_1,name_col_1,source_1,data_2,name_col_2,source_2,y_name,name_station,x_name='Year',tuple_error_bar=('pi',80)):
+    
+    fig,ax=plt.subplots()
+    plt.tight_layout() # Adjust the padding between and around subplots.
+    
+     # count the number of missing observation data per year
+    missing_data_per_year = data_2.groupby('Year')[[name_col_2+' MISSING']].sum()
+    # calculate the yearly mean of the observation data
+    if 'pr' in name_col_2.lower():
+        obs_data_per_year = data_2.groupby('Year')[[name_col_2]].agg(np.nanmean)*365.25
+    else:
+        obs_data_per_year = data_2.groupby('Year')[[name_col_2]].agg(np.nanmean)
+    
+    # determine which period we are plotting
+    start_year_hist=min(obs_data_per_year.index)
+    stop_year_hist=max(obs_data_per_year.index)
+    
+    for year in obs_data_per_year.index:
+        if len(data_2[data_2['Year']==year])<366:
+            missing_data_per_year.loc[year] = missing_data_per_year.loc[year]+366-len(data_2[data_2['Year']==year])
+    
+    if len(obs_data_per_year.index)<(stop_year_hist-start_year_hist+1):
+        for year in np.arange(start_year_hist,stop_year_hist):
+            if year not in obs_data_per_year.index: # adding missing years
+                obs_data_per_year.loc[year]=np.nan
+                missing_data_per_year.loc[year]=365
+    
+    
+    # replace value of the yearly mean by Nan if the year is missing more than 1/2 of its values
+    obs_data_per_year[missing_data_per_year[name_col_2+' MISSING']>182] = np.nan
+    
+    # plot modeled data
+    if 'pr' in name_col_1:
+        sns.lineplot(data=data_1.groupby(['Experiment','Model','Year'])[[name_col_1]].mean()*365.25,x='Year', y=name_col_1,hue='Model',errorbar=tuple_error_bar,ax=ax)
+        name_col_1 = 'precipitation mm per year'
+    else:
+        sns.lineplot(data=data_1.groupby(['Experiment','Model','Year'])[[name_col_1]].mean(),x='Year', y=name_col_1,hue='Model',errorbar=tuple_error_bar,ax=ax)
+    
+    ########## plot observed data
+    obs_data_per_year=obs_data_per_year.rename(columns={name_col_2:'Observation data from '+source_2})
+
+    if sum(missing_data_per_year.values)==0:
+        sns.lineplot(data=obs_data_per_year,palette=['black'],ax=ax)
+        print('No missing data')
+    else:
+        print('missing data')
+        for year in obs_data_per_year.index:
+            #try:
+            if year<stop_year_hist:
+                sns.lineplot(data=obs_data_per_year.loc[[year,year+1]],palette=['black'],ax=ax)
+            #except: # some data dont cover every years
+                #pass
+
+    ax.set_ylabel('Yearly average '+name_col_1)
+    # control labels in legend
+    handles1, labels1=ax.get_legend_handles_labels() # register information from first y axis for the legend
+    labels1, ids1 = np.unique(labels1, return_index=True)
+    labels1=list(labels1)
+    handles1 = [handles1[i] for i in ids1]
+    
+    # make the labels in the legend appear in the order wanted
+    if labels1[len(labels1)-1]!='Observation data from '+source_2:
+        str_1= labels1[len(labels1)-1]
+        str_2= labels1[len(labels1)-2]
+
+        handles1_end = handles1[len(handles1)-1]
+        handles1_end_1 = handles1[len(handles1)-2]
+
+        labels1[len(labels1)-1] = str_2
+        labels1[len(labels1)-2] = str_1
+
+        handles1[len(handles1)-2] = handles1_end
+        handles1[len(handles1)-1] = handles1_end_1
+    
+    # is there some missing data ? if yes, we plot them. If not, we don t plot them
+    if sum(missing_data_per_year[name_col_2+' MISSING'])!=0:
+        # there are some missing data in observation data
+        ax2 = ax.twinx()
+        sns.lineplot(data=missing_data_per_year.reset_index(),x='Year',y=name_col_2+' MISSING',color='red',label='Missing observation data',ax=ax2)
+        ax2.set_ylim(0, 370) # impose this scale to know how much data missing for 365 days
+        ax2.set_ylabel('Number of missing data in '+source_2+' dataset')
+        # set right axis on red
+        ax2.yaxis.label.set_color('red')
+        ax2.tick_params(axis='y', colors='red')
+        ax2.spines['right'].set_color('red')
+        handles2, labels2=ax2.get_legend_handles_labels() # register information from first y axis for the legend
+        # display the legend
+        fig.legend(handles1+handles2, labels1+labels2, loc='upper right', ncol=1, bbox_to_anchor=(1.47, 0.9),title='Legend')
+        ax2.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+
+    else:
+        # there are no missing data
+        plt.figtext(0, 0, "There are no missing data in the observation data", ha="center", fontsize=7, bbox={"facecolor":"white", "alpha":0.5, "pad":5})
+        fig.legend(handles1, labels1, loc='upper right', ncol=1, bbox_to_anchor=(1.4, 0.9),title='Legend')
+
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+
+
+    plt.title('Modeled '+source_1+' yearly average '+clim_var+' accross time at '+name_station+',\n compared to observed yearly average '+clim_var+' from '+source_2+', between '+str(start_year_hist)+' and '+str(stop_year_hist))
+    #path_figure=os.path.join(r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures',title_fig+'.png')
+    #plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+    plt.show()
+
+
+# In[ ]:
+
+
+def compare_2_lines(data_1,data_2,y_name,x_name='Year',tuple_error_bar=('pi',80)):
+    
+    fig,ax=plt.subplots()
+    plt.tight_layout() # Adjust the padding between and around subplots.
+
+    sns.lineplot(data=pr_historic_modeled_NEXGDDPCMIP6_gorongosa.groupby(['Experiment','Model','Year'])[['Mean of the daily precipitation rate mm_per_day']].mean(),x='Year', y='Mean of the daily precipitation rate mm_per_day',hue='Model',errorbar=tuple_error_bar,ax=ax)
+    sns.lineplot(data=pr_obs_gorongosa_from_gorongosa.groupby('Year')[['Mean of the daily precipitation rate mm_per_day']].mean(),x='Year', y='Mean of the daily precipitation rate mm_per_day',color='black',label='Observation from Gorongosa',errorbar=tuple_error_bar,ax=ax)
+    
+    # display the legend
+    handles, labels=ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.38, 0.88),title='Legend')
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    plt.title('Modeled NEX-GDDP-CMIP6 yearly average precipitation accross time at Gorongosa,\n compared to observed yearly average temperature from gorongosa, between '+str(start_year_hist)+' and '+str(stop_year_hist))
+    path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\Comp_hist_m_o_pr.png'
+    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
 
 
@@ -250,6 +411,7 @@ def title_column_NOAA_obs(source,climate_var):
 
 
 # # cdf_plot_projections
+#  need to check if this graphs stille makes sense
 # example
 # ![image.png](attachment:image.png)
 
@@ -298,15 +460,15 @@ def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data
 # can plot either the category asked for with the observed value, only the category asked for or only the observed values
 # 
 # category model with obs values
-# ![image-5.png](attachment:image-5.png)
+# ![image-7.png](attachment:image-7.png)
 # category scenario with obs values
 # ![image-6.png](attachment:image-6.png)
 # category model without observation values
-# ![image-4.png](attachment:image-4.png)
+# ![image-8.png](attachment:image-8.png)
 # only observed values
 # ![image-3.png](attachment:image-3.png)
 
-# In[3]:
+# In[ ]:
 
 
 def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
@@ -376,6 +538,8 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
 
 
 # # function cdf_plot_period plot as example
+# 
+# chech if the function still works because the change function cdf_
 # ![image.png](attachment:image.png)
 
 # In[ ]:

@@ -22,6 +22,14 @@ import math
 # In[ ]:
 
 
+def select_station(df,name_col,name_station):
+    df_name_station = df[df[name_col]==name_station]
+    return df_name_station
+
+
+# In[ ]:
+
+
 ## Add Year, Month and Season to df
 
 
@@ -504,6 +512,8 @@ def avg_dry_season_precipitation(df,title_column):
 # In[ ]:
 
 
+# inverse columns and rows for final df
+
 def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
     # create empty dataframe
     #midx = pd.MultiIndex.from_product([df_years_avg_2041_2060_distribution.index.tolist(),precipitation_2021_2060_copy.index.levels[1].tolist(),models],names=['Name project','Experiment', 'Model'])
@@ -532,7 +542,7 @@ def changes_in_indicators(df_past,df_futur,title_indicator, unit,climate_var):
 # In[ ]:
 
 
-## Functions not finished
+# inverse columns and rows for final df
 
 def level_exposure(df):
     # level of exposure by climate variable
