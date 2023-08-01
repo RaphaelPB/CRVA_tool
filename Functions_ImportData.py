@@ -13,7 +13,29 @@ from Functions_Indicators import str_month
 from Functions_Indicators import add_year_month_season
 
 
+# import_treat_obs_NOAA aims to import the original file containing the NOAA observation data. It used in 'Treat DATA NOAA Station'
+
 # In[2]:
+
+
+# this function is meant to import the NOAA observation data
+def import_treat_obs_NOAA():
+    # path where the file is placed
+    path_file_NOAA = r'C:\Users\CLMRX\COWI\A248363 - Climate analysis - Documents\General\CRVA_tool\Master_thesis\Project\3 - Implementation\1 - Data\1-BC\NOAA-ClimateDataOnline\3370204.csv'
+    # read the information in the file
+    data_obs_NOAA = pd.read_csv(path_file_NOAA)
+    # unit of PRCP are mm
+    # unit of temperature are degrees Celsius
+    
+    # add Year, month and season columns for graphs
+    data_obs_NOAA = add_year_month_season(data_obs_NOAA,'DATE')
+
+    return data_obs_NOAA
+
+
+# treat_NOAA_data aims to add information to the dataframe of the observation data. It is used in 'Treat DATA NOAA Station'
+
+# In[3]:
 
 
 def treat_NOAA_data(daily_sum_obs_from_NOAA):
@@ -30,7 +52,35 @@ def treat_NOAA_data(daily_sum_obs_from_NOAA):
     return daily_sum_obs_from_NOAA
 
 
-# In[3]:
+# In[4]:
+
+
+# this funciton count the missing values in the columns named name_col in the dataframe df
+def count_na_in_df_NOAA(df,name_col): # function used in treat_NOAA_data
+    df[name_col+' MISSING']=0
+    df[name_col+' MISSING'][df[name_col].isna()]=1
+    return df
+
+
+# import_filtered_NOAA_obs aims to import the filtered observation NOAA data
+
+# In[13]:
+
+
+def import_filtered_NOAA_obs():
+    # path where the filtered file is placed
+    path_file_NOAA = r'C:\Users\CLMRX\COWI\A248363 - Climate analysis - Documents\General\CRVA_tool\Master_thesis\Project\3 - Implementation\1 - Data\1-BC\NOAA-ClimateDataOnline\filtred_NOAA_obs_data.csv'
+    # read the information in the file
+    data_obs_NOAA = pd.read_csv(path_file_NOAA) 
+    
+    data_obs_NOAA = data_obs_NOAA.drop('Unnamed: 0',axis=1)
+    
+    return data_obs_NOAA
+
+
+# import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA aims to import and treat the NEX GDDP CMIP6 data close to the NOAA station
+
+# In[5]:
 
 
 def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
@@ -45,7 +95,9 @@ def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
     return data_NEX_GDDP_CMIP6_EmplacementStation
 
 
-# In[7]:
+# import_treat_modeled_NEX_GDDP_CMIP6 aims to import and treat the NEX GDDP CMIP6 data at the emplacement of the project of interest
+
+# In[6]:
 
 
 def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,start_y,stop_y):
@@ -63,22 +115,10 @@ def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,st
     return data_NEX_GDDP_CMIP6
 
 
-# In[5]:
+# In[ ]:
 
 
-# this function is meant to import the NOAA observation data
-def import_treat_obs_NOAA():
-    # path where the file is placed
-    path_file_NOAA = r'C:\Users\CLMRX\COWI\A248363 - Climate analysis - Documents\General\CRVA_tool\Master_thesis\Project\3 - Implementation\1 - Data\1-BC\NOAA-ClimateDataOnline\3370204.csv'
-    # read the information in the file
-    data_obs_NOAA = pd.read_csv(path_file_NOAA)
-    # unit of PRCP are mm
-    # unit of temperature are degrees Celsius
-    
-    # add Year, month and season columns for graphs
-    data_obs_NOAA = add_year_month_season(data_obs_NOAA,'DATE')
 
-    return data_obs_NOAA
 
 
 # In[ ]:

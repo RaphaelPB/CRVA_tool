@@ -366,6 +366,26 @@ def BCSD_Precipitation(df):
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
+# In[1]:
+
+
+def BCSD_Precipitation_return_anoms(df):
+    from skdownscale.pointwise_models import BcsdPrecipitation
+
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index)
+    targets.index = pd.to_datetime(targets.index)
+    X_pcp = training[["pcp"]]#.resample("MS").sum()#MS
+    y_pcp = targets[["pcp"]]#.resample("MS").sum()
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdPrecipitation(return_anoms=False)
+    bcsd_temp.fit(X_pcp, y_pcp)
+    out = bcsd_temp.predict(X_pcp) * X_pcp # additive for temperature, multiplicative for precipitation
+    
+    return (X_pcp,X_pcp,y_pcp,y_pcp,out)
+
+
 # In[9]:
 
 
