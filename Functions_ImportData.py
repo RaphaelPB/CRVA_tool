@@ -28,9 +28,6 @@ def import_treat_obs_NOAA():
     data_obs_NOAA = pd.read_csv(path_file_NOAA)
     # unit of PRCP are mm
     # unit of temperature are degrees Celsius
-    
-    # add Year, month and season columns for graphs
-    data_obs_NOAA = add_year_month_season(data_obs_NOAA,'DATE')
 
     return data_obs_NOAA
 
@@ -66,7 +63,7 @@ def count_na_in_df_NOAA(df,name_col): # function used in treat_NOAA_data
 
 # import_filtered_NOAA_obs aims to import the filtered observation NOAA data
 
-# In[13]:
+# In[5]:
 
 
 def import_filtered_NOAA_obs():
@@ -84,7 +81,7 @@ def import_filtered_NOAA_obs():
 # 
 # function 'import_CMIP6_past_close_to_NOAA' aims to import past CMIP6 data, at the same emplacement than the NOAA station
 
-# In[35]:
+# In[6]:
 
 
 def import_CMIP6_past_close_to_NOAA(global_variable,climate_var=''):
@@ -111,7 +108,7 @@ def import_CMIP6_past_close_to_NOAA(global_variable,climate_var=''):
 # 
 # does not work
 
-# In[5]:
+# In[7]:
 
 
 def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
@@ -130,7 +127,7 @@ def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
 # 
 # does not work
 
-# In[6]:
+# In[8]:
 
 
 def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,start_y,stop_y):
@@ -146,6 +143,30 @@ def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,st
     data_NEX_GDDP_CMIP6 = add_year_month_season(data_NEX_GDDP_CMIP6,'Date')
     
     return data_NEX_GDDP_CMIP6
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:

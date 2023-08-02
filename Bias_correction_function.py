@@ -116,20 +116,21 @@ def treat_data_for_test(df_obs,name_col_obs,df_model_past,name_col_model,name_st
     #training[new_name].values = scaler.fit_transform(training[new_name].values)
     
     Date1 = training['time'].values
+    #return Date1
     for i in np.arange(0,len(training)):
         training['time'][i] = Date1[i][6:10]+'-'+Date1[i][3:5]+'-'+Date1[i][0:2]#datetime.strptime(, '%Y-%M-%d').date()
         #print(training['time'][i])
     # .date() to avoid having the hours in the datetime
     training=training.set_index('time')
-    
+    #return training
     # prepare targets data
     targets = df_obs[['NAME','DATE',name_col_obs]] # select only 3 columns of interest
     targets = targets[targets['NAME']==name_station].rename(columns = {'DATE':'time',name_col_obs:new_name}).set_index('time').drop(['NAME'],axis=1) # the targets data is meant to represent our "observations"
-    
-    if len(targets)>len(training):
+    #return targets
+    if len(targets)<len(training):
         targets = targets.dropna() # drop rows with NaN
         training = training[training.index.isin(list(targets.index))]
-    if len(targets)<len(training):
+    if len(targets)>len(training):
         training = training.dropna() # drop rows with NaN
         targets = targets[targets.index.isin(list(training.index))]
     
@@ -237,6 +238,34 @@ def BC(df,name_col,method,name_station,name_project,name_model):
         plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
         plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)
 
+    if method == 'BCSD_Precipitation_return_anoms':
+        (X_train, X_test, y_train, y_test,pred)=BCSD_Precipitation_return_anoms(df)
+        plot_time_series(X_test,y_test,pred,name_model)
+        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)   
+        
+    if method == 'BCSD_Precipitation_return_anoms_resample_month':
+        (X_train, X_test, y_train, y_test,pred)=BCSD_Precipitation_return_anoms_resample_month(df)
+        plot_time_series(X_test,y_test,pred,name_model)
+        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)  
+
+    if method == 'BCSD_Temperature_return_anoms':
+        (X_train, X_test, y_train, y_test,pred)=BCSD_Temperature_return_anoms(df)
+        plot_time_series(X_test,y_test,pred,name_model)
+        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)        
+
+    if method == 'BCSD_Temperature_return_anoms_resample_month':
+        (X_train, X_test, y_train, y_test,pred)=BCSD_Temperature_return_anoms_resample_month(df)
+        plot_time_series(X_test,y_test,pred,name_model)
+        plot_train_test_pred(X_train.values, X_test.values, y_train.values, y_test.values,pred.values,name_station,name_project,name_model,name_col)
+        plot_test_pred(X_test.values,y_test.values, y_train.values, pred.values,name_station,name_project,name_model,name_col)
+        plot_cdfs(X_test,y_test,pred,name_station,name_project,name_model,name_col)  
+        
     return pred 
 
 
@@ -366,7 +395,7 @@ def BCSD_Precipitation(df):
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
-# In[1]:
+# In[9]:
 
 
 def BCSD_Precipitation_return_anoms(df):
@@ -381,12 +410,122 @@ def BCSD_Precipitation_return_anoms(df):
     # Fit/predict the BCSD Temperature model
     bcsd_temp = BcsdPrecipitation(return_anoms=False)
     bcsd_temp.fit(X_pcp, y_pcp)
-    out = bcsd_temp.predict(X_pcp) * X_pcp # additive for temperature, multiplicative for precipitation
+    out = bcsd_temp.predict(X_pcp)# * X_pcp # additive for temperature, multiplicative for precipitation
     
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
-# In[9]:
+# In[10]:
+
+
+def BCSD_Precipitation_return_anoms_to_apply(df,X_to_correct):
+    from skdownscale.pointwise_models import BcsdPrecipitation
+
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index,format='%Y-%m-%d')
+    targets.index = pd.to_datetime(targets.index,format='%Y-%m-%d')
+    X_pcp = training[["pcp"]]#.resample("MS").sum()#MS
+    y_pcp = targets[["pcp"]]#.resample("MS").sum()
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdPrecipitation(return_anoms=False)
+    bcsd_temp.fit(X_pcp, y_pcp)
+
+    Date = X_to_correct['Date'].values
+    for i in np.arange(0,len(Date)):
+        X_to_correct['Date'][i] = Date[i][6:10]+'-'+Date[i][3:5]+'-'+Date[i][0:2]#datetime.strptime(, '%Y-%M-%d').date()
+        #print(X_to_correct['Date'][i])
+    # .date() to avoid having the hours in the datetime
+    X_to_correct=X_to_correct.set_index('Date')
+    X_to_correct.index = pd.to_datetime(X_to_correct.index,format='%Y-%m-%d')
+    out = bcsd_temp.predict(X_to_correct)# * X_pcp # additive for temperature, multiplicative for precipitation
+    
+    return (X_pcp,y_pcp,out)
+
+
+# In[11]:
+
+
+def BCSD_Precipitation_return_anoms_resample_month(df):
+    from skdownscale.pointwise_models import BcsdPrecipitation
+
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index)
+    targets.index = pd.to_datetime(targets.index)
+    X_pcp = training[["pcp"]].resample("MS").sum()#MS
+    y_pcp = targets[["pcp"]].resample("MS").sum()
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdPrecipitation(return_anoms=False)
+    bcsd_temp.fit(X_pcp, y_pcp)
+    out = bcsd_temp.predict(X_pcp)# * X_pcp # additive for temperature, multiplicative for precipitation
+    
+    return (X_pcp,X_pcp,y_pcp,y_pcp,out)
+
+
+# In[12]:
+
+
+def BCSD_Temperature_return_anoms(df):
+    from skdownscale.pointwise_models import BcsdTemperature
+
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index)
+    targets.index = pd.to_datetime(targets.index)
+    X_pcp = training[["temp"]]#.resample("MS").sum()#MS
+    y_pcp = targets[["temp"]]#.resample("MS").sum()
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdTemperature(return_anoms=False)
+    # in predict of BcsdPrecipitation, in skdownscale, in p
+    bcsd_temp.fit(X_pcp, y_pcp)
+    out = bcsd_temp.predict(X_pcp)# * X_pcp # additive for temperature, multiplicative for precipitation
+    
+    return (X_pcp,X_pcp,y_pcp,y_pcp,out)
+
+
+# In[13]:
+
+
+def BCSD_Temperature_return_anoms_to_apply(df,X_to_correct):
+    from skdownscale.pointwise_models import BcsdTemperature
+
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index)
+    targets.index = pd.to_datetime(targets.index)
+    X_pcp = training[["temp"]]#.resample("MS").sum()#MS
+    y_pcp = targets[["temp"]]#.resample("MS").sum()
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdTemperature(return_anoms=False)
+    # in predict of BcsdPrecipitation, in skdownscale, in p
+    bcsd_temp.fit(X_pcp, y_pcp)
+    out = bcsd_temp.predict(X_to_correct)# * X_pcp # additive for temperature, multiplicative for precipitation
+    
+    return (X_pcp,y_pcp,out)
+
+
+# In[14]:
+
+
+def BCSD_Temperature_return_anoms_resample_month(df):
+    from skdownscale.pointwise_models import BcsdTemperature
+
+    training = df['training']
+    targets = df['targets']
+    training.index = pd.to_datetime(training.index)
+    targets.index = pd.to_datetime(targets.index)
+    X_pcp = training[["temp"]].resample("MS").sum()#MS
+    y_pcp = targets[["temp"]].resample("MS").sum()
+    # Fit/predict the BCSD Temperature model
+    bcsd_temp = BcsdTemperature(return_anoms=False)
+    bcsd_temp.fit(X_pcp, y_pcp)
+    out = bcsd_temp.predict(X_pcp)# * X_pcp # additive for temperature, multiplicative for precipitation
+    
+    return (X_pcp,X_pcp,y_pcp,y_pcp,out)
+
+
+# In[15]:
 
 
 def BCSD_Precipitation_without_multi(df):
@@ -406,7 +545,7 @@ def BCSD_Precipitation_without_multi(df):
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
-# In[10]:
+# In[16]:
 
 
 def BCSD_Precipitation_one_more_time(df,out):
@@ -419,7 +558,7 @@ def BCSD_Precipitation_one_more_time(df,out):
     return out
 
 
-# In[11]:
+# In[17]:
 
 
 # missing graphs
@@ -455,7 +594,7 @@ def BCSD_Temperature(df):
     return (X_temp,X_temp,y_temp,y_temp,out)
 
 
-# In[12]:
+# In[18]:
 
 
 # missing graphs
@@ -491,7 +630,7 @@ def BCSD_Temperature_without_addition(df):
     return (X_temp,X_temp,y_temp,y_temp,out)
 
 
-# In[13]:
+# In[19]:
 
 
 # plot results
@@ -674,25 +813,26 @@ def plot_cdf(ax=None, **kwargs):
         plt.sca(ax)
     else:
         ax = plt.gca()
-    LW = 4
+    LW = 8
     for label, X in kwargs.items():
         vals = np.sort(X, axis=0)
         pp = scipy.stats.mstats.plotting_positions(vals)
         ax.plot(pp, vals, label=label,linewidth=LW)
-        LW -= 1
+        LW -= 3
     ax.legend()
     return ax
 
 
 def plot_cdf_by_month(ax=None, **kwargs):
     fig, axes = plt.subplots(4, 3, sharex=True, sharey=False, figsize=(12, 8))
+    LW = 8
     for label, X in kwargs.items():
         for month, ax in zip(range(1, 13), axes.flat):
-
             vals = np.sort(X[X.index.month == month], axis=0)
             pp = scipy.stats.mstats.plotting_positions(vals)
-            ax.plot(pp, vals, label=label)
+            ax.plot(pp, vals, label=label,linewidth=LW)
             ax.set_title(month)
+        LW -= 3
     ax.legend()
     # set title and xaxis
     if X.columns[0] == 'pcp':
@@ -725,7 +865,7 @@ def plot_cdf_by_month(ax=None, **kwargs):
 
 
 
-# In[14]:
+# In[ ]:
 
 
 # comment on fait pour savoir chronologie de donnees corrigees ?
@@ -743,7 +883,7 @@ def plot_cdf_by_month(ax=None, **kwargs):
 
 
 
-# In[15]:
+# In[ ]:
 
 
 # test bcsd one more time
