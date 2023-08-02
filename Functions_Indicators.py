@@ -42,7 +42,7 @@ def add_year_month_season(df,column_date):
     Month = df[[column_date]].values.reshape(len(df[[column_date]].values),)
     Season = df[[column_date]].values.reshape(len(df[[column_date]].values),)
     
-    if str(Year[1]).find('-')==2:
+    if str(Year[1]).find('-')==2 or str(Year[1]).find('/')==2:
         for i in np.arange(0,len(df[[column_date]].values)):
             Year[i]=int(Year[i][6:10])
             Month[i]=int(Month[i][3:5])
@@ -53,7 +53,7 @@ def add_year_month_season(df,column_date):
             
             Month[i]=str_month(Month[i])
             
-    if str(Year[1]).find('-')==4:
+    if str(Year[1]).find('-')==4 or str(Year[1]).find('/')==4:
         for i in np.arange(0,len(df[[column_date]].values)):
             Year[i]=int(Year[i][0:4])
             Month[i]=int(Month[i][5:7])
@@ -101,25 +101,31 @@ def str_month(int_m):
     return str_m
 
 
-# In[ ]:
+# In[2]:
 
 
 # this function is meant to filter the data wnated 
-def filter_dataframe(df,name_location,list_model_to_kill,start_y=1950,stop_y=2100):
+def filter_dataframe(df,name_projects,list_model_to_kill,start_y=1950,stop_y=2100):
     df = df.reset_index() # to take out multiindex that may exist and complicate filtering process
     
-    for name_model in list_model_to_kill:
-        df = df[df['Model']!=name_model]
+    if list_model_to_kill!=[]:
+        for name_model in list_model_to_kill:
+            df = df[df['Model']!=name_model]
     
-    df = df[df['Name project']==name_location] # select only data of interest
-    df=add_year_month_season(df,'Date') # add column 'Year', 'Month', 'Season'
+    df_final= pd.DataFrame()
+    for name_project in name_projects:
+        df_temp = df[df['Name project']==name_project] # select only data of interest
+        df_final = pd.concat([df_final,df_temp])
+    
+    if 'Year' not in list(df_final.columns):
+        df_final=add_year_month_season(df_final,'Date') # add column 'Year', 'Month', 'Season'
     
     if start_y!=1950 or stop_y!=2100:
-        df = df[df['Year'].between(start_y,stop_y)] # select only the years of interest
-    if 'index' in df.columns:
-        df= df.drop('index',axis=1)
+        df_final = df_final[df_final['Year'].between(start_y,stop_y)] # select only the years of interest
+    if 'index' in df_final.columns:
+        df_final= df_final.drop('index',axis=1)
     
-    return df
+    return df_final
 
 
 # In[ ]:
