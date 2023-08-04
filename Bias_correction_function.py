@@ -418,7 +418,7 @@ def BCSD_Precipitation_return_anoms(df):
 # In[10]:
 
 
-def BCSD_Precipitation_return_anoms_to_apply(df,X_to_correct):
+def BCSD_Precipitation_return_anoms_to_apply(df,X_to_correct):# df and X_to_correct are dataframes
     from skdownscale.pointwise_models import BcsdPrecipitation
 
     training = df['training']
@@ -440,7 +440,7 @@ def BCSD_Precipitation_return_anoms_to_apply(df,X_to_correct):
     X_to_correct.index = pd.to_datetime(X_to_correct.index,format='%Y-%m-%d')
     out = bcsd_temp.predict(X_to_correct)# * X_pcp # additive for temperature, multiplicative for precipitation
     
-    return (X_pcp,y_pcp,out)
+    return (X_pcp,y_pcp,out)# X_pcp,y_pcp,out are dataframes
 
 
 # In[11]:
@@ -463,7 +463,7 @@ def BCSD_Precipitation_return_anoms_resample_month(df):
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
-# In[12]:
+# In[20]:
 
 
 def BCSD_Temperature_return_anoms(df):
@@ -479,15 +479,23 @@ def BCSD_Temperature_return_anoms(df):
     bcsd_temp = BcsdTemperature(return_anoms=False)
     # in predict of BcsdPrecipitation, in skdownscale, in p
     bcsd_temp.fit(X_pcp, y_pcp)
+    Date = X_to_correct['Date'].values
+    for i in np.arange(0,len(Date)):
+        X_to_correct['Date'][i] = Date[i][6:10]+'-'+Date[i][3:5]+'-'+Date[i][0:2]#datetime.strptime(, '%Y-%M-%d').date()
+        #print(X_to_correct['Date'][i])
+    # .date() to avoid having the hours in the datetime
+    X_to_correct=X_to_correct.set_index('Date')
+    X_to_correct.index = pd.to_datetime(X_to_correct.index,format='%Y-%m-%d')
     out = bcsd_temp.predict(X_pcp)# * X_pcp # additive for temperature, multiplicative for precipitation
     
     return (X_pcp,X_pcp,y_pcp,y_pcp,out)
 
 
-# In[13]:
+# In[22]:
 
 
 def BCSD_Temperature_return_anoms_to_apply(df,X_to_correct):
+    # df and X_to_correct are dataframes
     from skdownscale.pointwise_models import BcsdTemperature
 
     training = df['training']
@@ -500,9 +508,16 @@ def BCSD_Temperature_return_anoms_to_apply(df,X_to_correct):
     bcsd_temp = BcsdTemperature(return_anoms=False)
     # in predict of BcsdPrecipitation, in skdownscale, in p
     bcsd_temp.fit(X_pcp, y_pcp)
+    Date = X_to_correct['Date'].values
+    for i in np.arange(0,len(Date)):
+        X_to_correct['Date'][i] = Date[i][6:10]+'-'+Date[i][3:5]+'-'+Date[i][0:2]#datetime.strptime(, '%Y-%M-%d').date()
+        #print(X_to_correct['Date'][i])
+    # .date() to avoid having the hours in the datetime
+    X_to_correct=X_to_correct.set_index('Date')
+    X_to_correct.index = pd.to_datetime(X_to_correct.index,format='%Y-%m-%d')
     out = bcsd_temp.predict(X_to_correct)# * X_pcp # additive for temperature, multiplicative for precipitation
     
-    return (X_pcp,y_pcp,out)
+    return (X_pcp,y_pcp,out)# X_pcp,y_pcp,out are dataframes
 
 
 # In[14]:
