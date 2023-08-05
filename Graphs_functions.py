@@ -483,7 +483,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
 
             for model in list(set(df[category])):
                 df[df[category]==model]= cdf_(df[df[category]==model],name_column_df)
-            sns.lineplot(data=df,x=name_column_df,y='CDF',hue=category,errorbar =('pi',80))
+            sns.lineplot(data=df,x=name_column_df,y='CDF',hue=category,errorbar =('pi',80), linewidth =2)
             
         if category == 'Experiment':
             palette_color = ['blue','green','orange','pink','red']
@@ -492,7 +492,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
             for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
                 for model in list(set(df['Model'])):
                     df_temp = cdf_(df[(df[category]==ssp) & (df['Model']==model)],name_column_df)
-                    sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80))
+                    sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
             # hue=category
             #df = df.drop(['Model'],axis=1)
                 

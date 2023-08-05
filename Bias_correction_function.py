@@ -99,9 +99,9 @@ def treat_data_for_test(df_obs,name_col_obs,df_model_past,name_col_model,name_st
         new_name = 'pcp'
     if 'temp' in name_col_model.lower():
         if 'maximum' in name_col_model.lower():
-            new_name = 'temp_max'
+            new_name = 'temp'#'temp_max'
         if 'minimum' in name_col_model.lower():
-            new_name = 'temp_min'
+            new_name = 'temp'#'temp_min'
         if 'maximum' not in name_col_model.lower() and 'minimum' not in name_col_model.lower():
             new_name = 'temp'
     

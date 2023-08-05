@@ -148,7 +148,15 @@ def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,st
 # In[ ]:
 
 
-
+def import_BC_NEX_GDDP_CMIP6(climate_var,start_y,stop_y,resolution ='day'):
+    path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file'
+    if climate_var =='pr':
+        unit ='mm_per_day'
+    if 'tas' in climate_var:
+        unit ='Celsius'
+    df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected.csv'))
+    df=df.drop('Unnamed: 0',axis=1)
+    return df
 
 
 # In[ ]:
