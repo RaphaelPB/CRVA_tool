@@ -154,7 +154,10 @@ def import_BC_NEX_GDDP_CMIP6(climate_var,start_y,stop_y,resolution ='day'):
         unit ='mm_per_day'
     if 'tas' in climate_var:
         unit ='Celsius'
-    df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected.csv'))
+    if (stop_y>2014) and (start_y>2014):
+        df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected.csv'))
+    if (stop_y<2014) and (start_y<2014):
+        df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected_EmplacementStationNOAA.csv'))
     df=df.drop('Unnamed: 0',axis=1)
     return df
 
