@@ -10,7 +10,7 @@
 # 
 # ![image.png](attachment:image.png)
 
-# In[ ]:
+# In[1]:
 
 
 import pandas as pd
@@ -70,7 +70,7 @@ def boxplots_(climate_var,df1,name_col1,df2,name_col2,name_station):
     #fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
     #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
     ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
-    plt.title('Compare observation for '+climate_var+' from NOAA,with modeled data\nby NEX-GDDP-CMIP6 between 1970 to 2014 at '+name_station)
+    plt.title('Compare observation for '+climate_var+' from NOAA,with modeled data\nby NEX-GDDP-CMIP6 between '+str(min(df2['Year']))+' to '+str(max(df2['Year']))+' at '+name_station)
 
     path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\testBoxplotObs.png'
     plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
@@ -111,7 +111,7 @@ def boxplots_comp_obs_model(climate_var,df_obs,source_obs,df_model,source_model)
 
 # ![image.png](attachment:image.png)
 
-# In[1]:
+# In[ ]:
 
 
 def compare_3_lines(title_fig,title_x_axis,clim_var,data_1,name_col_1,source_1,data_2,name_col_2,source_2,y_name,name_station,x_name='Year',tuple_error_bar=('pi',80)):
@@ -468,10 +468,110 @@ def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data
 # only observed values
 # ![image-3.png](attachment:image-3.png)
 
+# In[3]:
+
+
+# name_location will just be in the title
+
+# df_initial is the dataframe containing the modelled data
+# name_column_df is the name of the column in the df_initial where we want to calculate the cdf
+# source_df is the source of the data (ex: NEX-GDDP-CMIP6)
+# category is the category with which the dat are going to be split in the representation
+
+# df_initial is the dataframe containing the obsered data
+# name_column_obs is the name of the column in the df of observations where we want to calculate the cdf 
+# source_obs is the source of the data (ex: NOAA)
+
+def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
+    fig,ax=plt.subplots()
+    str_title_df = ''
+    if not df_initial.empty:
+        start_y_df = str(min(df_initial['Year']))
+        stop_y_df = str(max(df_initial['Year']))
+        if category == 'Model':
+            df = df_initial[[category,name_column_df]].copy(deep=True)
+            df['CDF']=df[name_column_df]
+
+            for model in list(set(df[category])):
+                df[df[category]==model]= cdf_(df[df[category]==model],name_column_df)
+            sns.lineplot(data=df,x='CDF',y=name_column_df,hue=category,errorbar =('pi',80), linewidth =2)
+            
+        if category == 'Experiment':
+            palette_color = ['blue','green','orange','pink','red']
+            df = df_initial[[category,'Model',name_column_df]].copy(deep=True)
+            df['CDF']=df[name_column_df]
+            df_final = pd.DataFrame()
+            for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
+                for model in list(set(df['Model'])):
+                    df_temp = cdf_(df[(df[category]==ssp) & (df['Model']==model)],name_column_df)
+                    df_final = pd.concat([df_final,df_temp])
+                sns.lineplot(data=df_final,x='CDF',y=name_column_df,label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
+        r'''
+        if category == 'Experiment':
+            palette_color = ['blue','green','orange','pink','red']
+            df = df_initial[[category,'Model',name_column_df]].copy(deep=True)
+            df['CDF']=df[name_column_df]
+            df_final = pd.DataFrame()
+            for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
+                df_temp = cdf_(df[(df[category]==ssp)],name_column_df)
+                sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
+        '''
+
+        str_title_df = 'modelled '+source_df+' data between '+start_y_df+' and '+stop_y_df
+    
+    str_title_obs = ''
+    if not obs_initial.empty:
+        obs = obs_initial.copy(deep=True)
+        obs['CDF']=obs[name_column_obs]
+        obs=cdf_(obs[['CDF',name_column_obs]],name_column_obs)
+        sns.lineplot(data=obs,x='CDF',y=name_column_df,label='Observation data from '+source_obs,color='black')
+        start_y_obs = str(min(obs_initial['Year']))
+        stop_y_obs = str(max(obs_initial['Year']))
+        str_title_obs = 'observation '+source_obs+' data between '+start_y_obs+' and '+stop_y_obs
+    
+    # legend of the figure
+    
+    # title of the figure
+    if str_title_df!='' and str_title_obs!='':
+        str_title = str_title_df +',\ncompared to CDF of '+str_title_obs
+        x_legend = 1.35
+    else:
+        if str_title_df!='':
+            str_title = str_title_df
+            x_legend = 1.2
+        if str_title_obs!='':
+            str_title = str_title_obs
+            x_legend = 1.35
+    
+    if category == 'Experiment':
+        handles, labels = plt.gca().get_legend_handles_labels()
+        labels, ids = np.unique(labels, return_index=True)
+        handles = [handles[i] for i in ids] 
+    else:
+        handles, labels=ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(x_legend, 0.8),title='Legend')
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    plt.ylabel('Cumulative distribution function')
+    plt.title('Cumulative distribution function of '+name_column_df+'\n'+str_title+'\n at '+name_location)
+        
+    return
+
+
 # In[ ]:
 
 
-def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
+# name_location will just be in the title
+
+# df_initial is the dataframe containing the modelled data
+# name_column_df is the name of the column in the df_initial where we want to calculate the cdf
+# source_df is the source of the data (ex: NEX-GDDP-CMIP6)
+# category is the category with which the dat are going to be split in the representation
+
+# df_initial is the dataframe containing the obsered data
+# name_column_obs is the name of the column in the df of observations where we want to calculate the cdf 
+# source_obs is the source of the data (ex: NOAA)
+
+def cdf_plot_category_or_obsOriginal(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
     fig,ax=plt.subplots()
     str_title_df = ''
     if not df_initial.empty:
@@ -489,14 +589,23 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
             palette_color = ['blue','green','orange','pink','red']
             df = df_initial[[category,'Model',name_column_df]].copy(deep=True)
             df['CDF']=df[name_column_df]
+            df_final = pd.DataFrame()
             for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
                 for model in list(set(df['Model'])):
                     df_temp = cdf_(df[(df[category]==ssp) & (df['Model']==model)],name_column_df)
-                    sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
-            # hue=category
-            #df = df.drop(['Model'],axis=1)
-                
-        #sns.lineplot(data=df,x=name_column_df,y='CDF',hue=category,errorbar =('pi',80))
+                    df_final = pd.concat([df_final,df_temp])
+                sns.lineplot(data=df_final,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
+        r'''
+        if category == 'Experiment':
+            palette_color = ['blue','green','orange','pink','red']
+            df = df_initial[[category,'Model',name_column_df]].copy(deep=True)
+            df['CDF']=df[name_column_df]
+            df_final = pd.DataFrame()
+            for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
+                df_temp = cdf_(df[(df[category]==ssp)],name_column_df)
+                sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
+        '''
+
         str_title_df = 'modelled '+source_df+' data between '+start_y_df+' and '+stop_y_df
     
     str_title_obs = ''
@@ -546,15 +655,19 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
 
 
 # need to choose periods, in format as example ['2020-2040','2040-2060']
+# df is the dataframe where all the are
+# periods is in the format of a list of strings
+# name_column is the name of the column of the elements from which we have to calculate the cdf
 
 def cdf_plot_period(df,periods,name_column):
+
     df_copy = df.copy(deep=True) # do a copy of the dataframe
     # create two new columns to register the periods and cdfs
     df_copy['Period'] = df_copy['Year']
     df_copy['CDF'] = df_copy['Year']
     # register historical information to concatenate them with each period
     df_historical = df_copy[df_copy['Experiment']=='historical']
-    df_historical=cdf(df_historical,name_column)
+    df_historical=cdf_(df_historical,name_column)
     # create an empty dataframe for the information to plot
     df_final=pd.DataFrame()
     for period in periods: # go throught all the periods wnated
@@ -569,7 +682,7 @@ def cdf_plot_period(df,periods,name_column):
             df_temp_ssp=cdf_(df_temp_ssp,name_column)
             # concat the result with the other ssps
             df_ssp = pd.concat([df_ssp,df_temp_ssp])
-        # concat the results withthe other ssps and periods
+        # concat the results with the other ssps and periods
         df_final = pd.concat([df_final,df_historical,df_ssp])
         
     # plot the different periods with the historical data

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import pandas as pd
@@ -17,7 +17,7 @@ from Functions_Indicators import add_year_month_season
 
 # import_treat_obs_NOAA aims to import the original file containing the NOAA observation data. It used in 'Treat DATA NOAA Station'
 
-# In[2]:
+# In[ ]:
 
 
 # this function is meant to import the NOAA observation data
@@ -34,7 +34,7 @@ def import_treat_obs_NOAA():
 
 # treat_NOAA_data aims to add information to the dataframe of the observation data. It is used in 'Treat DATA NOAA Station'
 
-# In[3]:
+# In[ ]:
 
 
 def treat_NOAA_data(daily_sum_obs_from_NOAA):
@@ -51,7 +51,7 @@ def treat_NOAA_data(daily_sum_obs_from_NOAA):
     return daily_sum_obs_from_NOAA
 
 
-# In[4]:
+# In[ ]:
 
 
 # this funciton count the missing values in the columns named name_col in the dataframe df
@@ -63,7 +63,7 @@ def count_na_in_df_NOAA(df,name_col): # function used in treat_NOAA_data
 
 # import_filtered_NOAA_obs aims to import the filtered observation NOAA data
 
-# In[5]:
+# In[ ]:
 
 
 def import_filtered_NOAA_obs():
@@ -77,11 +77,23 @@ def import_filtered_NOAA_obs():
     return data_obs_NOAA
 
 
+# ## Precipitation data from Gorongosa
+
+# In[ ]:
+
+
+def import_gorongosa_obs_pr():
+    path=r'C:\Users\CLMRX\COWI\A248363 - Climate analysis - Documents\General\CRVA_tool\Master_thesis\Project\3 - Implementation\1 - Data\1-BC\DirecltyfromMoz\Precipitation_Gorongosa_reformat_ready_to_use.csv'
+    df = pd.read_csv(path)
+    df = df.drop('Unnamed: 0',axis=1)
+    return df
+
+
 # ## CMIP6
 # 
 # function 'import_CMIP6_past_close_to_NOAA' aims to import past CMIP6 data, at the same emplacement than the NOAA station
 
-# In[6]:
+# In[ ]:
 
 
 def import_CMIP6_past_close_to_NOAA(global_variable,climate_var=''):
@@ -108,7 +120,7 @@ def import_CMIP6_past_close_to_NOAA(global_variable,climate_var=''):
 # 
 # does not work
 
-# In[7]:
+# In[ ]:
 
 
 def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
@@ -127,7 +139,7 @@ def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
 # 
 # does not work
 
-# In[8]:
+# In[ ]:
 
 
 def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,start_y,stop_y):
@@ -148,16 +160,16 @@ def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,st
 # In[ ]:
 
 
-def import_BC_NEX_GDDP_CMIP6(climate_var,start_y,stop_y,resolution ='day'):
+def import_BC_NOAA_NEX_GDDP_CMIP6(climate_var,start_y,stop_y,EmplacementStationNOAA='yes',resolution ='day'):
     path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file'
     if climate_var =='pr':
         unit ='mm_per_day'
     if 'tas' in climate_var:
         unit ='Celsius'
-    if (stop_y>2014) and (start_y>2014):
-        df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected.csv'))
-    if (stop_y<2014) and (start_y<2014):
+    if EmplacementStationNOAA=='yes':
         df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected_EmplacementStationNOAA.csv'))
+    else:
+        df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected.csv'))
     df=df.drop('Unnamed: 0',axis=1)
     return df
 
@@ -165,19 +177,11 @@ def import_BC_NEX_GDDP_CMIP6(climate_var,start_y,stop_y,resolution ='day'):
 # In[ ]:
 
 
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
+def import_BC_Gorongosa_NEX_GDDP_CMIP6(start_y,stop_y, climate_var='pr',resolution='day',unit='mm_per_day'):
+    path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file'
+    df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected_OnlyGorongosa.csv'))
+    df=df.drop('Unnamed: 0',axis=1)
+    return df
 
 
 # In[ ]:
