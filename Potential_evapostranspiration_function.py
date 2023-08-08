@@ -4,6 +4,8 @@
 # ![image.png](attachment:image.png)
 # 
 # Source of image : https://link.springer.com/article/10.1007/s10584-021-03122-z, section 3.2
+# 
+# Indications are misleading the results : RH_mean shoudl be [-] (divide the value in percent by 100)
 
 # Units of PET is kg.m^(-2).day^(-1)
 
@@ -149,12 +151,12 @@ def dataframe_Ra():
 #U_z =2
 
 
-# In[5]:
+# In[1]:
 
 
 # Function PET is to determine potential evapotranspiration
 
-def PET(T,T_max,T_min,Rs,RH_mean,U_z,z_station_elevation,lat,month):
+def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month):
     
     #### Slope of vapor pressure
     _delta = 4098*e_0(T)/(T+237.3)**2
@@ -185,16 +187,24 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_z,z_station_elevation,lat,month):
     # Psychrometric constant [kPa/°C]
     _gamma = (1.005*101.3)/(0.622*_lambda*10**3)
     
-    #### Wind
-    z = 10 # m
-    U_2 = U_z*(4.87)/(np.log(67.8*z-5.42)) # np.log is the neperian logarithm ln
+    #### Wind, conversion already done out of the function
+    #z = 10 # m
+    #U_2 = U_z*(4.87)/(np.log(67.8*z-5.42)) # np.log is the neperian logarithm ln
     
     #### (Mean) saturation vapor pressure
     e_s = (e_0(T_max)+e_0(T_min))/2
     
     
     ##### potential evapotranspiration calculation
-    PET_value = (_delta*R_n + (6.43*_gamma*(1+0.536*U_2)*(1-RH_mean)*e_s))/((_delta+_gamma)*_lambda)
+    PET_value = (_delta*R_n + (6.43*_gamma*(1+0.536*U_2)*(1-(RH_mean/100))*e_s))/((_delta+_gamma)*_lambda)
+    
+    print('_delta '+str(_delta))
+    print('R_n '+str(R_n))
+    print('_gamma '+str(_gamma))
+    print('U_2 '+str(U_2))
+    print('RH_mean '+str(RH_mean))
+    print('_lambda '+str(_lambda))
+    
     if PET_value < 0:
         print('The potential evapotranspiration is negative, there is a problem with input data')
     
