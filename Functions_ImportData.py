@@ -126,7 +126,7 @@ def import_CMIP6_past_close_to_NOAA(global_variable,climate_var=''):
 def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
     # import data
     
-    path_NEX_GDDP_CMIP6_EmplacementStation=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_'+unit+'_day_1970-2014_Closest_to_NOAA','NEXGDDPCMIP6_at_same_emplacement_as_NOAA_stationPembaChimoioBeira_'+climate_var+'_1970-2014_projectsMoz.csv')
+    path_NEX_GDDP_CMIP6_EmplacementStation=os.path.join(r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file',climate_var,climate_var+'_'+unit+'_day_1950-2100_Closest_to_NOAA','NEXGDDPCMIP6_at_same_emplacement_as_NOAA_stationPembaChimoioBeira_'+climate_var+'_1950-2100.csv')
     
     data_NEX_GDDP_CMIP6_EmplacementStation = pd.read_csv(path_NEX_GDDP_CMIP6_EmplacementStation)
     
@@ -167,8 +167,10 @@ def import_BC_NOAA_NEX_GDDP_CMIP6(climate_var,start_y,stop_y,EmplacementStationN
     if 'tas' in climate_var:
         unit ='Celsius'
     if EmplacementStationNOAA=='yes':
+        print('read csv')
         df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected_EmplacementStationNOAA.csv'))
     else:
+        print('read csv')
         df=pd.read_csv(os.path.join(path,climate_var,climate_var+'_'+unit+'_'+resolution+'_'+str(start_y)+'-'+str(stop_y)+'_BiasCorrected',climate_var+'_'+unit+resolution+str(start_y)+'-'+str(stop_y)+'_BiasCorrected.csv'))
     df=df.drop('Unnamed: 0',axis=1)
     return df
