@@ -285,13 +285,12 @@ def return_period_coresponding_to_threshold(Z):
 # In[ ]:
 
 
-# sure de cette function
-def return_period(Z,T,start_y,stop_y):
+def return_period(df,T,start_y,stop_y):
     Z = df[df['Year'].between(start_y,stop_y)].groupby('Year')[['pr']].agg(np.nanmax)#.reshape(len(pr_obs_gorongosa_from_gorongosa.groupby('Year')[['pr']].max()),)
     #Z = Z[~np.isnan(Z)]
     (loc1,scale1)=scipy.stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
     value_for_T=threshold_coresponding_to_return_period(loc1,scale1,T)
-    return 
+    return value_for_T
 
 
 # In[ ]:
@@ -308,6 +307,7 @@ def return_period(Z,T,start_y,stop_y):
 
 
 # this function only works for projections
+# example of use df_monthly_avg_tas_NEXGDDPCMIP6_gorongosa=temporal_avg(df_tas_NEXGDDPCMIP6_gorongosa,'temperature','Monthly average temperature','month')
 def temporal_avg(df,climate_var_long_name,title_column,temporal_resolution):
     df_yearly_avg = df.copy(deep =True)
     old_name_column = find_name_col(df,climate_var_long_name)
@@ -329,6 +329,31 @@ def temporal_avg(df,climate_var_long_name,title_column,temporal_resolution):
 
 
 # this function only works for projections
+# example of use df_monthly_avg_tas_NEXGDDPCMIP6_gorongosa=temporal_avg(df_tas_NEXGDDPCMIP6_gorongosa,'temperature','Monthly average temperature','month')
+def temporal_max(df,climate_var_long_name,title_column,temporal_resolution):
+    df_yearly_avg = df.copy(deep =True)
+    old_name_column = find_name_col(df,climate_var_long_name)
+    df_yearly_avg=df_yearly_avg.rename(columns={old_name_column:title_column})
+    if 'pr' in title_column.lower():
+        if temporal_resolution == 'year':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].max()*365.25
+        if temporal_resolution == 'month':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].max()*30
+    else:
+        if temporal_resolution == 'year':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Year'])[[title_column]].max()
+        if temporal_resolution == 'month':
+            df_yearly_avg = df_yearly_avg.groupby(['Name project','Experiment','Model','Month'])[[title_column]].max()
+    return df_yearly_avg
+
+
+# # Vulnerability - statistical distribution
+
+# In[ ]:
+
+
+# this function only makes sense if data are in the past or the future
+# input of this function is a dataframe. Should just put a datfarme of 2 columns as df. The 2 columns sould be ['Name project'] and the colummn of interest
 def df_stat_distr(df):
     df = df.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
     # if describe() does not return al wanted statistics, it is maybe because the elements in it are not recognized as int

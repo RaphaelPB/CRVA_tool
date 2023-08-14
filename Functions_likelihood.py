@@ -292,6 +292,14 @@ def define_likelihood(proba_event):
 # In[12]:
 
 
+# the input dataframe df should have no Nan values (add .dropna() at the end of input)
+# climate_var is 'tas', 'tasmax','tasmin' or 'pr'
+# name_column is the name of the column of the values of interest
+# event is the threshold value of the event to look at
+# type_event is either '=','>' or '<'. 
+# examples, 
+#     if we are interested in the event 'the temperature will go over 40', event = 40, type_event = '>'
+#     if we are interested in the event 'the temperature will go under 40', event = 40, type_event = '<'
 def likelihood_accross_models(df,climate_var,unit,name_column,event,type_event):
     
     proba_event=[]
@@ -306,6 +314,41 @@ def likelihood_accross_models(df,climate_var,unit,name_column,event,type_event):
             print('proba_event_model registered')
         else:
             model_not_in_final_calculation.append(distribution.name)
+        
+    proba_event_accross_model=statistics.mean(proba_event)
+    
+    likelihood=define_likelihood(proba_event_accross_model)
+    
+    return proba_event_accross_model,likelihood
+
+
+# In[ ]:
+
+
+# the input dataframe df should have no Nan values (add .dropna() at the end of input)
+# climate_var is 'tas', 'tasmax','tasmin' or 'pr'
+# name_column is the name of the column of the values of interest
+# event is the threshold value of the event to look at
+# type_event is either '=','>' or '<'. 
+# examples, 
+#     if we are interested in the event 'the temperature will go over 40', event = 40, type_event = '>'
+#     if we are interested in the event 'the temperature will go under 40', event = 40, type_event = '<'
+
+def likelihood_accross_models_and_ssps(df,climate_var,unit,name_column,event,type_event):
+    
+    proba_event=[]
+    model_not_in_final_calculation = []
+    for model in list(set(df['Model'])):
+        for ssp in list(set(df['Experiment'])):
+            (distribution,params)=look_best_distr(df[(df['Model']==model)&(df['Experiment']==ssp)][[name_column]],climate_var,unit)
+            print('params '+str(params))
+            proba_event_model = type_event_f(event,type_event,distribution,params)
+            print('proba_event_model '+str(proba_event_model))
+            if not np.isnan(proba_event_model): # apparently, when the parameters are too small, can cause trouble to calculate the probability
+                proba_event.append(proba_event_model)
+                print('proba_event_model registered')
+            else:
+                model_not_in_final_calculation.append(distribution.name)
         
     proba_event_accross_model=statistics.mean(proba_event)
     
