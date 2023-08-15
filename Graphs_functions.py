@@ -614,7 +614,7 @@ def cdf_plot_category_or_obs_attempt(name_location,df_initial=pd.DataFrame(),nam
 
             for model in list(set(df[category])):
                 df[df[category]==model]= cdf_(df[df[category]==model],name_column_df)
-            sns.lineplot(data=df,x='CDF',y=name_column_df,hue=category,errorbar =('pi',80), linewidth =2)
+            sns.lineplot(data=df,x=name_column_df,y= 'CDF',hue=category,errorbar =('pi',80), linewidth =2)
         r'''    
         if category == 'Experiment':
             palette_color = ['blue','green','orange','pink','red']
@@ -644,7 +644,7 @@ def cdf_plot_category_or_obs_attempt(name_location,df_initial=pd.DataFrame(),nam
         obs = obs_initial.copy(deep=True)
         obs['CDF']=obs[name_column_obs]
         obs=cdf_(obs[['CDF',name_column_obs]],name_column_obs)
-        sns.lineplot(data=obs,x='CDF',y=name_column_obs,label='Observation data from '+source_obs,color='black')
+        sns.lineplot(data=obs,x=name_column_obs,y= 'CDF',label='Observation data from '+source_obs,color='black')
         start_y_obs = str(min(obs_initial['Year']))
         stop_y_obs = str(max(obs_initial['Year']))
         str_title_obs = 'observation '+source_obs+' data between '+start_y_obs+' and '+stop_y_obs

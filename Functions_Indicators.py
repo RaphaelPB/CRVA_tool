@@ -347,13 +347,40 @@ def temporal_max(df,climate_var_long_name,title_column,temporal_resolution):
     return df_yearly_avg
 
 
-# # Vulnerability - statistical distribution
+# ### N - number of days above threshold
+
+# In[ ]:
+
+
+def number_day_above_threshold(df,climate_var_longName,threshold):
+    try:
+        try:
+            old_title_column=df.filter(like=climate_var_longName, axis=1).columns[0]
+        except:
+            old_title_column=df.filter(like=climate_var_longName.capitalize(), axis=1).columns[0]
+    except:
+        old_title_column=df.filter(like=climate_var_longName.upper(), axis=1).columns[0]
+    new_name='Average annual number of days with '+climate_var_longName+' above '+str(threshold)
+    #df = df.rename(columns={old_title_column:new_name})
+    
+    df = df.drop(['Date','Month','Season'],axis=1) 
+    df=df.reset_index()
+    #df=df.groupby(['Experiment','Model','Year']).apply(lambda x: x[x[new_name]>40].count()).reset_index()
+    df[new_name]=0
+    df[new_name].iloc[np.where(df[old_title_column]>40)[0]]=1    
+    df = df.groupby(['Experiment','Model','Year'])[[new_name]].sum()
+    
+    return df
+
+
+# ### Vulnerability - statistical distribution
 
 # In[ ]:
 
 
 # this function only makes sense if data are in the past or the future
-# input of this function is a dataframe. Should just put a datfarme of 2 columns as df. The 2 columns sould be ['Name project'] and the colummn of interest
+# input of this function is a dataframe with no multi evel index. If the dataframe is with multilevel index, should .reset_index()
+# Should just put a datfarme of 2 columns as df. The 2 columns sould be ['Name project'] and the colummn of interest
 def df_stat_distr(df):
     df = df.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
     # if describe() does not return al wanted statistics, it is maybe because the elements in it are not recognized as int
@@ -610,8 +637,9 @@ def level_exposure(df):
                     # test if there are any True, if any value is over the threshold indicated
                     ExposureLevel.loc[name_p,('Exposure level',climate_variable)] = 'High' # attribute value to exposure level
     
-    ExposureLevel=ExposureLevel.style.apply(exposureColor) # apply color depending on value of Exposure
-    ExposureLevel=ExposureLevel.set_table_styles([{'selector': 'th.col_heading', 'props': 'text-align: left;'}],[{'selector': 'td', 'props': 'text-align: center;'}],overwrite = True) # place first level column to the left
+    # those 2 next lines are meant to put colors for Exposure, but prevent from using it as a dataframe after, so give up for the moement
+    #ExposureLevel=ExposureLevel.style.apply(exposureColor) # apply color depending on value of Exposure
+    #ExposureLevel=ExposureLevel.set_table_styles([{'selector': 'th.col_heading', 'props': 'text-align: left;'}],[{'selector': 'td', 'props': 'text-align: center;'}],overwrite = True) # place first level column to the left
     # meant to place element in dataframe, but do not work very well
     return ExposureLevel
 
@@ -625,4 +653,18 @@ def exposureColor(series):
     orange = 'background-color: orange'
     red = 'background-color: red'
     return [red if value == 'High' else orange if value == 'Medium' else green for value in series]
+
+
+# # Vulnerability
+
+# In[ ]:
+
+
+def vulnerability(df_sensitivity,df_exposure):
+    
+    'No' # default value
+    
+    #if 
+    
+    return df_vulnerability
 

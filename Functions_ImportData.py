@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import pandas as pd
@@ -186,14 +186,39 @@ def import_BC_Gorongosa_NEX_GDDP_CMIP6(start_y,stop_y, climate_var='pr',resoluti
     return df
 
 
-# In[ ]:
+# # Sensitivity informations
+
+# In[64]:
 
 
+# this function imports the sentivity for the town of gorongosa
+# even if the user modifies the path and the initial document, also need to adapt the code, to permit to deal with several projects
+def sensitivity():
+    path = r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\GorongosaSensitivity.csv'
+    df = pd.read_csv(path)
+    # register names of projects in the matrix
+    names = list(df['Unnamed: 0'].dropna())
+    names.remove('Project')
+    # register Sensitivity theme
+    ST = list(df['Unnamed: 1'].dropna())
+    ST.remove('Sensitivity theme')
+    # list climate variables
+    CV = list(df.iloc[0,2:len(df.columns)])
 
+    # create a new dataframe, with multiple indexes andmultiples columns
+    midx = pd.MultiIndex.from_product([names,ST],names=['Name project','Sensitivity theme']) # multiple index
+    cols = pd.MultiIndex.from_product([('Sensitivity level',),CV]) # create mutliple columns
+    # create empty dataframe
+    df_ = pd.DataFrame(data = [], 
+                                index = midx,
+                                columns = cols)
+    # set a default value for every element in the new dataframe
+    df_.loc[:,:]='No'
 
-
-# In[ ]:
-
-
-
+    # register sensitivity values from initial csv
+    for i in np.arange(0,len(df_.index)):
+        for j in np.arange(0,len(df_.columns)):
+            if df.iloc[i+1,j+2]!= 'No':
+                df_.iloc[i,j] = df.iloc[i+1,j+2]
+    return df_
 
