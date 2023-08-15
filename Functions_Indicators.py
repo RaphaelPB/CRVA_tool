@@ -352,14 +352,7 @@ def temporal_max(df,climate_var_long_name,title_column,temporal_resolution):
 # In[ ]:
 
 
-def number_day_above_threshold(df,climate_var_longName,threshold):
-    try:
-        try:
-            old_title_column=df.filter(like=climate_var_longName, axis=1).columns[0]
-        except:
-            old_title_column=df.filter(like=climate_var_longName.capitalize(), axis=1).columns[0]
-    except:
-        old_title_column=df.filter(like=climate_var_longName.upper(), axis=1).columns[0]
+def number_day_above_threshold(df,climate_var_longName,old_title_column,threshold):
     new_name='Average annual number of days with '+climate_var_longName+' above '+str(threshold)
     #df = df.rename(columns={old_title_column:new_name})
     
@@ -368,23 +361,8 @@ def number_day_above_threshold(df,climate_var_longName,threshold):
     #df=df.groupby(['Experiment','Model','Year']).apply(lambda x: x[x[new_name]>40].count()).reset_index()
     df[new_name]=0
     df[new_name].iloc[np.where(df[old_title_column]>40)[0]]=1    
-    df = df.groupby(['Experiment','Model','Year'])[[new_name]].sum()
+    df = df.groupby(['Name project','Experiment','Model','Year'])[[new_name]].sum()
     
-    return df
-
-
-# ### Vulnerability - statistical distribution
-
-# In[ ]:
-
-
-# this function only makes sense if data are in the past or the future
-# input of this function is a dataframe with no multi evel index. If the dataframe is with multilevel index, should .reset_index()
-# Should just put a datfarme of 2 columns as df. The 2 columns sould be ['Name project'] and the colummn of interest
-def df_stat_distr(df):
-    df = df.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
-    # if describe() does not return al wanted statistics, it is maybe because the elements in it are not recognized as int
-    # add astype(int) as in following example; df.astype(int).groupby(['Name project']).describe(percentiles=[.1, .5, .9])
     return df
 
 
@@ -648,6 +626,7 @@ def level_exposure(df):
 
 
 # function use in function 'level_exposure' to color result depending on the result
+# function not in use for the moment
 def exposureColor(series):
     green = 'background-color: lightgreen'
     orange = 'background-color: orange'
@@ -660,11 +639,59 @@ def exposureColor(series):
 # In[ ]:
 
 
+# this function only makes sense if data are in the past or the future
+# input of this function is a dataframe with no multi evel index. If the dataframe is with multilevel index, should .reset_index()
+# Should just put a datfarme of 2 columns as df. The 2 columns sould be ['Name project'] and the colummn of interest
+def df_stat_distr(df):
+    df = df.groupby(['Name project']).describe(percentiles=[.1, .5, .9])
+    # if describe() does not return al wanted statistics, it is maybe because the elements in it are not recognized as int
+    # add astype(int) as in following example; df.astype(int).groupby(['Name project']).describe(percentiles=[.1, .5, .9])
+    return df
+
+
+# permit to have the foloowing matrix
+# ![image.png](attachment:image.png)
+
+# In[ ]:
+
+
 def vulnerability(df_sensitivity,df_exposure):
     
-    'No' # default value
+    if len(df_sensitivity.columns.levels[1])!=len(df_exposure.columns.levels[1]): # check if both dataframe have the same numbers of indicators we are checking in
+        print('The number of climate variables is the sensitivity and in exposure is different')
+        return
     
-    #if 
+    df_vulnerability = df_sensitivity.copy(deep=True)
+        
+    df_vulnerability.loc[:,:]='No' # default value
+    df_vulnerability=df_vulnerability.rename(columns={'Sensitivity level':'Vulnerability level'}) # chnage name of the column
     
+    for name_p in list(df_exposure.index):# go throught projects
+        print(name_p)
+        for k in np.arange(0,len(df_vulnerability.index.levels[1])): # go through project elements
+            for i in np.arange(0,len(df_exposure.columns.levels[1])): # go through climate variables
+                #print('i = '+str(i))
+                if df_exposure.loc[name_p,('Exposure level',ExposureLevel_tasmax.columns.levels[1][i])]=='No':
+                    if df_sensitivity.loc[name_p,('Sensitivity level',df_sensitivity.columns.levels[1][i])][k]=='High':
+                        # assign vulnerability to 'Medium'
+                        df_vulnerability.loc[name_p,('Vulnerability level',df_vulnerability.columns.levels[1][i])][k]=='Medium'
+                if df_exposure.loc[name_p,('Exposure level',ExposureLevel_tasmax.columns.levels[1][i])]=='Medium':
+                    if df_sensitivity.loc[name_p,('Sensitivity level',ExposureLevel_tasmax.columns.levels[1][i])][k]=='Medium':
+                        # assign vulnerability to 'Medium'
+                        df_vulnerability.loc[name_p,('Vulnerability level',df_vulnerability.columns.levels[1][i])][k]=='Medium'
+                    if df_sensitivity.loc[name_p,('Exposure level',ExposureLevel_tasmax.columns.levels[1][i])][k]=='High':
+                        # assign vulnerability to 'High'
+                        df_vulnerability.loc[name_p,('Vulnerability level',df_vulnerability.columns.levels[1][i])][k]=='High'
+                if df_exposure.loc[name_p,('Exposure level',ExposureLevel_tasmax.columns.levels[1][i])]=='High':
+                    if df_sensitivity.loc[name_p,('Sensitivity level',ExposureLevel_tasmax.columns.levels[1][i])][k]=='No':
+                        # assign vulnerability to 'Medium'
+                        df_vulnerability.loc[name_p,('Vulnerability level',df_vulnerability.columns.levels[1][i])][k]=='Medium'
+                    if df_sensitivity.loc[name_p,('Sensitivity level',ExposureLevel_tasmax.columns.levels[1][i])][k]=='Medium':
+                        # assign vulnerability to 'High'
+                        df_vulnerability.loc[name_p,('Vulnerability level',df_vulnerability.columns.levels[1][i])][k]=='High'
+                    if df_sensitivity.loc[name_p,('Sensitivity level',ExposureLevel_tasmax.columns.levels[1][i])][k]=='High':
+                        # assign vulnerability to 'High'
+                        df_vulnerability.loc[name_p,('Vulnerability level',df_vulnerability.columns.levels[1][i])][k]=='High'
+
     return df_vulnerability
 
