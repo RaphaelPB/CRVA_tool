@@ -368,10 +368,13 @@ def compare_2_lines(data_1,data_2,y_name,x_name='Year',tuple_error_bar=('pi',80)
 # In[9]:
 
 
+# climate_var: short name for climate var ('pr' for precipitation)
 # data_1 : first set of data to be used, should only contains the location of interest
 # source_1 : source of the first set of data
 # data_2 : second set of dat to be used, should only contains the location of interest
 # source_2 : source of the second set of data
+# stats: string format, for example 'Average', meant to be used in the title and to choose wha to present
+# location: string format, meant to be used only in the tile
 
 def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100):
     
@@ -384,7 +387,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
         if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
             data_1=data_1[data_1['Year'].between(start_year_boxplot,stop_year_boxplot)]
         data_boxplot=prepare_NEX_GDDP_CMIP6(data_1,climate_var_longName,stats,temporal_resolution,new_name_col)
-        return data_boxplot
+        #return data_boxplot
         source_boxplot=source_1
     if 'NEX-GDDP-CMIP6' in source_2:
         if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
@@ -403,7 +406,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
         title_column=title_column_NOAA_obs(source_2,climate_var)
         data_line=prepare_NOAA(data_2,title_column,temporal_resolution,new_name_col)
         source_line=source_2
-    return data_boxplot
+    #return data_boxplot
     if temporal_resolution == 'Month': # to plot the data in the chronological order of the months
         month_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
         data_boxplot=data_boxplot.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()
