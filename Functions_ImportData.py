@@ -136,8 +136,6 @@ def import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA(climate_var, unit):
 
 
 # import_treat_modeled_NEX_GDDP_CMIP6 aims to import and treat the NEX GDDP CMIP6 data at the emplacement of the project of interest
-# 
-# does not work
 
 # In[ ]:
 
@@ -157,6 +155,8 @@ def import_treat_modeled_NEX_GDDP_CMIP6(climate_var, unit,temporal_resolution,st
     return data_NEX_GDDP_CMIP6
 
 
+# import_BC_NOAA_NEX_GDDP_CMIP6 aims to import NEX-GDDP-CMIP6 data that were bias corrected with NOAA data.
+
 # In[ ]:
 
 
@@ -175,6 +175,8 @@ def import_BC_NOAA_NEX_GDDP_CMIP6(climate_var,start_y,stop_y,EmplacementStationN
     df=df.drop('Unnamed: 0',axis=1)
     return df
 
+
+# import_BC_NOAA_NEX_GDDP_CMIP6 aims to import precipitation NEX-GDDP-CMIP6 data that were bias corrected with precipitation data from Gorongosa
 
 # In[ ]:
 

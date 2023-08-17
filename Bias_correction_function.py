@@ -2,12 +2,6 @@
 # coding: utf-8
 
 # This notebook aims to contain all the functions that will permit to apply bias correction.
-# 
-# TO DO :
-# 
-# NEED TO CHECK FUNCTIONALITY OF THE CODE for other methods than bscd precipitation
-# apply cdf for quantile ..
-# impose a version for the past and for the future (without y test, not used for BC, just for presentation of results)
 
 # In[1]:
 
@@ -428,8 +422,8 @@ def BCSD_Precipitation_return_anoms_to_apply(df,X_to_correct):# df and X_to_corr
     X_pcp = training[["pcp"]]#.resample("MS").sum()#MS
     y_pcp = targets[["pcp"]]#.resample("MS").sum()
     # Fit/predict the BCSD Temperature model
-    bcsd_temp = BcsdPrecipitation(return_anoms=False)
-    bcsd_temp.fit(X_pcp, y_pcp)
+    bcsd_temp = BcsdPrecipitation(return_anoms=False) # if return_anoms=True, will actually return climate anomalies
+    bcsd_temp.fit(X_pcp, y_pcp) # fitting of the model
 
     Date = X_to_correct['Date'].values
     for i in np.arange(0,len(Date)):
@@ -438,7 +432,7 @@ def BCSD_Precipitation_return_anoms_to_apply(df,X_to_correct):# df and X_to_corr
     # .date() to avoid having the hours in the datetime
     X_to_correct=X_to_correct.set_index('Date')
     X_to_correct.index = pd.to_datetime(X_to_correct.index,format='%Y-%m-%d')
-    out = bcsd_temp.predict(X_to_correct)# * X_pcp # additive for temperature, multiplicative for precipitation
+    out = bcsd_temp.predict(X_to_correct)# correction of the data with fitted model # additive for temperature, multiplicative for precipitation
     
     return (X_pcp,y_pcp,out)# X_pcp,y_pcp,out are dataframes
 
@@ -866,220 +860,4 @@ def plot_cdf_by_month(ax=None, **kwargs):
     fig.supxlabel('Cumulative distribution function')
     fig.supylabel(climate_var+unit)
     return fig
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-# comment on fait pour savoir chronologie de donnees corrigees ?
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-# test bcsd one more time
-
-
-# In[ ]:
-
-
-r'''
-climate_var_NEX_GDDP_CMIP6_EmplacementStation_BC=climate_var_NEX_GDDP_CMIP6_EmplacementStation[climate_var_NEX_GDDP_CMIP6_EmplacementStation['Name project']==name_station].drop(['Name project','Year','Month','Season'],axis =1)
-climate_var_NEX_GDDP_CMIP6_EmplacementStation_BC_model = climate_var_NEX_GDDP_CMIP6_EmplacementStation_BC[climate_var_NEX_GDDP_CMIP6_EmplacementStation_BC['Model'] =='ACCESS-CM2'].drop(['Model'],axis=1)
-training = climate_var_NEX_GDDP_CMIP6_EmplacementStation_BC_model.rename(columns = {'Date':'time','Mean of the daily precipitation rate mm/day':'pcp'}).reset_index()
-
-# changing format of Date for training
-Date1 = training['time'].values
-for i in np.arange(0,len(training)):
-    training['time'][i] = Date1[i][6:10]+'-'+Date1[i][3:5]+'-'+Date1[i][0:2]#datetime.strptime(, '%Y-%M-%d').date()
-    print(training['time'][i])
-# .date() to avoid having the hours in the datetime
-training=training.set_index('time').drop(['index'],axis=1)
-
-
-# targets
-targets = data_obs_NOAA[['NAME','DATE','PRCP']] # select only 3 columns of interest
-targets = targets[targets['NAME']==name_station].rename(columns = {'DATE':'time','PRCP':'pcp'}).set_index('time').drop(['NAME'],axis=1) # the targets data is meant to represent our "observations"
-
-
-# to have the same size of vectors
-targets = targets.dropna() # drop rows with NaN
-training = training[training.index.isin(list(targets.index))]'''
-
-
-# In[ ]:
-
-
-r'''df=pd.concat({'training': training, 'targets': targets}, axis=1)
-
-df=df.dropna()'''
-
-
-# In[ ]:
-
-
-r'''df = df.droplevel(1,axis=1)
-df'''
-
-
-# In[ ]:
-
-
-#out=BCSD_Precipitation(df)
-
-
-# In[ ]:
-
-
-#out
-
-
-# In[ ]:
-
-
-# return period before first BC
-#out3 = add_year_month_season(out.reset_index(),'time')
-#Z=out3.groupby('Year')[['pcp']].max()
-#(loc1,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
-# choice of gumbel because suits to extreme precipitation
-#return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = 
-#threshold_coresponding_to_return_period(loc1,scale,50) ## 113
-#return_period.loc[(name_p,ssp,model),('Value for return period 100 years mm/day')] = 
-#threshold_coresponding_to_return_period(loc1,scale,100) # 124
-
-
-# In[ ]:
-
-
-#out=BCSD_Precipitation_one_more_time(df,out) # second time
-
-
-# In[ ]:
-
-
-#out
-
-
-# In[ ]:
-
-
-#out=BCSD_Precipitation_one_more_time(df,out) # third time
-
-
-# In[ ]:
-
-
-#out
-
-
-# In[ ]:
-
-
-#out=BCSD_Precipitation_one_more_time(df,out) # fourth time
-
-
-# In[ ]:
-
-
-#out3 = add_year_month_season(out.reset_index(),'time')
-
-
-# In[ ]:
-
-
-#out3
-
-
-# In[ ]:
-
-
-#Z=out3.groupby('Year')[['pcp']].max()
-
-
-# In[ ]:
-
-
-#out
-
-
-# In[ ]:
-
-
-#(loc1,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
-# choice of gumbel because suits to extreme precipitation
-#return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = 
-#threshold_coresponding_to_return_period(loc1,scale,50) ## 220
-#return_period.loc[(name_p,ssp,model),('Value for return period 100 years mm/day')] = 
-#threshold_coresponding_to_return_period(loc1,scale,100) # 245
-
-
-# In[ ]:
-
-
-#out=BCSD_Precipitation_one_more_time(df,out) # fifth time
-
-
-# In[ ]:
-
-
-#out
-
-
-# In[ ]:
-
-
-#out = add_year_month_season(out.reset_index(),'time')
-
-
-# In[ ]:
-
-
-#Z=out.groupby('Year')[['pcp']].max()
-
-
-# In[ ]:
-
-
-#(loc1,scale)=stats.gumbel_r.fit(Z) # return the function necessary to establish the continous function
-# choice of gumbel because suits to extreme precipitation
-#return_period.loc[(name_p,ssp,model),('Value for return period 50 years mm/day')] = 
-#threshold_coresponding_to_return_period(loc1,scale,50) ## 245
-#return_period.loc[(name_p,ssp,model),('Value for return period 100 years mm/day')] = 
-#threshold_coresponding_to_return_period(loc1,scale,100) # 274
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 

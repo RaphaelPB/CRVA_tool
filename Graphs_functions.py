@@ -159,7 +159,7 @@ def boxplots_without_outliers(climate_var,df1,name_col1,df2,name_col2,name_stati
     #fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
     #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
     ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
-    ax.set_ylim(0,12)
+    ax.set_ylim(0,14)
     plt.title('Compare observation for '+climate_var+' from NOAA,with modeled data\nby NEX-GDDP-CMIP6 between '+str(min(df2['Year']))+' to '+str(max(df2['Year']))+' at '+name_station)
 
     path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\testBoxplotObs.png'
