@@ -61,6 +61,8 @@ def add_year_month_season(df,column_date):
                 Season[i]='Dry'
             else:# humid season is between October and March
                 Season[i]='Humid'
+            # paper talking about the season in Mozambique: 
+            # https://pdf.sciencedirectassets.com/277910/1-s2.0-S1876610217X00350/1-s2.0-S1876610217351081/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEO7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIQDZKtKpBNFodsR6x3m1JZHMHJgHlr%2FK6sMWgVM97BtgmQIge46Zf6Qxp6M%2FGJsZOOv8IEgLeqnCG7tVmQF6dIR4%2FkgquwUIp%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAFGgwwNTkwMDM1NDY4NjUiDJQ24kvPuoPzBE80WCqPBRiSv%2B5GquSrLthGw%2F5FqS7nkk%2FuxrwYE%2BYQ7m6xTz3kzMVHQWoKkDNI3VkHM21LHeguWBbZ8UvprGsp%2FS%2BYR%2BjgF9fBkI57EH%2F6EeKAI%2B8tnLtAduTAhFA8ExJOMN1l8Y871ZSPy2X%2FJhBl5Pr5dboHZ5W9fkR%2FcSW9YFXRXyKreLaji2%2FgEmX3qeuQRGvmE2Tbz2VxGuGsNw%2FiwCs4t0BRvCSemEG6%2Bmyz9pw7KsQey6ojF51y82F0ufSgz48ZcI0Fj1CrYEDnj7js6M8B08wU3n4zBhReUM%2FBAqY1dJUp0cO1SkZ4cDe3NgA88rNuLG8cV%2BGh5pfGH2vWqGs8tF%2BQEXFJMu2Svxn04xqwX1AxykpeHFHDwhTno9iQOKqK1ZghpFXziEk0CpWi9LHOBCUaAjcEuxVpJoHM4pNhGsGU%2FvvLBSuJcCkg267NpLwwwtdyNLZEcuyPpfHo1pN9Yc%2Bev4lMBMkokV9oK%2F2WmXMuduQu5OxJI4QHBeLFkNxWIdKNmHH%2FkmcGD8AlZ%2BfPuKllSLEPmRhA5PGv1u7JyA1TtpRrpjbO3ZCMMyXjUpyiihlgT6Y2ifZL9A0IS9lxz0ucm%2FVRsa%2BP%2Bo%2FONuDZK3Z10mXCO6Fx1u%2F%2BaHg5chtDmbd2ByPdQuytjPiOYJhBomP7dE4ggSfy1G4Zff1hLmc0AN%2FdLNxo88iY3W0cf7dqWSkUo%2BnRNrRlRTxAX5fFl9oC9Wkqf3phJmT8vY73LiizwG6HuXnVLmgYvjkEb8M04jKUpUSe0xFsKrKNO1vemq0pvSdTfq7oY4p7XIeshvvclChLTQPHNDjndrS5vNZhBX%2F5js4QLbEjlFmJRjFgZI5xJ88%2BhY783L2cF2UPQEUw3ouDpwY6sQFRdp5XujWpzdWYY3QLfECY9aJXZdpvzDxtbuBCrmep4FPpcoGya2t5N1C3Nh7bsrkbsdx3Ny689MunpOvPIsAcTF5cJ18QQo0Pi72zNAiNV5eZj4oIUYDCdpgihnK%2Bk%2FJYr4EVuk9M0uwxvIjWRAZYWeF%2FEJWxtnCY3QzojO3vFn%2BGaKESKxIX%2Fcig0UGY4wdu0RIRZFutktfI1ht7ejNnOB6rKfu%2BxPfAuBP7AFRm%2Bl0%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230819T141836Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTY2G3LIM7P%2F20230819%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=27ac7cf0872c7a68d97e0a99292c5ca1c98fba84fa3d9ff0fd1978a20a485fbc&hash=b4bcb944de8a8adaeef8435431522b46ab79732518c76334b8924be0dddf96af&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=S1876610217351081&tid=spdf-8eb3a4f2-2183-4a80-93fc-cee7ffcec8a3&sid=cfbd58eb54dba641ff79dab-46f13144aa3egxrqa&type=client&tsoh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&ua=010c5807585455530754&rr=7f9306d72df310ef&cc=dk
             
             Month[i]=str_month(Month[i])
                 
@@ -104,17 +106,20 @@ def str_month(int_m):
 # In[ ]:
 
 
-# this function is meant to filter the data wnated 
+# this function is meant to filter the data wanted
+# the function use the function model_to_kill (to take out the models the user does not want, the funciton is defined below in the same file) 
+# and the function add_year_month_season to add to the dataframe the information about the year, the month and the season for each row
 def filter_dataframe(df,name_projects,list_model_to_kill,start_y=1950,stop_y=2100):
     df = df.reset_index() # to take out multiindex that may exist and complicate filtering process
     
     if list_model_to_kill!=[]:
-        for name_model in list_model_to_kill:
-            df = df[df['Model']!=name_model]
+        df = model_to_kill(df,list_model_to_kill)
     
     df_final= pd.DataFrame()
+    # find name of the colum containing the name of the localization of interest
+    name_col_name=[i for i in df.columns if 'Name ' in i][0]
     for name_project in name_projects:
-        df_temp = df[df['Name project']==name_project] # select only data of interest
+        df_temp = df[df[name_col_name]==name_project] # select only data of interest
         df_final = pd.concat([df_final,df_temp])
     
     if 'Year' not in list(df_final.columns):
@@ -126,6 +131,21 @@ def filter_dataframe(df,name_projects,list_model_to_kill,start_y=1950,stop_y=210
         df_final= df_final.drop('index',axis=1)
     
     return df_final
+
+
+# In[1]:
+
+
+# this function is meant to take out the results of the models the user does not want
+# inputs are
+# df a dataframe, with no indexes (used .reset_index() if there are some indexes)
+# list_model_to_kill: a list of string containing the names of the models that need to be taken out of the dataframe
+# returns
+# the dataframe without the rows corresponding to elements in the list_model_to_kill
+def model_to_kill(df,list_model_to_kill):
+    for name_model in list_model_to_kill:
+        df = df[df['Model']!=name_model]
+    return df
 
 
 # In[ ]:
