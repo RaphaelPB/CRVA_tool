@@ -93,7 +93,7 @@ class copernicus_elements:
 
 # ### read_cckp_ncdata
 
-# In[5]:
+# In[6]:
 
 
 #def read cckp (world bank) nc files
@@ -103,7 +103,11 @@ def read_cckp_ncdata(nc_path,output='tempfile.tif'):
     with rioxarray.open_rasterio(nc_path,decode_times=False)[0] as ncdata:
         ncdata.rio.write_crs('EPSG:4326', inplace=True)
         ncdata=ncdata.isel(time=0)
+        if os.path.exists(output):
+            os.remove(output) 
         ncdata.rio.to_raster(output)
+        ncdata.close()
+        
        # output=output #here
    # else: 
       #  print(nc_path,"not found") # in this case, the data printed in the table will apply to the previous print.. 
@@ -132,7 +136,7 @@ def read_nc_data(nc_path,stats,output='tempfile.tif'):
 
 # ### get_cckp_file_name
 
-# In[6]:
+# In[3]:
 
 
 #get filename from cckp based on ssp, period and gcm
@@ -155,12 +159,12 @@ def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
  #Realtime             
     elif period not in ['1991-2020']:
     #Precipitation     
-        if var in ['frp100yr-rx1day-period-mean_cmip6_period','climatology-rx1day-annual-mean_cmip6_annual','frp50yr-rx1day-period-mean_cmip6_period','climatology-pr-monthly-mean_cmip6_monthly','climatology-pr-annual-mean_cmip6_annual','climatology-pr-seasonal-mean_cmip6_seasonal','changefactorfaep100yr-rx1day-period-mean_cmip6_period','anomaly-pr-monthly-mean_cmip6_monthly','climatology-rx5day-annual-mean_cmip6_annual']: 
+        if var in ['frp100yr-rx1day-period-mean_cmip6_period','climatology-rx1day-annual-mean_cmip6_annual','frp50yr-rx1day-period-mean_cmip6_period','climatology-pr-monthly-mean_cmip6_monthly','climatology-pr-annual-mean_cmip6_annual','climatology-pr-seasonal-mean_cmip6_seasonal','changefactorfaep100yr-rx1day-period-mean_cmip6_period','anomaly-pr-monthly-mean_cmip6_monthly','climatology-rx5day-annual-mean_cmip6_annual','anomaly-pr-annual-mean_cmip6_annual']: 
             filename='precipitation/wb_cckp/frp100yr-rx1day-period-mean_cmip6_period_all-regridded-bct-ssp245-climatology_median_2010-2039.nc'   
             filename=filename.replace('2010-2039',period)
             filename=filename.replace('frp100yr-rx1day-period-mean_cmip6_period',var)                      
     #Temperature
-        elif var in ['climatology-hd40','anomaly-hd40','anomaly-hd35','anomaly-tasmax','anomaly-txx','climatology-txx','anomaly-tas','climatology-tas']: 
+        elif var in ['climatology-hd40','anomaly-hd40','anomaly-hd35','anomaly-tasmax','climatology-tasmax','anomaly-txx','climatology-txx','anomaly-tas','climatology-tas']: 
             filename='temperature/wb_cckp/climatology-hd40-annual-mean_cmip6_annual_all-regridded-bct-ssp245-climatology_median_2020-2039.nc'
             filename=filename.replace('2020-2039',period)    
             filename=filename.replace('climatology-hd40',var)
@@ -469,48 +473,52 @@ def create_file_download_path(start_path,name_variable,name_area,SSP,model,year,
 # name_project: Name of the project for which the data are taken
 # area: list containing latitudes and logitudes around the project
 
-def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,source):    
+def csv_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_projects,area,source):    
     ### PROBLEM WITH DATES, CAN T just pass one year. year str is a list, so if one year (2020,)
     ## PROBLEM WITH PATH: not coherent between data csv, datasets, download. And not achieving to have project name in path for dataset
     ## maybe the name for dataset is too long, but even if end at name project, does not work. Try doing one string with name project in it
     ## PROBLEM WITH PATH: WORK BUT NOT IDEAL
     ## pourquoi mettre toutes les donnees dans un dataframe ?? permet d'avoir cette organisation en multiindex. Sinon, on ne peut pas faire ca
-    print('############################### Project name: '+name_project+' ###############################')
-    
-    # create string for name of folder depending on type of period
-    if temporal_resolution == 'fixed':
-        period = 'fixed'
-    else:
-        period=year_str[0]+'-'+year_str[len(year_str)-1]
-    
-    # modification on name_project str to ensure no problem whent using this str as name of a folder
-    name_project = name_project.replace('-','_') # take off every blank space of project names
-    name_project = name_project.replace('/','_') # take off every / of project names
-    name_project = name_project.replace(r'"\"','_') # take off every \ of project names
-    # brackets shouldn't be a problem for name projects
-        
-    (dates, index_dates)=date_copernicus(temporal_resolution,year_str) # create time vector depending on temporal resolution
+    df_final = []
+    for name_project in name_projects:
+        print('############################### Project name: '+name_project+' ###############################')
 
-    title_file = name_project +'_' +period+ '_' + temporal_resolution + '_' +name_variable#+'.csv'
-    
-    path_for_csv = os.path.join(out_path,'csv',source,name_variable,name_project,period) # create path for csv file
+        # create string for name of folder depending on type of period
+        if temporal_resolution == 'fixed':
+            period = 'fixed'
+        else:
+            period=year_str[0]+'-'+year_str[len(year_str)-1]
 
-    if not os.path.isdir(path_for_csv): # test if the data were already downloaded; if not, first part if the if is applied
-        os.makedirs(path_for_csv) # to ensure the creation of the path
-        # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
-        # and then produce a csv file if the data exists
-        df=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
-        return df
-    else:# test if the data were already downloaded; if yes, this part of the if is applied
-        if len(os.listdir(path_for_csv)) == 0: #test if the directory is empty
-            # the csv file does not exist, even if the path exist
+        # modification on name_project str to ensure no problem whent using this str as name of a folder
+        name_project = name_project.replace('-','_') # take off every blank space of project names
+        name_project = name_project.replace('/','_') # take off every / of project names
+        name_project = name_project.replace(r'"\"','_') # take off every \ of project names
+        # brackets shouldn't be a problem for name projects
+
+        (dates, index_dates)=date_copernicus(temporal_resolution,year_str) # create time vector depending on temporal resolution
+
+        title_file = name_project +'_' +period+ '_' + temporal_resolution + '_' +name_variable#+'.csv'
+
+        path_for_csv = os.path.join(out_path,'csv',source,name_variable,name_project,period) # create path for csv file
+
+        if not os.path.isdir(path_for_csv): # test if the data were already downloaded; if not, first part if the if is applied
+            os.makedirs(path_for_csv) # to ensure the creation of the path
             # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
             # and then produce a csv file if the data exists
             df=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
-        else: # the directory is not empty
-            df=file_already_downloaded(path_for_csv,title_file)
+            #return df
+        else:# test if the data were already downloaded; if yes, this part of the if is applied
+            if len(os.listdir(path_for_csv)) == 0: #test if the directory is empty
+                # the csv file does not exist, even if the path exist
+                # the dataframe_copernicus functions aims to test if the data with the specific parameters exists (with copernicus_data)
+                # and then produce a csv file if the data exists
+                df=dataframe_copernicus(temporal_resolution,year_str,experiments,models,out_path, global_variable, name_variable, name_project,area,period,index_dates,dates,path_for_csv,title_file,source)
+            else: # the directory is not empty
+                df=file_already_downloaded(path_for_csv,title_file)
+                
+        df_final = pd.concat([df_final,df])
 
-        return df
+    return df_final
 
 
 # In[15]:
@@ -660,7 +668,7 @@ def Display_map(indexes_lat,indexes_lon,lat,lon,lat_min_wanted,lat_max_wanted,lo
 
 # ### Display map project
 
-# In[20]:
+# In[7]:
 
 
 ########################################## Display project on map ############################################
@@ -819,6 +827,12 @@ randomlist[0]=randomlist[1]
 
 
 #rank[duplicate]=mean_rank
+
+
+# In[32]:
+
+
+(ranked_data_series,T)=return_period(randomlist)
 
 
 # In[ ]:
