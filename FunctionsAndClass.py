@@ -117,21 +117,21 @@ def read_cckp_ncdata(nc_path,output='tempfile.tif'):
 #def read nc files (copernicus)
 #reads data from CMIP6 Copernicus, nc files
 #assigns projection and exports to tif since zonal_stats seems to have issues with it otherwise (not ideal solution)
-def read_nc_data(nc_path,stats,output='tempfile.tif'):
-    with rioxarray.open_rasterio(nc_path,decode_times=False)[3] as ncdata:
-        # calculate statistiques for each variable
-        if stats == 'mean':
-            ncdata=ncdata.mean(dim='time')
-        elif stats == 'median':
-            ncdata=ncdata.median(dim='time')
-        elif stats == 'p10':
-            ncdata=ncdata.quantile(0.1, dim='time')
-        elif stats == 'p90':
-            ncdata=ncdata.quantile(0.9, dim='time')
+# def read_nc_data(nc_path,stats,output='tempfile.tif'):
+#     with rioxarray.open_rasterio(nc_path,decode_times=False)[3] as ncdata:
+#         # calculate statistiques for each variable
+#         if stats == 'mean':
+#             ncdata=ncdata.mean(dim='time')
+#         elif stats == 'median':
+#             ncdata=ncdata.median(dim='time')
+#         elif stats == 'p10':
+#             ncdata=ncdata.quantile(0.1, dim='time')
+#         elif stats == 'p90':
+#             ncdata=ncdata.quantile(0.9, dim='time')
         
-        ncdata.rio.write_crs('EPSG:4326', inplace=True)
-        ncdata.rio.to_raster(output)
-    return output       
+#         ncdata.rio.write_crs('EPSG:4326', inplace=True)
+#         ncdata.rio.to_raster(output)
+#     return output       
 
 
 # ### get_cckp_file_name
