@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 # #### plot lines
 # ![image-2.png](attachment:image-2.png)
 
-# In[ ]:
+# In[2]:
 
 
 def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_location,y_start=1950,y_stop=2100,tuple_error_bar=('ci',80)):
@@ -49,7 +49,7 @@ def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_loca
 # 
 # ![image.png](attachment:image.png)
 
-# In[ ]:
+# In[3]:
 
 
 def boxplots_(climate_var,df1,name_col1,df2,name_col2,name_station):
@@ -79,6 +79,126 @@ def boxplots_(climate_var,df1,name_col1,df2,name_col2,name_station):
 
 
 # In[ ]:
+
+
+def boxplots_comp(climate_var,df1,name_col1,df1_,name_col1_,name_station,fliersize_=0, max_y_lim=120,violin=False):#df2,name_col2,name_station,fliersize_=0):
+        
+    df1_=df1_.rename(columns={name_col1_:name_col1})
+
+    df_boxplot=pd.concat([df1,df1_])
+
+    fig,ax=plt.subplots()
+    plt.tight_layout() # Adjust the padding between and around subplots.
+    
+    if violin:
+        sns.violinplot(data=df_boxplot,x=df_boxplot.Model, y=name_col1,hue='Experiment',fliersize=fliersize_,whis=[10,90],ax=ax)#,palette=cols)
+    else:
+        sns.boxplot(data=df_boxplot,x=df_boxplot.Model, y=name_col1,hue='Experiment',fliersize=fliersize_,whis=[10,90],ax=ax)#,palette=cols)
+
+    # display the legend
+    handles, labels=ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.2, 0.8),title='Legend')
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    ax.set_ylim(0,max_y_lim)
+    ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+    plt.title('Compare past ('+str(min(df1['Year']))+' to '+str(max(df1['Year']))+') and future ('+str(min(df1_['Year']))+' to '+str(max(df1_['Year']))+')\n'+climate_var+' NEX-GDDP-CMIP6 modelled data at '+name_station)
+
+    #path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\testBoxplotObs.png'
+    #plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+    plt.show()
+
+
+# In[ ]:
+
+
+def boxplots_violin(climate_var,df1,name_col1,df2,name_col2,name_station):
+    
+    df2['Model']='Observation NOAA'
+    df2=df2.rename(columns={name_col2:name_col1})
+    
+    df_boxplot=pd.concat([df2,df1])
+
+    
+    fig,ax=plt.subplots()
+    plt.tight_layout() # Adjust the padding between and around subplots.
+    cols = ['pink' if (x =='Observation NOAA') else 'skyblue' for x in df_boxplot.Model.drop_duplicates().values]
+    sns.violinplot(data=df_boxplot,x=df_boxplot.Model, y=name_col1,palette=cols,whis=[10,90],ax=ax)
+
+    # display the legend
+    #handles, labels=ax.get_legend_handles_labels()
+    #fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
+    #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+    plt.title('Compare observation for '+climate_var+' from NOAA,with modeled data\nby NEX-GDDP-CMIP6 between '+str(min(df2['Year']))+' to '+str(max(df2['Year']))+' at '+name_station)
+
+    path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\testBoxplotObs.png'
+    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+    plt.show()
+
+
+# In[4]:
+
+
+def boxplots_without_outliers(climate_var,df1,name_col1,df2,name_col2,name_station):
+    
+    df2['Model']='Observation NOAA'
+    df2=df2.rename(columns={name_col2:name_col1})
+    
+    df_boxplot=pd.concat([df2,df1])
+
+    
+    fig,ax=plt.subplots()
+    plt.tight_layout() # Adjust the padding between and around subplots.
+    cols = ['pink' if (x =='Observation NOAA') else 'skyblue' for x in df_boxplot.Model.drop_duplicates().values]
+    sns.boxplot(data=df_boxplot,x=df_boxplot.Model, y=name_col1,fliersize=0,palette=cols,whis=[10,90],ax=ax)
+
+    # display the legend
+    #handles, labels=ax.get_legend_handles_labels()
+    #fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
+    #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+    ax.set_ylim(0,14)
+    plt.title('Compare observation for '+climate_var+' from NOAA,with modeled data\nby NEX-GDDP-CMIP6 between '+str(min(df2['Year']))+' to '+str(max(df2['Year']))+' at '+name_station)
+
+    path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\testBoxplotObs.png'
+    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+    plt.show()
+
+
+# In[ ]:
+
+
+def boxplots_without_outliers_violin(climate_var,df1,name_col1,df2,name_col2,name_station):
+    
+    df2['Model']='Observation NOAA'
+    df2=df2.rename(columns={name_col2:name_col1})
+    
+    df_boxplot=pd.concat([df2,df1])
+
+    
+    fig,ax=plt.subplots()
+    plt.tight_layout() # Adjust the padding between and around subplots.
+    cols = ['pink' if (x =='Observation NOAA') else 'skyblue' for x in df_boxplot.Model.drop_duplicates().values]
+    sns.violinplot(data=df_boxplot,x=df_boxplot.Model, y=name_col1,fliersize=0,palette=cols,whis=[10,90],ax=ax)
+
+    # display the legend
+    #handles, labels=ax.get_legend_handles_labels()
+    #fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.3, 1),title='Legend')
+    #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    ax.set_xticklabels(ax.get_xticklabels(),rotation=90)
+    ax.set_ylim(0,12)
+    plt.title('Compare observation for '+climate_var+' from NOAA,with modeled data\nby NEX-GDDP-CMIP6 between '+str(min(df2['Year']))+' to '+str(max(df2['Year']))+' at '+name_station)
+
+    path_figure=r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures\testBoxplotObs.png'
+    plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
+
+    plt.show()
+
+
+# In[5]:
 
 
 r'''# without outliers
@@ -111,7 +231,7 @@ def boxplots_comp_obs_model(climate_var,df_obs,source_obs,df_model,source_model)
 
 # ![image.png](attachment:image.png)
 
-# In[ ]:
+# In[6]:
 
 
 def compare_3_lines(title_fig,title_x_axis,clim_var,data_1,name_col_1,source_1,data_2,name_col_2,source_2,y_name,name_station,x_name='Year',tuple_error_bar=('pi',80)):
@@ -218,7 +338,7 @@ def compare_3_lines(title_fig,title_x_axis,clim_var,data_1,name_col_1,source_1,d
     plt.show()
 
 
-# In[ ]:
+# In[7]:
 
 
 def compare_2_lines(data_1,data_2,y_name,x_name='Year',tuple_error_bar=('pi',80)):
@@ -239,19 +359,22 @@ def compare_2_lines(data_1,data_2,y_name,x_name='Year',tuple_error_bar=('pi',80)
     plt.show()
 
 
-# In[ ]:
+# In[8]:
 
 
 # trends_month
 
 
-# In[ ]:
+# In[9]:
 
 
+# climate_var: short name for climate var ('pr' for precipitation)
 # data_1 : first set of data to be used, should only contains the location of interest
 # source_1 : source of the first set of data
 # data_2 : second set of dat to be used, should only contains the location of interest
 # source_2 : source of the second set of data
+# stats: string format, for example 'Average', meant to be used in the title and to choose wha to present
+# location: string format, meant to be used only in the tile
 
 def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100):
     
@@ -264,7 +387,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
         if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
             data_1=data_1[data_1['Year'].between(start_year_boxplot,stop_year_boxplot)]
         data_boxplot=prepare_NEX_GDDP_CMIP6(data_1,climate_var_longName,stats,temporal_resolution,new_name_col)
-        return data_boxplot
+        #return data_boxplot
         source_boxplot=source_1
     if 'NEX-GDDP-CMIP6' in source_2:
         if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
@@ -283,7 +406,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
         title_column=title_column_NOAA_obs(source_2,climate_var)
         data_line=prepare_NOAA(data_2,title_column,temporal_resolution,new_name_col)
         source_line=source_2
-    return data_boxplot
+    #return data_boxplot
     if temporal_resolution == 'Month': # to plot the data in the chronological order of the months
         month_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
         data_boxplot=data_boxplot.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()
@@ -297,7 +420,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
     boxplots_line(data_boxplot,data_line,temporal_resolution,new_name_col,source_line,title_plot)
 
 
-# In[ ]:
+# In[10]:
 
 
 # data_boxplot : dataframr that will be used to do the boxplots
@@ -330,7 +453,7 @@ def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,ca
     plt.show()
 
 
-# In[ ]:
+# In[11]:
 
 
 def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
@@ -348,7 +471,7 @@ def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
     return df
 
 
-# In[ ]:
+# In[12]:
 
 
 def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new_name_col):
@@ -376,7 +499,7 @@ def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new
     return data_NEXGDDPCMIP6
 
 
-# In[ ]:
+# In[13]:
 
 
 def infos_str(climate_var,temporal_resolution):
@@ -394,7 +517,7 @@ def infos_str(climate_var,temporal_resolution):
     return climate_var_longName,climate_var,unit
 
 
-# In[ ]:
+# In[14]:
 
 
 def title_column_NOAA_obs(source,climate_var):
@@ -415,7 +538,7 @@ def title_column_NOAA_obs(source,climate_var):
 # example
 # ![image.png](attachment:image.png)
 
-# In[ ]:
+# In[15]:
 
 
 def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data,location_data,type_):
@@ -468,7 +591,7 @@ def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data
 # only observed values
 # ![image-3.png](attachment:image-3.png)
 
-# In[3]:
+# In[16]:
 
 
 # name_location will just be in the title
@@ -482,7 +605,7 @@ def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data
 # name_column_obs is the name of the column in the df of observations where we want to calculate the cdf 
 # source_obs is the source of the data (ex: NOAA)
 
-def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
+def cdf_plot_category_or_obs_attempt(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
     fig,ax=plt.subplots()
     str_title_df = ''
     if not df_initial.empty:
@@ -494,8 +617,8 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
 
             for model in list(set(df[category])):
                 df[df[category]==model]= cdf_(df[df[category]==model],name_column_df)
-            sns.lineplot(data=df,x='CDF',y=name_column_df,hue=category,errorbar =('pi',80), linewidth =2)
-            
+            sns.lineplot(data=df,x=name_column_df,y= 'CDF',hue=category,errorbar =('pi',80), linewidth =2)
+        r'''    
         if category == 'Experiment':
             palette_color = ['blue','green','orange','pink','red']
             df = df_initial[[category,'Model',name_column_df]].copy(deep=True)
@@ -506,7 +629,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
                     df_temp = cdf_(df[(df[category]==ssp) & (df['Model']==model)],name_column_df)
                     df_final = pd.concat([df_final,df_temp])
                 sns.lineplot(data=df_final,x='CDF',y=name_column_df,label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
-        r'''
+        '''
         if category == 'Experiment':
             palette_color = ['blue','green','orange','pink','red']
             df = df_initial[[category,'Model',name_column_df]].copy(deep=True)
@@ -515,7 +638,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
             for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
                 df_temp = cdf_(df[(df[category]==ssp)],name_column_df)
                 sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
-        '''
+        
 
         str_title_df = 'modelled '+source_df+' data between '+start_y_df+' and '+stop_y_df
     
@@ -524,7 +647,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
         obs = obs_initial.copy(deep=True)
         obs['CDF']=obs[name_column_obs]
         obs=cdf_(obs[['CDF',name_column_obs]],name_column_obs)
-        sns.lineplot(data=obs,x='CDF',y=name_column_df,label='Observation data from '+source_obs,color='black')
+        sns.lineplot(data=obs,x=name_column_obs,y= 'CDF',label='Observation data from '+source_obs,color='black')
         start_y_obs = str(min(obs_initial['Year']))
         stop_y_obs = str(max(obs_initial['Year']))
         str_title_obs = 'observation '+source_obs+' data between '+start_y_obs+' and '+stop_y_obs
@@ -557,7 +680,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
     return
 
 
-# In[ ]:
+# In[17]:
 
 
 # name_location will just be in the title
@@ -571,7 +694,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
 # name_column_obs is the name of the column in the df of observations where we want to calculate the cdf 
 # source_obs is the source of the data (ex: NOAA)
 
-def cdf_plot_category_or_obsOriginal(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
+def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column_df=[],source_df=[],category=[],obs_initial=pd.DataFrame(),name_column_obs=[],source_obs=[]):
     fig,ax=plt.subplots()
     str_title_df = ''
     if not df_initial.empty:
@@ -593,8 +716,8 @@ def cdf_plot_category_or_obsOriginal(name_location,df_initial=pd.DataFrame(),nam
             for (ssp,i) in zip(list(set(df[category])),np.arange(0,len(palette_color))):
                 for model in list(set(df['Model'])):
                     df_temp = cdf_(df[(df[category]==ssp) & (df['Model']==model)],name_column_df)
-                    df_final = pd.concat([df_final,df_temp])
-                sns.lineplot(data=df_final,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
+                    #df_final = pd.concat([df_final,df_temp])
+                    sns.lineplot(data=df_temp,x=name_column_df,y='CDF',label=ssp, color = palette_color[i],errorbar =('pi',80), linewidth =2)
         r'''
         if category == 'Experiment':
             palette_color = ['blue','green','orange','pink','red']
@@ -651,7 +774,7 @@ def cdf_plot_category_or_obsOriginal(name_location,df_initial=pd.DataFrame(),nam
 # chech if the function still works because the change function cdf_
 # ![image.png](attachment:image.png)
 
-# In[ ]:
+# In[18]:
 
 
 # need to choose periods, in format as example ['2020-2040','2040-2060']
@@ -701,7 +824,7 @@ def cdf_plot_period(df,periods,name_column):
     return df_final
 
 
-# In[ ]:
+# In[19]:
 
 
 # the dataframe given in this function should have a column named 'CDF'
@@ -709,6 +832,12 @@ def cdf_(df,name_column_df):
     df=df.sort_values(name_column_df,na_position='first').dropna() # sort the values
     df['CDF'] = np.arange(len(df[name_column_df])) / float(len(df[name_column_df]))
     return df
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
