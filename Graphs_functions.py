@@ -10,7 +10,7 @@
 # 
 # ![image.png](attachment:image.png)
 
-# In[1]:
+# In[ ]:
 
 
 import pandas as pd
@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 # #### plot lines
 # ![image-2.png](attachment:image-2.png)
 
-# In[2]:
+# In[ ]:
 
 
 def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_location,y_start=1950,y_stop=2100,tuple_error_bar=('ci',80)):
@@ -49,7 +49,7 @@ def plot_lines(df,x_axis,y_axis,category,source_data,y_label,title_fig,name_loca
 # 
 # ![image.png](attachment:image.png)
 
-# In[3]:
+# In[ ]:
 
 
 def boxplots_(climate_var,df1,name_col1,df2,name_col2,name_station):
@@ -138,7 +138,7 @@ def boxplots_violin(climate_var,df1,name_col1,df2,name_col2,name_station):
     plt.show()
 
 
-# In[4]:
+# In[ ]:
 
 
 def boxplots_without_outliers(climate_var,df1,name_col1,df2,name_col2,name_station):
@@ -198,7 +198,7 @@ def boxplots_without_outliers_violin(climate_var,df1,name_col1,df2,name_col2,nam
     plt.show()
 
 
-# In[5]:
+# In[ ]:
 
 
 r'''# without outliers
@@ -231,7 +231,7 @@ def boxplots_comp_obs_model(climate_var,df_obs,source_obs,df_model,source_model)
 
 # ![image.png](attachment:image.png)
 
-# In[6]:
+# In[ ]:
 
 
 def compare_3_lines(title_fig,title_x_axis,clim_var,data_1,name_col_1,source_1,data_2,name_col_2,source_2,y_name,name_station,x_name='Year',tuple_error_bar=('pi',80)):
@@ -338,7 +338,7 @@ def compare_3_lines(title_fig,title_x_axis,clim_var,data_1,name_col_1,source_1,d
     plt.show()
 
 
-# In[7]:
+# In[ ]:
 
 
 def compare_2_lines(data_1,data_2,y_name,x_name='Year',tuple_error_bar=('pi',80)):
@@ -359,13 +359,10 @@ def compare_2_lines(data_1,data_2,y_name,x_name='Year',tuple_error_bar=('pi',80)
     plt.show()
 
 
-# In[8]:
+# # trends_month
+# ![image.png](attachment:image.png)
 
-
-# trends_month
-
-
-# In[9]:
+# In[1]:
 
 
 # climate_var: short name for climate var ('pr' for precipitation)
@@ -383,6 +380,10 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
     # define the new common name, that will be used as y_axis for boxplots and line
     new_name_col = temporal_resolution+'ly '+climate_var_longName+' '+unit
     
+    # initialize dataframe
+    data_boxplot = pd.DataFrame()
+    data_line = pd.DataFrame()
+    source_line=''
     if 'NEX-GDDP-CMIP6' in source_1:
         if (start_year_boxplot!=2014) or (stop_year_boxplot!=2100):
             data_1=data_1[data_1['Year'].between(start_year_boxplot,stop_year_boxplot)]
@@ -409,8 +410,10 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
     #return data_boxplot
     if temporal_resolution == 'Month': # to plot the data in the chronological order of the months
         month_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-        data_boxplot=data_boxplot.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()
-        data_line=data_line.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()    
+        if not data_boxplot.empty:
+            data_boxplot=data_boxplot.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()
+        if not data_line.empty:
+            data_line=data_line.reset_index().set_index(temporal_resolution).loc[month_order].reset_index()    
     
     if stats == 'Sum':
         title_plot = climate_var_longName+' '+unit+', modeled by '+source_boxplot+',\nbetween '+str(start_year_boxplot)+' and '+str(stop_year_boxplot)+' at '+location+' compared with '+source_line+'\nobservation data, between '+str(start_year_line)+' and '+str(stop_year_line)
@@ -420,7 +423,7 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
     boxplots_line(data_boxplot,data_line,temporal_resolution,new_name_col,source_line,title_plot)
 
 
-# In[10]:
+# In[ ]:
 
 
 # data_boxplot : dataframr that will be used to do the boxplots
@@ -438,9 +441,11 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
 
 def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,categories='Experiment'):
     fig,ax=plt.subplots()
-    sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,ax=ax)
-    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
-    sns.lineplot(data=data_line,x=x_axis, y=y_axis,ax=ax,label=source_line)
+    if not data_boxplot.empty:
+        sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,ax=ax)
+        ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    if not data_line.empty:
+        sns.lineplot(data=data_line,x=x_axis, y=y_axis,ax=ax,label=source_line)
     
     # display the common legend for the line and boxplots
     handles, labels=ax.get_legend_handles_labels()
@@ -453,7 +458,7 @@ def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,ca
     plt.show()
 
 
-# In[11]:
+# In[ ]:
 
 
 def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
@@ -471,7 +476,7 @@ def prepare_NOAA(df_NOAA,title_column,temporal_resolution,new_name_col):
     return df
 
 
-# In[12]:
+# In[ ]:
 
 
 def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new_name_col):
@@ -499,7 +504,7 @@ def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new
     return data_NEXGDDPCMIP6
 
 
-# In[13]:
+# In[ ]:
 
 
 def infos_str(climate_var,temporal_resolution):
@@ -517,7 +522,7 @@ def infos_str(climate_var,temporal_resolution):
     return climate_var_longName,climate_var,unit
 
 
-# In[14]:
+# In[ ]:
 
 
 def title_column_NOAA_obs(source,climate_var):
@@ -538,7 +543,7 @@ def title_column_NOAA_obs(source,climate_var):
 # example
 # ![image.png](attachment:image.png)
 
-# In[15]:
+# In[ ]:
 
 
 def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data,location_data,type_):
@@ -591,7 +596,7 @@ def cdf_plot_projections(df,title_column,what_is_plot,y_start,y_stop,source_data
 # only observed values
 # ![image-3.png](attachment:image-3.png)
 
-# In[16]:
+# In[ ]:
 
 
 # name_location will just be in the title
@@ -680,7 +685,7 @@ def cdf_plot_category_or_obs_attempt(name_location,df_initial=pd.DataFrame(),nam
     return
 
 
-# In[17]:
+# In[ ]:
 
 
 # name_location will just be in the title
@@ -774,7 +779,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
 # chech if the function still works because the change function cdf_
 # ![image.png](attachment:image.png)
 
-# In[18]:
+# In[ ]:
 
 
 # need to choose periods, in format as example ['2020-2040','2040-2060']
@@ -824,7 +829,7 @@ def cdf_plot_period(df,periods,name_column):
     return df_final
 
 
-# In[19]:
+# In[ ]:
 
 
 # the dataframe given in this function should have a column named 'CDF'
