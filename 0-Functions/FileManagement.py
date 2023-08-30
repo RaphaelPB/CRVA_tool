@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# This file aims to regroup all function involved in file management
-
+This file aims to regroup all function involved in file management
 # In[1]:
 
 
@@ -514,7 +512,8 @@ def information_files_in_vectors(name_list):
 # In[18]:
 
 
-# this functions aims to return the time, latitudes and longitudes of the files of concern
+# this functions aims to return the closest latitudes and longitudes to the projects, and the respectives index 
+#  in the lat and lon vectors of the file
 def _lat_lon(path,lat_projects,lon_projects):
     ds =  xr.open_dataset(path) 
     # ds.indexes['time'] gives back CFTimeIndex format, with hours. The strftime('%d-%m-%Y') permits to have time 

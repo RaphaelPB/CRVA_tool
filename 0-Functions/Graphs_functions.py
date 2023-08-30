@@ -373,7 +373,7 @@ def compare_2_lines(data_1,data_2,y_name,x_name='Year',tuple_error_bar=('pi',80)
 # stats: string format, for example 'Average', meant to be used in the title and to choose wha to present
 # location: string format, meant to be used only in the tile
 
-def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100):
+def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temporal_resolution='Month',start_year_line=1970,stop_year_line=2014,start_year_boxplot=2015,stop_year_boxplot=2100,dry_season='no'):
     
     (climate_var_longName,climate_var,unit)= infos_str(climate_var,temporal_resolution)
     
@@ -420,7 +420,41 @@ def trends_month(climate_var,data_1,source_1,data_2,source_2,stats,location,temp
     else:
         title_plot = stats+' '+climate_var_longName+' '+unit+', modeled by '+source_boxplot+',\nbetween '+str(start_year_boxplot)+' and '+str(stop_year_boxplot)+' at '+location+' compared with '+source_line+'\nobservation data, between '+str(start_year_line)+' and '+str(stop_year_line)
         
+    if dry_season!='no':
+        dry_season_month=['Apr','May','Jun','Jul','Aug','Sep']
+        if not data_boxplot.empty:
+            data_boxplot = data_boxplot[data_boxplot['Month'].isin(dry_season_month)]
+        if not data_line.empty:
+            data_line = data_line[data_line['Month'].isin(dry_season_month)]
     boxplots_line(data_boxplot,data_line,temporal_resolution,new_name_col,source_line,title_plot)
+
+
+# trends_year
+# ![image.png](attachment:image.png)
+
+# In[ ]:
+
+
+# select years because impossible to read
+def trends_year(climate_var,data_1,source_1,stats,location,start_year,stop_year,temporal_resolution='Year'):
+    (climate_var_longName,unit)= infos_str(climate_var,temporal_resolution)
+    
+    # define the new common name, that will be used as y_axis for boxplots and line
+    new_name_col = temporal_resolution+'ly '+climate_var_longName+' '+unit
+    
+    data_boxplot=prepare_NEX_GDDP_CMIP6(data_1,climate_var_longName,stats,temporal_resolution,new_name_col)
+    if stats =='Sum':
+        stats = ''
+    
+    if (stop_year-start_year+1)>10:
+        for i in np.arange(0,round(((stop_year-start_year+1)/10))):
+            df_filter=data_boxplot[data_boxplot['Year'].between(start_year+i*10,start_year+i*10+10)]
+            title_plot = stats+' '+ climate_var_longName+' '+unit+' between '+str(start_year)+' and '+str(stop_year)+' at '+location
+            boxplots(df_filter,temporal_resolution,new_name_col,title_plot)
+    else:
+        df_filter=data_boxplot[data_boxplot['Year'].between(start_year,stop_year)]
+        title_plot = stats+' '+climate_var_longName+' '+unit+' between '+str(start_year)+' and '+str(stop_year)+' at '+location
+        boxplots(df_filter,temporal_resolution,new_name_col,title_plot)
 
 
 # In[ ]:
@@ -450,7 +484,7 @@ def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,ca
     # display the common legend for the line and boxplots
     handles, labels=ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.2, 0.5),title='Legend')
-    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
     plt.title(title_plot)
     #path_figure=os.path.join(r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures','trend_month.png')
     #plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
@@ -487,12 +521,10 @@ def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new
             title_column=df.filter(like=climate_var_longName.capitalize(), axis=1).columns[0]
     except:
         title_column=df.filter(like=climate_var_longName.upper(), axis=1).columns[0]
-    print('title_column '+title_column)
-    print(df)
+
     if stats == 'Average':
         data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].mean().rename(columns={title_column:new_name_col}).reset_index()
-        print(temporal_resolution)
-        print(data_NEXGDDPCMIP6)
+
     if stats == 'Sum':
         data_NEXGDDPCMIP6=df[['Experiment','Model',temporal_resolution,title_column]].groupby(['Experiment','Model',temporal_resolution])[[title_column]].sum().rename(columns={title_column:new_name_col}).reset_index()
     if stats == 'Median':
@@ -500,7 +532,7 @@ def prepare_NEX_GDDP_CMIP6(df,climate_var_longName,stats,temporal_resolution,new
     
     if 'pr' in climate_var_longName.lower() and temporal_resolution =='Month':
         data_NEXGDDPCMIP6[new_name_col] = data_NEXGDDPCMIP6[[new_name_col]].values*30
-    print(data_NEXGDDPCMIP6)
+
     return data_NEXGDDPCMIP6
 
 

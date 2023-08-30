@@ -103,8 +103,6 @@ def read_cckp_ncdata(nc_path,output='tempfile.tif'):
     with rioxarray.open_rasterio(nc_path,decode_times=False)[0] as ncdata:
         ncdata.rio.write_crs('EPSG:4326', inplace=True)
         ncdata=ncdata.isel(time=0)
-        if os.path.exists(output):
-            os.remove(output) 
         ncdata.rio.to_raster(output)
         ncdata.close()
         
@@ -117,21 +115,21 @@ def read_cckp_ncdata(nc_path,output='tempfile.tif'):
 #def read nc files (copernicus)
 #reads data from CMIP6 Copernicus, nc files
 #assigns projection and exports to tif since zonal_stats seems to have issues with it otherwise (not ideal solution)
-# def read_nc_data(nc_path,stats,output='tempfile.tif'):
-#     with rioxarray.open_rasterio(nc_path,decode_times=False)[3] as ncdata:
-#         # calculate statistiques for each variable
-#         if stats == 'mean':
-#             ncdata=ncdata.mean(dim='time')
-#         elif stats == 'median':
-#             ncdata=ncdata.median(dim='time')
-#         elif stats == 'p10':
-#             ncdata=ncdata.quantile(0.1, dim='time')
-#         elif stats == 'p90':
-#             ncdata=ncdata.quantile(0.9, dim='time')
+def read_nc_data(nc_path,stats,output='tempfile.tif'):
+    with rioxarray.open_rasterio(nc_path,decode_times=False)[3] as ncdata:
+        # calculate statistiques for each variable
+        if stats == 'mean':
+            ncdata=ncdata.mean(dim='time')
+        elif stats == 'median':
+            ncdata=ncdata.median(dim='time')
+        elif stats == 'p10':
+            ncdata=ncdata.quantile(0.1, dim='time')
+        elif stats == 'p90':
+            ncdata=ncdata.quantile(0.9, dim='time')
         
-#         ncdata.rio.write_crs('EPSG:4326', inplace=True)
-#         ncdata.rio.to_raster(output)
-#     return output       
+        ncdata.rio.write_crs('EPSG:4326', inplace=True)
+        ncdata.rio.to_raster(output)
+    return output       
 
 
 # ### get_cckp_file_name
@@ -177,7 +175,7 @@ def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
 
 # ### Period for the copernicus function
 
-# In[7]:
+# In[8]:
 
 
 ################################################ Period for copernicus function ################################################
@@ -712,227 +710,6 @@ def Display_map_projects(projects,study_area,str_interest,title_for_image,number
     plt.suptitle(title_for_image) # give a global name to the image
     plt.savefig(os.path.join(out_path,'figures',str_interest,title_for_image),format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
     plt.show()
-
-
-# ## Return period function
-
-# In[21]:
-
-
-from scipy.optimize import curve_fit ## given some x_data and some y_data and a model function f thaht depends on unknown parameters bveta,
-# the goal of curve fitting is to find the optimal set of parameters beta such that the function y = f(x,beta) best resembles the data
-
-# two ways to obtain beta parameter
- #### method of least squares : minimize sum of the square of the difference between the model function and y by adjusting beta
- #### maximum-likelihood : when y has errors, minimize the sum of the ratio between the suqre of the difference of the model function and y
-    # and the square of the variance 
-
-
-# In[22]:
-
-
-## PROBELM : when 2 values are the same, what happens ????
-# curve fitting, how to find equation representing, possible to install scipy : https://www.geeksforgeeks.org/scipy-curve-fitting/
-
-def return_period(data_series):
-    # rank data
-    data_series.sort(reverse=True)
-    N = len(data_series)
-    rank=np.arange(N,0,-1,dtype=int)
-    # look for duplicates in the list
-    for value in data_series:
-        duplicate = list_duplicates_of(randomlist, value)
-        #if not duplicate.empty:
-            
-        #else:
-        #    continue
-    # give return period of each value in the time period given
-    P = rank / (N+1) # rank / (N+1)
-    T=1/P
-    plt.scatter(T,data_series)
-    plt.xlabel('Return period')
-    plt.ylabel('Climate variable of interest')
-    
-    return data_series,T
-
-
-# In[23]:
-
-
-def list_duplicates_of(seq,item):
-    start_at = -1
-    locs = []
-    while True:
-        try:
-            loc = seq.index(item,start_at+1)
-        except ValueError:
-            break
-        else:
-            locs.append(loc)
-            start_at = loc
-    return locs
-
-
-# In[24]:
-
-
-# to test return_period
-
-import random
-
-randomlist = random.sample(range(100, 500), 365)
-randomlist[0]=randomlist[1]
-
-
-# In[25]:
-
-
-#rank=np.arange(len(randomlist),0,-1,dtype=int)
-#rank=rank.tolist()
-#rank
-
-
-# In[26]:
-
-
-#duplicate=list_duplicates_of(randomlist, randomlist[0])
-#type(duplicate)
-
-
-# In[27]:
-
-
-##duplicate
-
-
-# In[28]:
-
-
-#type(rank[duplicate])
-
-
-# In[29]:
-
-
-##mean_rank=sum(rank[duplicate].tolist())/len(rank[duplicate].tolist())
-
-
-# In[30]:
-
-
-#mean_rank
-
-
-# In[31]:
-
-
-#rank[duplicate]=mean_rank
-
-
-# In[32]:
-
-
-(ranked_data_series,T)=return_period(randomlist)
-
-
-# In[ ]:
-
-
-def model_f1(x, a, b, c):
-    return a*(x-b)**2 + c
-
-
-# In[ ]:
-
-
-import math
-
-def model_f(x, a, b, c):
-    return a*np.exp(x)**b+c
-
-
-# In[ ]:
-
-
-def model_f2(x, a, b, c):
-    return a*np.log(x)**b+c
-
-
-# In[ ]:
-
-
-def model_f3(x, a, b, c):
-    return a*np.log10(x)**b+c
-
-
-# In[ ]:
-
-
-def model_f4(x, a, b, c):
-    return (a)**(b*x)+c
-
-
-# In[ ]:
-
-
-r'''
-popt, pcov = curve_fit(model_f, T, ranked_data_series, p0=[50,-10,-100])
-'''
-
-
-# In[ ]:
-
-
-r'''
-a_opt, b_opt, c_opt = popt
-x_model = np.linspace(min(T), max(T), 100)
-y_model = model_f(x_model, a_opt, b_opt, c_opt)
-'''
-
-
-# In[ ]:
-
-
-r'''
-plt.scatter(T,ranked_data_series)
-plt.plot(x_model,y_model, color='r')
-plt.show()
-'''
-
-
-# In[ ]:
-
-
-r'''
-plt.imshow(np.log(np.abs(pcov)))
-plt.colorbar()
-plt.show()
-'''
-
-
-# In[ ]:
-
-
-# 
-
-
-# In[ ]:
-
-
-## scipy 
-import numpy as np
- 
-# curve-fit() function imported from scipy
-from scipy.optimize import curve_fit
- 
-from matplotlib import pyplot as plt
-
-
-# In[ ]:
-
-
-#def probability_of_exceedance():
-    
 
 
 # In[ ]:
