@@ -2,7 +2,8 @@
 
 This tool applies Climate Risk and Vulnerability Assessment (CRVA) method, developed in [Non-paper Guidelines for Project Managers: Making vulnerable investments climate resilient](https://climate-adapt.eea.europa.eu/en/metadata/guidances/non-paper-guidelines-for-project-managers-making-vulnerable-investments-climate-resilient/guidelines-for-project-managers.pdf).
 
-# Summary of ReadME
+# Summary of README
+
 - [Functions](#Function)
 - [Download and format data](#DownloadAndFormatData)
 - [Bias correction](#BiasCorrection)
