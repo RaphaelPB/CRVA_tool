@@ -2,28 +2,27 @@
  tool to perform Climate Risk and Vulnerability Analyses
 
 Gitignore keeps from other viewers every file in folder 'outputs', tempfile and cdsapirc
-
 Quick intro. Put European mthod link
 # Summary of ReadME
-[Functions](#Function)
-[Download and format data](#DownloadAndFormatData)
-[Bias correction](#BiasCorrection)
-[Application for the CRVA tool](#ApplicationCRVA)
-- [Import data](#ImportData)
-- [Indicators](#Indicator)
-- [Vulnerability](#Vulnerability)
-	- [Sensitivity](#Sensitivity)
-	- [Exposure](#Exposure)
-	- [Determination of vulnerability](#DetVulnerability)
-- [Risk](#Risk)
-[StudyCase-Gorongosa_Mozambique](#StudyCaseGorongosa)
-- [Observed data](#StudyCaseObservedData)
-- [Validation of data](#ValidationData)
-- [Bias correction results](#BCResults)
-[What to still implement](#ToImplement)
-[*Commands* and explanations](#Commands)
-- [Packages installed](#Packages)
-- [Resolving errors](#ResolvingErrors)
+- [Functions](#Function)
+- [Download and format data](#DownloadAndFormatData)
+- [Bias correction](#BiasCorrection)
+- [Application for the CRVA tool](#ApplicationCRVA)
+	- [Import data](#ImportData)
+	- [Indicators](#Indicator)
+	- [Vulnerability](#Vulnerability)
+		- [Sensitivity](#Sensitivity)
+		- [Exposure](#Exposure)
+		- [Determination of vulnerability](#DetVulnerability)
+	- [Risk](#Risk)
+- [StudyCase-Gorongosa_Mozambique](#StudyCaseGorongosa)
+	- [Observed data](#StudyCaseObservedData)
+	- [Validation of data](#ValidationData)
+	- [Bias correction results](#BCResults)
+- [What to still implement](#ToImplement)
+- [*Commands* and explanations](#Commands)
+	- [Packages installed](#Packages)
+	- [Resolving errors](#ResolvingErrors)
 <a id='Function'></a>
 # Functions
 This folder contains the functions in the different codes.
@@ -31,11 +30,14 @@ This folder contains the functions in the different codes.
 # Download and format data
 ## Modelled data
 NEX-GDDP-CMIP6 dataset is [produced by NASA](https://www.nccs.nasa.gov/services/data-collections/land-based-products/nex-gddp-cmip6), by bias correcting and downscaling data from [CMIP6](https://cds.climate.copernicus.eu/cdsapp#!/dataset/projections-cmip6?tab=overview). The dataset contains 9 climate variables, for several experiments and models ([Detailed paper about the dataset](https://www.nature.com/articles/s41597-022-01393-4)).
+
 For this tool, NEX-GDDP-CMIP6 data were downloaded with [Download_NEX-GDDP-CMIP6.py](https://github.com/RaphaelPB/CRVA_tool/blob/main/1-DownloadAndFormatData/Download_NEX-GDDP-CMIP6.py), using the csv file made available by NASA [here page 16](https://www.nccs.nasa.gov/sites/default/files/NEX-GDDP-CMIP6-Tech_Note.pdf).
+
 Once the data are downloaded, need to reformate them in csv files with [CSV_NEX-GDDP-CMIP6_one_lat_lon] https://github.com/RaphaelPB/CRVA_tool/blob/main/1-DownloadAndFormatData/CSV_NEX-GDDP-CMIP6_one_lat_lon.py).
 <a id=BiasCorrection></a>
 # Bias correction
 For this tool, bias correction applied is BCSD method ([Wood 2004](https://link.springer.com/article/10.1023/B:CLIM.0000013685.99609.9e)), implemented thanks to [scikit-downscale package](https://github.com/pangeo-data/scikit-downscale). In the end, only the quantile mapping step is performed, and not the downscaling. The [BC_NEX-GDDP-CMIP6](https://github.com/RaphaelPB/CRVA_tool/blob/main/2-BiasCorrection/BC_NEX-GDDP-CMIP6.ipynb) ([folder 2-BiasCorrection](https://github.com/RaphaelPB/CRVA_tool/tree/main/2-BiasCorrection)) applies functions BCSD_Temperature_return_anoms_to_apply and BCSD_Precipitation_return_anoms_to_apply from [Bias_correction_function](https://github.com/RaphaelPB/CRVA_tool/blob/main/0-Functions/Bias_correction_function.ipynb) ([folder 0-Functions](https://github.com/RaphaelPB/CRVA_tool/tree/main/0-Functions)) on respectively temperature and precipitation NEX-GDDP-CMIP6 dataset.
+
 In folder [Archives-BiasCorrectionTests](https://github.com/RaphaelPB/CRVA_tool/tree/main/Archives-BiasCorrectionTests), other bias correction tests are gathered.
 <a id=ApplicationCRVA></a>
 # Application for the CRVA tool
