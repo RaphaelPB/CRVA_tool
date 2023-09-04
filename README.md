@@ -52,21 +52,16 @@ Before performing any indicators, data are imported thanks to functions in [Func
 <a id=Indicator></a>
 ## Indicators
 In folder [0-Functions](https://github.com/RaphaelPB/CRVA_tool/tree/main/0-Functions), [Functions_Indicators](https://github.com/RaphaelPB/CRVA_tool/blob/main/0-Functions/Functions_Indicators.py) contains the indicators that can be used and that are explained in the table below.
-Climate variables changes	Indicators	Code to obtain the indicator
-Incremental air temperature change	Average temperature per year	With the ' Daily Near-Surface Air Temperature °C' (tas), for each scenario and for each model, the average temperature per year is calculated with the function 'temporal_avg'.
-Extreme air temperature increase	Maximum temperature in year	With the 'Daily Maximum Near-Surface Air Temperature °C' (tasmax), apply function 'temporal_max'.
-	Daily maximum temperature	use the 'Daily Maximum Near-Surface Air Temperature °C' (tasmax)
 
-	Annual number of days with temperature above a certain threshold temperature	With the 'Daily Maximum Near-Surface Air Temperature °C' (tasmax), apply 'number_day_above_threshold'.
-Incremental rainfall change	Average yearly precipitation	With the precipitation data, used the function 'temporal_avg' with temporal_resolution (fourth input) as 'year'. This gave the average yearly precipitation for each SSP and model
-	Average monthly dry or wet season precipitation	With the precipitation data corresponding to the dry or wet season, used the function 'temporal_avg' with temporal_resolution (fourth input) as 'month'. This gave the average monthly precipitation for each SSP and model. The wet season goes from October to March (12)
+| Incremental air temperature change indicators| Code to obtain the indicator |
+|:-------------:| -----:|
+| Average temperature per year | With the ' Daily Near-Surface Air Temperature °C' (tas), for each scenario and for each model, the average temperature per year is calculated with the function 'temporal_avg'.|
 
-Extreme rainfall change	Maximum one day rainfall	With the precipitation data, used the function 'temporal_max'. Depending on if the user wants the maximum one-day rainfall per month or per year, the fourth input of the function should, respectively, be 'month' or 'year'. The result will be the maximum value of precipitation per month or per year, for each SSP and each model. The user can also use the 'dataframe_1_day_event' ; the result will be the maximum value of precipitation per year, for each SSP and each model.
-
-	Maximum five days rainfall	With the precipitation data, 'dataframe_max_5_days_event'.
-	Event with 100 year return period	With the precipitation data, function 'dataframe_threshold_coresponding_to_return_period_model'. The right-skewed gumbel distribution was chosen for the probability distribution function of the precipitation data (58). The extreme values were selected with the Annual Maxima method (59)
-
-	Future return period of one day rainfall event with a current return of 100 years	With the precipitation data, 'dataframe_return_period_coresponding_to_past_100year_event_model' but the results are not as excepted. This function should be bettered.
+| Extreme air temperature increase indicators| Code to obtain the indicator |
+|:-------------:| -----:|
+| Maximum temperature in year | With the 'Daily Maximum Near-Surface Air Temperature °C' (tasmax), apply function 'temporal_max'.| 
+| Daily maximum temperature | use the 'Daily Maximum Near-Surface Air Temperature °C' (tasmax)|
+| Annual number of days with temperature above a certain threshold temperature | With the 'Daily Maximum Near-Surface Air Temperature °C' (tasmax), apply 'number_day_above_threshold'.|
 
 
 Evaluate the evolution of Net Precipitation would be useful for some infrastructure. the work was started and is in the folder [InProcess-NetPrecipitation](https://github.com/RaphaelPB/CRVA_tool/tree/main/InProcess-NetPrecipitation).
