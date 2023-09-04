@@ -2,6 +2,10 @@
 
 This tool applies Climate Risk and Vulnerability Assessment (CRVA) method, developed in [Non-paper Guidelines for Project Managers: Making vulnerable investments climate resilient](https://climate-adapt.eea.europa.eu/en/metadata/guidances/non-paper-guidelines-for-project-managers-making-vulnerable-investments-climate-resilient/guidelines-for-project-managers.pdf).
 
+
+The tool was used in a master Thesis, [publically available](https://infoscience.epfl.ch/record/304715?&ln=fr).
+
+
 # Summary of README
 
 - [Functions](#Function)
@@ -33,7 +37,7 @@ To study future risk, climate projections are used. Here, NEX-GDDP-CMIP6 dataset
 
 For this tool, NEX-GDDP-CMIP6 data were downloaded with [Download_NEX-GDDP-CMIP6.py](https://github.com/RaphaelPB/CRVA_tool/blob/main/1-DownloadAndFormatData/Download_NEX-GDDP-CMIP6.py), using the csv file made available by NASA [here page 16](https://www.nccs.nasa.gov/sites/default/files/NEX-GDDP-CMIP6-Tech_Note.pdf).
 
-Once the data are downloaded, it is needed to reformate them from nc files (with one file for ssp and model) to csv files with every models and SSP for every point with [CSV_NEX-GDDP-CMIP6_one_lat_lon] https://github.com/RaphaelPB/CRVA_tool/blob/main/1-DownloadAndFormatData/CSV_NEX-GDDP-CMIP6_one_lat_lon.py).
+Once the data are downloaded, it is needed to reformate them from nc files (with one file for ssp and model) to csv files with every models and SSP for every point with [CSV_NEX-GDDP-CMIP6_one_lat_lon](https://github.com/RaphaelPB/CRVA_tool/blob/main/1-DownloadAndFormatData/CSV_NEX-GDDP-CMIP6_one_lat_lon.py).
 <a id=BiasCorrection></a>
 # 2-BiasCorrection
 Climate projections often have biases. To deal with them, it is possible to perform bias correction. For this tool, bias correction applied is BCSD method ([Wood 2004](https://link.springer.com/article/10.1023/B:CLIM.0000013685.99609.9e)), implemented thanks to [scikit-downscale package](https://github.com/pangeo-data/scikit-downscale). In the end, only the quantile mapping step is performed, and not the downscaling. The [BC_NEX-GDDP-CMIP6](https://github.com/RaphaelPB/CRVA_tool/blob/main/2-BiasCorrection/BC_NEX-GDDP-CMIP6.ipynb) ([folder 2-BiasCorrection](https://github.com/RaphaelPB/CRVA_tool/tree/main/2-BiasCorrection)) applies functions BCSD_Temperature_return_anoms_to_apply and BCSD_Precipitation_return_anoms_to_apply from [Bias_correction_function](https://github.com/RaphaelPB/CRVA_tool/blob/main/0-Functions/Bias_correction_function.py) ([folder 0-Functions](https://github.com/RaphaelPB/CRVA_tool/tree/main/0-Functions)) on respectively temperature and precipitation NEX-GDDP-CMIP6 dataset.
