@@ -58,6 +58,9 @@ Evaluate the evolution of Net Precipitation would be useful for some infrastruct
 <a id=Sensitivity></a>
 ### Sensitivity
 Sensitivity is based often on expert judgement. It is evaluated outside of the tool. It should be summarized in a matrix format (as example below), and added to the tool with the function *sensitivity*; this function is defined in [Functions_ImportData](https://github.com/RaphaelPB/CRVA_tool/blob/main/0-Functions/Functions_ImportData.py) ([folder 0-Functions](https://github.com/RaphaelPB/CRVA_tool/tree/main/0-Functions)).
+
+![Sensitivity](Sensitivity.png)
+
 <a id=Exposure></a>
 ### Exposure
 In this step, two sets of data are compared; one from the past and form the future. Every functions in this step is in [Functions_Indicators](https://github.com/RaphaelPB/CRVA_tool/blob/main/0-Functions/Functions_Indicators.py) in ([folder 0-Functions](https://github.com/RaphaelPB/CRVA_tool/tree/main/0-Functions)).
