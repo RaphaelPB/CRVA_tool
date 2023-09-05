@@ -56,7 +56,7 @@ In folder [0-Functions](https://github.com/RaphaelPB/CRVA_tool/tree/main/0-Funct
 Indicator available in the [Functions_Indicators](https://github.com/RaphaelPB/CRVA_tool/blob/main/0-Functions/Functions_Indicators.py) in folder [0-Functions](https://github.com/RaphaelPB/CRVA_tool/tree/main/0-Functions)
 ![Tableindicator](Tableindicator.png)
 
-Evaluate the evolution of Net Precipitation would be useful for some infrastructure. the work was started and is in the folder [InProcess-NetPrecipitation](https://github.com/RaphaelPB/CRVA_tool/tree/main/InProcess-NetPrecipitation).
+Evaluate the evolution of Net Precipitation would be useful for some infrastructure. The work was started and is in the folder [InProcess-NetPrecipitation](https://github.com/RaphaelPB/CRVA_tool/tree/main/InProcess-NetPrecipitation).
 <a id=Vulnerability></a>
 ## Vulnerability
 <a id=Sensitivity></a>
