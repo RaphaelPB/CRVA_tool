@@ -118,7 +118,6 @@ def import_CMIP6_past_close_to_NOAA(global_variable,climate_var=''):
 
 # import_treat_modeled_NEX_GDDP_CMIP6_close_to_stationNOAA aims to import and treat the NEX GDDP CMIP6 data close to the NOAA station
 # 
-# does not work
 
 # In[ ]:
 

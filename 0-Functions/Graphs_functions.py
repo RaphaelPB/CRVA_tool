@@ -476,7 +476,7 @@ def trends_year(climate_var,data_1,source_1,stats,location,start_year,stop_year,
 def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,categories='Experiment'):
     fig,ax=plt.subplots()
     if not data_boxplot.empty:
-        sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,ax=ax)
+        sns.boxplot(data=data_boxplot, x=x_axis, y=y_axis, hue=categories,whis=[10,90],ax=ax)
         ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
     if not data_line.empty:
         sns.lineplot(data=data_line,x=x_axis, y=y_axis,ax=ax,label=source_line)
@@ -484,7 +484,7 @@ def boxplots_line(data_boxplot,data_line,x_axis,y_axis,source_line,title_plot,ca
     # display the common legend for the line and boxplots
     handles, labels=ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper right', ncol=1, bbox_to_anchor=(1.2, 0.5),title='Legend')
-    #ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
+    ax.get_legend().remove() # this line permits to have a common legend for the boxplots and the line
     plt.title(title_plot)
     #path_figure=os.path.join(r'C:\Users\CLMRX\OneDrive - COWI\Documents\GitHub\CRVA_tool\outputs\figures','trend_month.png')
     #plt.savefig(path_figure,format ='png') # savefig or save text must be before plt.show. for savefig, format should be explicity written
@@ -819,7 +819,7 @@ def cdf_plot_category_or_obs(name_location,df_initial=pd.DataFrame(),name_column
 # periods is in the format of a list of strings
 # name_column is the name of the column of the elements from which we have to calculate the cdf
 
-def cdf_plot_period(df,periods,name_column):
+def cdf_plot_period(df,periods,name_column,df_obs,name_col_obs):
 
     df_copy = df.copy(deep=True) # do a copy of the dataframe
     # create two new columns to register the periods and cdfs
@@ -828,12 +828,15 @@ def cdf_plot_period(df,periods,name_column):
     # register historical information to concatenate them with each period
     df_historical = df_copy[df_copy['Experiment']=='historical']
     df_historical=cdf_(df_historical,name_column)
+    df_obs.loc[:,'Experiment']='Observation'
+    df_obs=cdf_(df_obs,name_col_obs)
     # create an empty dataframe for the information to plot
     df_final=pd.DataFrame()
     for period in periods: # go throught all the periods wnated
         df_temp = df_copy[df_copy['Year'].between(int(period[0:4]),int(period[5:9]))]
         df_temp.loc[:,'Period'] = period
         df_historical.loc[:,'Period'] = period
+        df_obs.loc[:,'Period'] = period
         df_ssp = pd.DataFrame()
         for ssp in list(set(df['Experiment'])): # go throught all the spp wanted
             # select the ssp and sort the data
@@ -843,7 +846,7 @@ def cdf_plot_period(df,periods,name_column):
             # concat the result with the other ssps
             df_ssp = pd.concat([df_ssp,df_temp_ssp])
         # concat the results with the other ssps and periods
-        df_final = pd.concat([df_final,df_historical,df_ssp])
+        df_final = pd.concat([df_final,df_obs,df_historical,df_ssp])
         
     # plot the different periods with the historical data
     
