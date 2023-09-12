@@ -52,10 +52,10 @@ def read_cckp_ncdata(nc_path,output='tempfile.tif'):
 
 
 #get filename from cckp based on ssp, period and gcm
-def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median'):
+def get_cckp_file_name(var,ssp='ssp245',period='2010-2039',gcm='median',data_folder=r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets'):
     cwd=os.getcwd()
     main=os.path.abspath(os.path.join(cwd, os.pardir))
-    data_folder=os.path.join(main,'dataset') 
+    #data_folder=os.path.join(main,'dataset') 
     #data_folder=r'\\COWI.net\projects\A245000\A248363\CRVA\Datasets'
     if period in ['1991-2020']:
  #cru/era
