@@ -181,7 +181,7 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
     Rs0 = (0.75 + 2*10**(-5)*z_station_elevation)*R_a# depens on the station elevation above sea level [m] z_station_elevation and
     # Ra, which depends on the month and latitude
     e_a = RH_mean*e_0(T)/100
-    Rnl = Boltzman_constant*((T_max+273.16+T_min+273.16)/2)*(0.34-(0.14*math.sqrt(e_a)))*(1.35*(Rs/Rs0)-0.35)
+    Rnl = Boltzman_constant*((T_max+273.16+T_min+273.16)/2)*(0.34-(0.14*e_a.apply(math.sqrt)))*(1.35*(Rs/Rs0)-0.35)
     
     # Final calculation of net radiation
     R_n = Rns - Rnl
