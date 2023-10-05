@@ -63,12 +63,12 @@ import pandas as pd
 # In[2]:
 
 
-def R_a_determination(lat,month,Ra):
+def R_a_determination(lat,month,R_a_df):
     if pd.isnull(month):
         R_a=np.nan
     else:
     # month should be one of the elements of the following list ['Apr', 'Aug', 'Dec', 'Feb', 'Jan', 'July', 'Jun', 'Mar', 'May', 'Nov','Oct', 'Sep']
-        R_a_df = dataframe_Ra(Ra)
+        #R_a_df = dataframe_Ra(Ra)
         # determine if Northern or Southern hemisphere
         if lat >0:
             Hemisphere_of_interest = R_a_df.columns.levels[0][0]
@@ -174,10 +174,13 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
     
     # Net longwave radiation Rnl
     Boltzman_constant = 4.903*10**(-9)
-    R_a = R_a_determination(lat,month,Ra)
+    #NEW
+    Ra = dataframe_Ra(Ra)
+    R_a = month.apply(lambda x: R_a_determination(lat,x,Ra))
+    #R_a = R_a_determination(lat,month,Ra)
     Rs0 = (0.75 + 2*10**(-5)*z_station_elevation)*R_a# depens on the station elevation above sea level [m] z_station_elevation and
     # Ra, which depends on the month and latitude
-    e_a = RH_mean*e_0(T)/(100)
+    e_a = RH_mean*e_0(T)/100
     Rnl = Boltzman_constant*((T_max+273.16+T_min+273.16)/2)*(0.34-(0.14*math.sqrt(e_a)))*(1.35*(Rs/Rs0)-0.35)
     
     # Final calculation of net radiation
@@ -207,8 +210,8 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
 #     print('RH_mean '+str(RH_mean))
 #     print('_lambda '+str(_lambda))
     
-    if PET_value < 0:
-        print('The potential evapotranspiration is negative, there is a problem with input data')
+    # if PET_value < 0:
+    #     print('The potential evapotranspiration is negative, there is a problem with input data')
     
     return PET_value
 
@@ -218,7 +221,9 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
 
 # saturation vapor pressure at the air
 def e_0(T):
-    e_0_result = 0.6108*math.exp(17.27*T/(T+237.3))
+    #NEW
+    e_0_result = 0.6108*(17.27*T/(T+237.3)).apply(math.exp)
+    #0.6108*math.exp(17.27*T/(T+237.3))
     return e_0_result
 
 
