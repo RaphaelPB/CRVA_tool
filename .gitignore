@@ -2,6 +2,8 @@
 *.cdsapirc
 *.tif
 *.tiff
+*.png
+*.svg
 
 # ignore ALL files in ANY directory named output
 outputs/
