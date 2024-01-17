@@ -4,6 +4,8 @@
 *.tiff
 *.png
 *.svg
+*.xlsx
 
 # ignore ALL files in ANY directory named output
 outputs/
+*checkpoints*/
