@@ -161,7 +161,7 @@ def dataframe_Ra(Ra):
 def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
     
     #### Slope of vapor pressure
-    _delta = 4098*e_0(T)/(T+237.3)**2
+    _delta = 4098*e_0(T)/(T+237.3)**2 #Pa/degree celcius 
     
     #### Net radiation
     # Net shortwave radiation Rns
@@ -181,7 +181,7 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
     Rs0 = (0.75 + 2*10**(-5)*z_station_elevation)*R_a# depens on the station elevation above sea level [m] z_station_elevation and
     # Ra, which depends on the month and latitude
     e_a = RH_mean*e_0(T)/100
-    Rnl = Boltzman_constant*((T_max+273.16+T_min+273.16)/2)*(0.34-(0.14*e_a.apply(math.sqrt)))*(1.35*(Rs/Rs0)-0.35)
+    Rnl = Boltzman_constant*((T_max+273.16+T_min+273.16)/2)*(0.34-(0.14*math.sqrt(e_a)))*(1.35*(Rs/Rs0)-0.35)
     
     # Final calculation of net radiation
     R_n = Rns - Rnl
@@ -201,7 +201,7 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
     
     
     ##### potential evapotranspiration calculation
-    PET_value = (_delta*R_n + (6.43*_gamma*(1+0.536*U_2)*(1-(RH_mean/100))*e_s))/((_delta+_gamma)*_lambda)
+    PET_value = (_delta*R_n + 6.43*_gamma*(1+0.536*U_2)*(1-(RH_mean/100))*e_s)/((_delta+_gamma)*_lambda)
     
 #     print('_delta '+str(_delta))
 #     print('R_n '+str(R_n))
@@ -222,8 +222,8 @@ def PET(T,T_max,T_min,Rs,RH_mean,U_2,z_station_elevation,lat,month,Ra):
 # saturation vapor pressure at the air
 def e_0(T):
     #NEW
-    e_0_result = 0.6108*(17.27*T/(T+237.3)).apply(math.exp)
-    #0.6108*math.exp(17.27*T/(T+237.3))
+    #e_0_result = 0.6108*(17.27*T/(T+237.3)).apply(math.exp)
+    e_0_result=0.6108*np.exp((17.27*T)/(T+237.3))
     return e_0_result
 
 

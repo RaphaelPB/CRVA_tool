@@ -7,12 +7,13 @@
 import numpy as np
 import pandas as pd
 
-from Functions_ImportData import import_treat_modeled_NEX_GDDP_CMIP6
-from Functions_ImportData import import_BC_NOAA_NEX_GDDP_CMIP6
-from Functions_ImportData import import_BC_Gorongosa_NEX_GDDP_CMIP6
+# from Functions_ImportData import import_treat_modeled_NEX_GDDP_CMIP6
+# from Functions_ImportData import import_BC_NOAA_NEX_GDDP_CMIP6
+# from Functions_ImportData import import_BC_Gorongosa_NEX_GDDP_CMIP6
 from Functions_ImportData import add_year_month_season
-
-from Potential_evapostranspiration_function import PET
+from Evaporation_code import ET0 #FAO 
+#from Potential_evapostranspiration_function import PET
+#from Evaporation_E0 import E0
 
 def filter_data(df,loc,mod_excl): # Filter data by location, models, and time period
     df = df[df['Name project']==loc]
@@ -44,30 +45,38 @@ def filter_data(df,loc,mod_excl): # Filter data by location, models, and time pe
 
 
 # CHANGE ACCORDING TO PURPOSE 
-loc='Gorongosa_EIB'
-mod_excl=['NESM3','CMCC-CM2-SR5','TaiESM1']
-yr_past=np.array([1980, 2014])
-yr_future=np.array([2030,2060])
+loc='Vemasse'
+mod_excl=[]
+yr_past=np.array([1980, 1914])
+yr_future=np.array([2030,2080])
+#	WTP_Mutua_EIB	latitude:-19.495080	elevation: 15
+#	Gorongosa_EIB	latitdue: -18.680637	elevtaion: 383
+# 	Chimoio_WTP_EIB	latitude:-19.125095 elevation:	723
+#	Pemba_EIB	latitude:	-12.973943	 elevation: 47
+
+
+#Timor
+
 
 #station information
-latitude = -18.680637 # gorongosa
-z_station= 383 #gorongosa m above sealevel
+latitude = -8.504763	 # 
+z_station= 16#mutua m 
 
 #PATHS DATA INPUT
 #precipitation 
-path_pr=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\pr\pr_mm_per_day_day_1950-2100\pr_1950-2100_projectsMoz.csv'
+path_pr=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6\csv_timor\pr\pr_mm\day_day_1980-2080\pr_1980-2080timor_gr2.csv'
 #tas: daily mean temperature
-path_tas=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\tas\tas_Celsius_day_1950-2100\tas_1950-2100_projectsMoz.csv'
+path_tas=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6\csv_timor\tas\tas_Celsius_day_1980-2080\tas_1980-2080timor_gr2.csv'
 #tasmin: minimum daily temperature 
-path_tasmin=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\tasmin\tasmin_Celsius_day_1950-2100\tasmin_1950-2100_projectsMoz.csv'
+path_tasmin=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6\csv_timor\tasmin\tasmin_Celsius_day_1980-2080\tasmin_1980-2080timor_gr2.csv'
 #tasmax: maximum daily temperature 
-path_tasmax=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\tasmax\tasmax_Celsius_day_1950-2100\tasmax_1950-2100_projectsMoz.csv'
+path_tasmax=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6\csv_timor\tasmax\tasmax_Celsius_day_1980-2080\tasmax_1980-2080timor_gr2.csv'
 #rs: radiaion (MJ.m-2.day-1)
-path_rs=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\rsds\rsds_MJ.m-2.day-1_day_1950-2100\rsds_1950-2100_projectsMoz.csv'
+path_rs=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6\csv_timor\rsds\rsds_MJ.m-2.day-1_day_1980-2080\rsds_1980-2080timor_gr2.csv'
 # near surface relative humidity RH 
-path_RH=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\hurs\hurs_%_day_1950-2100\hurs_1950-2100_projectsMoz.csv'
+path_RH=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6\csv_timor\hurs\hurs_%_day_1980-2080\hurs_1980-2080timor_gr2.csv'
 # Daily-Mean Near-Surface Wind Speed [m_s-1]
-path_wind10=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6-AllMoz\csv_file\sfcWind\sfcWind_m_s-1_day_1950-2100\sfcWind_1950-2100_projectsMoz.csv'
+path_wind10=r'\\cowi.net\projects\A245000\A248363\CRVA\Datasets\NEX-GDDP-CMIP6\csv_timor\sfcWind\sfcWind_m_s-1_day_1980-2080\sfcWind_1980-2080timor_gr2.csv'
 
 
 # # Evapotranspiration at Gorongosa
@@ -125,7 +134,7 @@ df_wind10=pd.read_csv(path_wind10)
 df_wind10=filter_data(df_wind10,loc,mod_excl)
 df_wind2=df_wind10.copy(deep=True) #Convert to 2 meters above ground instead of initial 10 meters
 z=10 #height above ground where the wind was measures 
-df_wind2[['Daily-Mean Near-Surface Wind Speed m_s-1']]=df_wind2[['Daily-Mean Near-Surface Wind Speed m_s-1']]*(4.87/(np.log((67.8*z)-5.42)))
+df_wind2[['Daily-Mean Near-Surface Wind Speedm_s-1']]=df_wind2[['Daily-Mean Near-Surface Wind Speedm_s-1']]*(4.87/(np.log((67.8*z)-5.42)))
 df_wind2_future=df_wind2[df_wind2['Year'].between(yr_future[0],yr_future[1])]
 
 #READ sheet for radiation data acoording to month and latitude
@@ -137,11 +146,11 @@ Ra=pd.read_csv(path_Ra)
 # Duplicate the one with pr, put nan in it.
 # Need to take in account changing month and lat
 df_PET = df_pr.copy(deep=True)
-df_PET.rename(columns={'Mean of the daily precipitation rate mm_per_day':'Potential evapotranspiration mm'},inplace=True)
-df_PET[['Potential evapotranspiration mm']] = np.nan
+df_PET.rename(columns={'Mean of the daily precipitation rate mm_per_day':'ET0 mm'},inplace=True)
+df_PET[['ET0 mm']] = np.nan
 # dataframe for net precipitation
 df_Net_Pr = df_PET.copy(deep=True)
-df_Net_Pr.rename(columns={'Potential evapotranspiration mm':'Net precipitation mm'},inplace=True)
+df_Net_Pr.rename(columns={'ET0 mm':'Net precipitation mm'},inplace=True)
 
 
 
@@ -149,44 +158,44 @@ df_Net_Pr.rename(columns={'Potential evapotranspiration mm':'Net precipitation m
 
 
 
-def filtr(df,date,model,ssp,col):
-    dfa=df.set_index(['Model','Experiment','Date'])
-    if (model,ssp,date) in dfa.index:
-        return dfa.loc[(model,ssp,date),col]
-    else:
-        return np.nan
+# def filtr(df,date,model,ssp,col):
+#     dfa=df.set_index(['Model','Experiment','Date'])
+#     if (model,ssp,date) in dfa.index:
+#         return dfa.loc[(model,ssp,date),col]
+#     else:
+#         return np.nan
     
 def dataframe_net_pr(df_pr,df_tas,df_tasmax,df_tasmin,df_Rs,df_RH,df_wind2,latitude,z_station,Ra):   
     # prepare dataframe to fill
     # dataframe for potential evapotranspiration
     df_PET = df_pr.copy(deep=True)
-    df_PET.rename(columns={'Mean of the daily precipitation rate mm_per_day':'Potential evapotranspiration mm'},inplace=True)
+    df_PET.rename(columns={'Mean of the daily precipitation rate mm_per_day':'ET0 mm'},inplace=True)
     # ssps=list(df_PET.Experiment.unique())
     # models=list(df_PET.Model.unique())
     # dates=list(df_PET.Date.unique())
     # df_PET=df_PET.set_index(['Model','Experiment','Date'])
-    df_PET[['Potential evapotranspiration mm']] = np.nan
+    df_PET[['ET0 mm']] = np.nan
     # dataframe for net precipitation
     df_Net_Pr = df_PET.copy(deep=True)
-    df_Net_Pr.rename(columns={'Potential evapotranspiration mm':'Net precipitation mm'},inplace=True)
+    df_Net_Pr.rename(columns={'ET0 mm':'Net precipitation mm'},inplace=True)
 
 
                 
     # what are the values of the parameters for the ssp, model and date precised ?
-    T=df_tas['Daily Near-Surface Air Temperature °C']
+    T=df_tas['Daily Near-Surface Air Temperature °C ']
     #print('T=',T)
-    T_max=df_tasmax['Daily Maximum Near-Surface Air Temperature °C']
+    T_max=df_tasmax['Daily Maximum Near-Surface Air Temperature Celsius']
     #print('Tmax=',T_max)
-    T_min=df_tasmin['Daily Minimum Near-Surface Air Temperature °C']
+    T_min=df_tasmin['SDaily Minimum Near-Surface Air TemperatureCelsius']
     #print('Tmin=',T_min)
-    Rs_=df_Rs['Surface Downwelling Shortwave Radiation MJ.m-2.day-1']
+    Rs_=df_Rs['Surface Downwelling Shortwave RadiationMJ.m-2.day-1']
     #print('Rs=',Rs_)
-    RH_mean=df_RH['Near-Surface Relative Humidity %']
-    wind2=df_wind2['Daily-Mean Near-Surface Wind Speed m_s-1']
+    RH_mean=df_RH['Daily-Mean Near-Surface Wind Speed%']
+    wind2=df_wind2['Daily-Mean Near-Surface Wind Speedm_s-1']
      
     month=df_pr['Month']
-    df_PET['Potential evapotranspiration mm']=PET(T,T_max,T_min,Rs_,RH_mean,wind2,z_station,latitude,month,Ra) # Open water evaporation from reservoirs may be estimated by multiplying PET by a factor of 1.2. source: 3.Evapotranspiration -FAO
-    df_Net_Pr['Net precipitation mm']=df_pr['Mean of the daily precipitation rate mm_per_day']-df_PET['Potential evapotranspiration mm']*1.2 #filtr(df_PET, date, model, ssp, 'Potential evapotranspiration mm')
+    df_PET['ET0 mm']=ET0(T,T_max,T_min,Rs_,RH_mean,wind2,z_station,latitude,month,Ra) # Open water evaporation from reservoirs may be estimated by multiplying PET by a factor of 1.2. source: 3.Evapotranspiration -FAO
+    df_Net_Pr['Net precipitation mm']=df_pr['Mean of the daily precipitation ratemm/day']-df_PET['ET0 mm'] #filtr(df_PET, date, model, ssp, 'Potential evapotranspiration mm')
     # filtr(df_PET,date,model,ssp,'Potential evapotranspiration mm')=PET(T,T_max,T_min,Rs_,RH_mean,wind2,z_station_elevation,lat,month)
     # filtr(df_Net_pr,date,model,ssp,'Net precipitation mm') = filtr(df_pr,date,model, ssp,'Mean of the daily precipitation rate mm_per_day')- filtr(df_PET, date, model, ssp, 'Potential evapotranspiration mm')
 
@@ -199,14 +208,19 @@ def dataframe_net_pr(df_pr,df_tas,df_tasmax,df_tasmin,df_Rs,df_RH,df_wind2,latit
 # (df_PET_future, df_netPr_future)=dataframe_net_pr(df_pr_future,df_tas_future,df_tasmax_future,df_tasmin_future,
 #                                                   df_rs_future,df_RH_future,df_wind2_future,latitude,z_station,Ra)
 
-(df_PET, df_netPr)=dataframe_net_pr(df_pr,df_tas,df_tasmax,df_tasmin,
-                                    df_rs,df_RH,df_wind2,latitude,z_station,Ra)
+(df_ET0, df_netPr)=dataframe_net_pr(df_pr,df_tas,df_tasmax,df_tasmin,
+                                     df_rs,df_RH,df_wind2,latitude,z_station,Ra)
 
+#(df_ET0_future, df_netPr_future)=dataframe_net_pr(df_pr_future,df_tas_future,df_tasmax_future,df_tasmin_future,
+  #                                  df_rs_future,df_RH_future,df_wind2_future,latitude,z_station,Ra)
 # In[18]:
 
 # df_netPr_future.to_csv("df_netPr_future_2030_2060.csv")
 # df_PET_future.to_csv("df_PET_future_2030_2060.csv")
 
-df_netPr.to_csv("df_netPr_future_2030_2060.csv")
-df_PET.to_csv("df_PET_future_2030_2060.csv")
+# df_netPr.to_csv("df_netPr_future2_2030_2060.csv")
+df_ET0.to_csv("df_ET0_FAOequation_Vemasse_albedo.csv")
 
+# df_ET0=_=df_ET0.copy()
+# df_ET0= df_ET0.groupby(['Month']).mean()*30
+# df_ET0['ET0 mm']
