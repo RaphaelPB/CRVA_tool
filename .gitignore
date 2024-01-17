@@ -10,3 +10,4 @@
 # ignore ALL files in ANY directory named output
 outputs/
 *checkpoints*/
+*pycache*/
