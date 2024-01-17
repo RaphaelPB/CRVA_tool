@@ -5,6 +5,7 @@
 *.png
 *.svg
 *.xlsx
+*.pyc
 
 # ignore ALL files in ANY directory named output
 outputs/
